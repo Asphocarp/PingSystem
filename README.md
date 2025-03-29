@@ -46,12 +46,12 @@ ls -la build/libs
 
 ## Todo
 
-- [x] config for mod with mod menu
 - [ ] get current key for info
-- [ ] confirm ping of teammate
-- [ ] (hard) ping entity
+- [ ] confirm ping of teammate; team system
 - [ ] fix NaN when looking up or down
+- [ ] (hard) ping entity
 - [ ] (hard) automatic pathfinding
 - [ ] (hard-compatibility) show on minimap
-- [ ] support forge
+- [ ] (hard) support forge
+- [x] config for mod with mod menu
 - [x] support 1.19.2
