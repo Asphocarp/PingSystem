@@ -263,7 +263,7 @@ public class RenderHandler implements IRenderer {
         // RenderUtils.drawTexturedRect(0, 0, 0, 0, 128, 128);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.applyModelViewMatrix();
+        // RenderSystem.applyModelViewMatrix();
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
@@ -359,24 +359,49 @@ public class RenderHandler implements IRenderer {
         RenderSystem.depthMask(false);
         RenderSystem.polygonOffset(-3f, -3f);
         RenderSystem.enablePolygonOffset();
-        RenderUtils.setupBlend();
-        RenderUtils.color(1f, 1f, 1f, 1f);
+        // RenderUtils.setupBlend();
+        // RenderUtils.color(1f, 1f, 1f, 1f);
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        RenderSystem.applyModelViewMatrix();
-        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        // RenderSystem.applyModelViewMatrix();
 
-        RenderUtils.drawBoxAllSidesBatchedQuads(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 0.3f), buffer);
-
-        tessellator.draw();
+        // buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        // RenderUtils.drawBoxAllSidesBatchedQuads(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 0.3f), buffer);
+        // tessellator.draw();
 
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-
-        RenderUtils.drawBoxAllEdgesBatchedLines(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 1f), buffer);
-
+        // RenderUtils.drawBoxAllEdgesBatchedLines(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 1f), buffer);
+        // West side
+        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
+        // East side
+        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        // North side (don't repeat the vertical lines that are done by the east/west sides)
+        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
+        // South side (don't repeat the vertical lines that are done by the east/west sides)
+        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
         tessellator.draw();
 
         RenderSystem.polygonOffset(0f, 0f);

@@ -1,19 +1,17 @@
 package com.asilvorcarp;
 
-import fi.dy.masa.malilib.config.ConfigManager;
 import fi.dy.masa.malilib.event.RenderEventHandler;
 import fi.dy.masa.malilib.event.TickHandler;
 import fi.dy.masa.malilib.interfaces.IInitializationHandler;
-
-import static com.asilvorcarp.ApexMC.MOD_ID;
+import fi.dy.masa.malilib.interfaces.IRenderer;
 
 public class InitHandler implements IInitializationHandler {
     @Override
     public void registerModHandlers() {
         RenderHandler renderer = RenderHandler.getInstance();
-        RenderEventHandler.getInstance().registerGameOverlayRenderer(renderer);
-        RenderEventHandler.getInstance().registerTooltipLastRenderer(renderer);
-        RenderEventHandler.getInstance().registerWorldLastRenderer(renderer);
+        RenderEventHandler.getInstance().registerGameOverlayRenderer((IRenderer) renderer);
+        RenderEventHandler.getInstance().registerTooltipLastRenderer((IRenderer) renderer);
+        RenderEventHandler.getInstance().registerWorldLastRenderer((IRenderer) renderer);
 
         TickHandler.getInstance().registerClientTickHandler(new ClientTickHandler());
 
