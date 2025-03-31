@@ -24,10 +24,6 @@ Pings at night:
 
 ![pingAtNight](images/pingAtNight.png)
 
-## Dependencies
-
-malilib: [https://www.curseforge.com/minecraft/mc-mods/malilib](https://www.curseforge.com/minecraft/mc-mods/malilib)
-
 
 ## Build
 

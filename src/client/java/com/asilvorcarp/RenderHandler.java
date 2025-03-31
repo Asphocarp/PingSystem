@@ -258,13 +258,13 @@ public class RenderHandler {
         // RenderUtils.drawTexturedRect(0, 0, 0, 0, 128, 128);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        // RenderSystem.applyModelViewMatrix();
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
         RenderSystem.enableBlend();
         // You might need a specific blend func here, e.g., RenderSystem.defaultBlendFunc();
         // Or: RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.defaultBlendFunc();
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
         buffer.vertex(x, y + height, zLevel).texture(u * pixelWidth, (v + height) * pixelWidth).next();
