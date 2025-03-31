@@ -364,9 +364,10 @@ public class RenderHandler {
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         // RenderSystem.applyModelViewMatrix();
 
-        // buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        // RenderUtils.drawBoxAllSidesBatchedQuads(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 0.3f), buffer);
-        // tessellator.draw();
+        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        // do RenderUtils.drawBoxAllSidesBatchedQuads(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 0.3f), buffer); here without malilib
+        
+        tessellator.draw();
 
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
         // RenderUtils.drawBoxAllEdgesBatchedLines(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 1f), buffer);
