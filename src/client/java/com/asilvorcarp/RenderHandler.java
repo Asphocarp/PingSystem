@@ -107,9 +107,9 @@ public class RenderHandler {
                 int width = client.getWindow().getScaledWidth();
                 int height = client.getWindow().getScaledHeight();
                 assert client.cameraEntity != null;
-                Vec3d cameraPos = client.cameraEntity.getPos();
+                Vec3d cameraPos = client.cameraEntity.getLerpedPos(tickDelta);
                 Vec3d targetPos = ping.pos;
-                Vec3d cameraDirection = client.cameraEntity.getRotationVec(1.0f);
+                Vec3d cameraDirection = client.cameraEntity.getRotationVec(tickDelta);
                 // get real fly/sprint fov
                 double fov = client.options.getFov().getValue();
                 if (client.player != null) {
