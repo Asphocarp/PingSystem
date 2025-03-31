@@ -20,6 +20,9 @@
 		],
 		"client": [
 			"com.asilvorcarp.ApexMCClient"
+		],
+		"modmenu": [
+			"com.asilvorcarp.ModConfig"
 		]
 	},
 	"mixins": [
@@ -37,5 +40,9 @@
 	},
 	"suggests": {
 		"another-mod": "*"
+	},
+	"recommends":{
+		"modmenu": "*",
+		"cloth-config": "*"
 	}
 }
