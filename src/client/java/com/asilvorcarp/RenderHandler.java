@@ -348,63 +348,112 @@ public class RenderHandler {
         r /= 256;
         g /= 256;
         b /= 256;
-        float a = 1.0f; // Define alpha for lines
 
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.polygonOffset(-3f, -3f);
         RenderSystem.enablePolygonOffset();
-        // RenderUtils.setupBlend();
-        // RenderUtils.color(1f, 1f, 1f, 1f);
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        // RenderSystem.applyModelViewMatrix();
 
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        // do RenderUtils.drawBoxAllSidesBatchedQuads(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 0.3f), buffer); here without malilib
-        
+        drawFilledBox(buffer, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, 0.3f);
         tessellator.draw();
 
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-        // RenderUtils.drawBoxAllEdgesBatchedLines(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 1f), buffer);
-        // West side
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
-        // East side
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
-        // North side (don't repeat the vertical lines that are done by the east/west sides)
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
-        // South side (don't repeat the vertical lines that are done by the east/west sides)
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        drawBoxOutline(buffer, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, 1.0f);
         tessellator.draw();
 
         RenderSystem.polygonOffset(0f, 0f);
         RenderSystem.disablePolygonOffset();
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
+    }
+
+    /**
+     * Draws a filled box using the provided BufferBuilder.
+     * Replicates malilib's RenderUtils.drawBoxAllSidesBatchedQuads.
+     * Assumes BufferBuilder has been initialized with QUADS draw mode and POSITION_COLOR format.
+     */
+    private static void drawFilledBox(BufferBuilder buffer, double minX, double minY, double minZ, double maxX, double maxY, double maxZ, float r, float g, float b, float a) {
+        // West side (-X)
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+
+        // East side (+X)
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+
+        // North side (-Z)
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+
+        // South side (+Z)
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+
+        // Top side (+Y)
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+
+        // Bottom side (-Y)
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+    }
+
+    /**
+     * Draws the outline of a box using the provided BufferBuilder.
+     * Replicates malilib's RenderUtils.drawBoxAllEdgesBatchedLines.
+     * Assumes BufferBuilder has been initialized with DEBUG_LINES draw mode and POSITION_COLOR format.
+     */
+    private static void drawBoxOutline(BufferBuilder buffer, double minX, double minY, double minZ, double maxX, double maxY, double maxZ, float r, float g, float b, float a) {
+        // West side (-X)
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+
+        // East side (+X)
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+
+        // North side (-Z) (connecting lines)
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+
+        // South side (+Z) (connecting lines)
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
     }
 
     public void updateData(MinecraftClient mc) {
