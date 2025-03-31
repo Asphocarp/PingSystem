@@ -1,7 +1,5 @@
 package com.asilvorcarp;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.Vec3d;
@@ -11,37 +9,31 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static com.asilvorcarp.ApexMC.LOGGER;
-
 public class PingPoint implements Serializable {
-    // TODO config for this
-    // zero means never
-    public static long SecondsToVanish = 0;
     public UUID id;
     public Vec3d pos;
     public String owner;
+    // the highlight color
     public Color color;
+    // the sound index
+    public byte sound;
     public LocalDateTime createTime;
 
-    public PingPoint(Vec3d pos, String owner) {
-        this.id = UUID.randomUUID();
-        this.pos = pos;
-        this.owner = owner;
-        // default color
-        this.color = new Color(247 / 256f, 175 / 256f, 53 / 256f);
-        this.createTime = LocalDateTime.now();
-    }
-
-    public PingPoint(Vec3d pos, String owner, Color color) {
+    public PingPoint(Vec3d pos, String owner, Color color, byte soundIdx) {
         this.id = UUID.randomUUID();
         this.pos = pos;
         this.owner = owner;
         this.color = color;
+        this.sound = soundIdx;
         this.createTime = LocalDateTime.now();
     }
 
-    public boolean shouldVanish() {
-        if(SecondsToVanish == 0){
+    public PingPoint(Vec3d pos, String owner, int color, byte soundIdx) {
+        this(pos, owner, new Color(color), soundIdx);
+    }
+
+    public boolean shouldVanish(long SecondsToVanish) {
+        if (SecondsToVanish == 0) {
             return false;
         }
         return LocalDateTime.now().minusSeconds(SecondsToVanish).isAfter(createTime);
@@ -57,6 +49,7 @@ public class PingPoint implements Serializable {
         stream.writeDouble(pos.z);
         stream.writeObject(owner);
         stream.writeObject(color);
+        stream.writeByte(sound);
         stream.writeObject(createTime);
     }
 
@@ -71,6 +64,7 @@ public class PingPoint implements Serializable {
         pos = new Vec3d(x, y, z);
         owner = (String) stream.readObject();
         color = (Color) stream.readObject();
+        sound = stream.readByte();
         createTime = (LocalDateTime) stream.readObject();
     }
 
