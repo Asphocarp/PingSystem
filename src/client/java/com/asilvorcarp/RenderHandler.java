@@ -1,10 +1,6 @@
 package com.asilvorcarp;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import fi.dy.masa.malilib.interfaces.IRenderer;
-import fi.dy.masa.malilib.render.RenderUtils;
-import fi.dy.masa.malilib.util.Color4f;
-import fi.dy.masa.malilib.util.EntityUtils;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -17,6 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import org.jetbrains.annotations.NotNull;
 import org.joml.*;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 
 import java.lang.Math;
 import java.util.ArrayList;
@@ -28,7 +25,7 @@ import static com.asilvorcarp.ApexMC.LOGGER;
 import static com.asilvorcarp.ApexMC.Vec3dToVector3d;
 import static com.asilvorcarp.ApexMCClient.pingKeyBinding;
 
-public class RenderHandler implements IRenderer {
+public class RenderHandler {
     public static final boolean DEBUG = false;
     private static final RenderHandler INSTANCE = new RenderHandler();
     private final MinecraftClient mc;
@@ -74,10 +71,9 @@ public class RenderHandler implements IRenderer {
         return onPing != null;
     }
 
-    @Override
-    public void onRenderWorldLast(MatrixStack matrixStack, net.minecraft.util.math.Matrix4f projMatrix) {
+    public void onRenderWorldLast(WorldRenderContext context) {
         if (this.mc.world != null && this.mc.player != null && !this.mc.options.hudHidden) {
-            this.renderOverlays(matrixStack, projMatrix, this.mc);
+            this.renderOverlays(this.mc);
         }
     }
 
@@ -102,8 +98,7 @@ public class RenderHandler implements IRenderer {
         return new Vec3f(v.x, v.y, v.z);
     }
 
-    @Override
-    public void onRenderGameOverlayPost(MatrixStack matrixStack) {
+    public void onRenderGameOverlayPost(MatrixStack matrixStack, float tickDelta) {
         boolean setOnPing = false;
         for (var entry : this.pings.entrySet()) {
             var owner = entry.getKey();
@@ -257,7 +252,7 @@ public class RenderHandler implements IRenderer {
         double y = cy - height / 2;
 
         // TODO add background
-        RenderUtils.bindTexture(PING_BASIC);
+        RenderSystem.setShaderTexture(0, PING_BASIC);
 
         // the following is
         // RenderUtils.drawTexturedRect(0, 0, 0, 0, 128, 128);
@@ -267,7 +262,9 @@ public class RenderHandler implements IRenderer {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
-        RenderUtils.setupBlend();
+        RenderSystem.enableBlend();
+        // You might need a specific blend func here, e.g., RenderSystem.defaultBlendFunc();
+        // Or: RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
         buffer.vertex(x, y + height, zLevel).texture(u * pixelWidth, (v + height) * pixelWidth).next();
@@ -315,9 +312,8 @@ public class RenderHandler implements IRenderer {
         return hotkey;
     }
 
-    public void renderOverlays(MatrixStack matrixStack, net.minecraft.util.math.Matrix4f projMatrix,
-                               MinecraftClient mc) {
-        Entity entity = EntityUtils.getCameraEntity();
+    public void renderOverlays(MinecraftClient mc) {
+        Entity entity = mc.getCameraEntity();
 
         if (entity == null) {
             return;
@@ -352,7 +348,7 @@ public class RenderHandler implements IRenderer {
         r /= 256;
         g /= 256;
         b /= 256;
-        Color4f color = new Color4f(r, g, b);
+        float a = 1.0f; // Define alpha for lines
 
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
@@ -375,33 +371,33 @@ public class RenderHandler implements IRenderer {
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
         // RenderUtils.drawBoxAllEdgesBatchedLines(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 1f), buffer);
         // West side
-        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
         // East side
-        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
         // North side (don't repeat the vertical lines that are done by the east/west sides)
-        buffer.vertex(maxX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, minY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, maxY, minZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
         // South side (don't repeat the vertical lines that are done by the east/west sides)
-        buffer.vertex(minX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, minY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
-        buffer.vertex(minX, maxY, maxZ).color(color.r, color.g, color.b, color.a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
         tessellator.draw();
 
         RenderSystem.polygonOffset(0f, 0f);

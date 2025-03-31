@@ -1,10 +1,11 @@
 package com.asilvorcarp;
 
-import fi.dy.masa.malilib.event.InitializationHandler;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -43,9 +44,15 @@ public class ApexMCClient implements ClientModInitializer {
                 "category.apex_mc.apex_mc" // The translation key of the keybinding's category.
         ));
 
-        InitializationHandler.getInstance().registerInitializationHandler(new InitHandler());
-
+        // Register Fabric events
+        // Tick handler for key presses
         ClientTickEvents.END_CLIENT_TICK.register(ApexMCClient::checkKeyPress);
+        // Tick handler for updating RenderHandler data (previously in ClientTickHandler)
+        ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler.getInstance()::onClientTick);
+
+        // Rendering handlers
+        WorldRenderEvents.LAST.register(RenderHandler.getInstance()::onRenderWorldLast);
+        HudRenderCallback.EVENT.register(RenderHandler.getInstance()::onRenderGameOverlayPost);
 
         ClientPlayNetworking.registerGlobalReceiver(PING_PACKET, (client, handler, buf, responseSender) -> {
             // Everything in this lambda is run on the render thread
