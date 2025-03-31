@@ -354,6 +354,7 @@ public class RenderHandler {
         RenderSystem.depthMask(false);
         RenderSystem.polygonOffset(-3f, -3f);
         RenderSystem.enablePolygonOffset();
+        RenderSystem.enableBlend();
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
