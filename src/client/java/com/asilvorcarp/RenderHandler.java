@@ -28,17 +28,12 @@ import static com.asilvorcarp.ApexMCClient.pingKeyBinding;
 
 public class RenderHandler {
     public static final boolean DEBUG = false;
-    // TODO be able to config this
-    public static final float ICON_RESIZER = 1f;
-    // format: 0xAARRGGBB
-    public static final int INFO_COLOR = 0xFFeb9d39;
     private static final RenderHandler INSTANCE = new RenderHandler();
     private final MinecraftClient mc;
     // the count for debug
     public int debug_count;
     // safe for multi-thread
     public HashMap<String, CopyOnWriteArrayList<PingPoint>> pings;
-    public int pingNumEach;
     // the ping that is pointed to
     private PingPoint onPing;
 
@@ -48,8 +43,6 @@ public class RenderHandler {
         this.mc = MinecraftClient.getInstance();
         this.debug_count = 0;
         this.pings = new HashMap<>();
-        // TODO be able to config this
-        this.pingNumEach = 3;
         this.onPing = null;
     }
 
@@ -259,14 +252,16 @@ public class RenderHandler {
         // TODO add background
         RenderSystem.setShaderTexture(0, PING_BASIC);
 
-        MatrixStack matrixStack = drawContext.getMatrices();
-        matrixStack.push();
+        // MatrixStack matrixStack = drawContext.getMatrices();
+        // matrixStack.push();
         
         RenderSystem.setShader(GameRenderer::getPositionTexProgram);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
         RenderSystem.enableBlend();
+        // You might need a specific blend func here, e.g., RenderSystem.defaultBlendFunc();
+        // Or: RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         RenderSystem.defaultBlendFunc();
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
@@ -277,7 +272,7 @@ public class RenderHandler {
 
         tessellator.draw();
         
-        matrixStack.pop();
+        // matrixStack.pop();
     }
 
     private void renderInfoHUD(DrawContext drawContext, int topLeftX, int topLeftY, PingPoint ping) {
@@ -360,11 +355,13 @@ public class RenderHandler {
         RenderSystem.polygonOffset(-3f, -3f);
         RenderSystem.enablePolygonOffset();
         RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.applyModelViewMatrix();
 
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         drawFilledBox(buffer, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, 0.3f);

@@ -51,9 +51,8 @@ public class ApexMCClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler.getInstance()::onClientTick);
 
         // Rendering handlers
-        WorldRenderEvents.AFTER_ENTITIES.register(RenderHandler.getInstance()::onRenderWorldLast);
-        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> 
-            RenderHandler.getInstance().onRenderGameOverlayPost(drawContext, tickDelta));
+        WorldRenderEvents.LAST.register(RenderHandler.getInstance()::onRenderWorldLast);
+        HudRenderCallback.EVENT.register(RenderHandler.getInstance()::onRenderGameOverlayPost);
 
         ClientPlayNetworking.registerGlobalReceiver(PING_PACKET, (client, handler, buf, responseSender) -> {
             // Everything in this lambda is run on the render thread
