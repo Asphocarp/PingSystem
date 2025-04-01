@@ -41,12 +41,12 @@ ls -la build/libs
 
 ## Todo
 
+- [ ] (hard) support forge
 - [ ] get current key for info
 - [ ] confirm ping of teammate; team system
 - [ ] fix NaN when looking up or down
 - [ ] (hard) ping entity
 - [ ] (hard) automatic pathfinding
 - [ ] (hard-compatibility) show on minimap
-- [ ] (hard) support forge
 - [x] config for mod with mod menu
 - [x] support 1.19.2, 1.20.1
