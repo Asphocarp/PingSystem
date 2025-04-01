@@ -12,7 +12,7 @@ Default hotkey: `c`
 
 Send signal to your team for communication.
 
-Press hotkey again on the Ping Point to cancel it.
+Press hotkey again towards the Ping Point to cancel it.
 
 ## Images
 
@@ -31,12 +31,11 @@ Pings at night:
   - e.g., `"java.import.gradle.java.home": "/opt/homebrew/opt/openjdk@17"` in your vscode user settings Json
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17 
-# build
+# build, run
 ./gradlew build
+./gradlew runClient
 # to show the .jar mod file
 ls -la build/libs
-# run
-./gradlew runClient
 ```
 
 
@@ -50,4 +49,4 @@ ls -la build/libs
 - [ ] (hard-compatibility) show on minimap
 - [ ] (hard) support forge
 - [x] config for mod with mod menu
-- [x] support 1.19.2
+- [x] support 1.19.2, 1.20.1
