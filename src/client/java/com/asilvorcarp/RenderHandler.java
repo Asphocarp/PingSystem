@@ -3,13 +3,11 @@ package com.asilvorcarp;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
@@ -96,7 +94,6 @@ public class RenderHandler {
     }
 
     public void onRenderGameOverlayPost(DrawContext drawContext, float tickDelta) {
-        MatrixStack matrixStack = drawContext.getMatrices();
         boolean setOnPing = false;
         for (var entry : this.pings.entrySet()) {
             var owner = entry.getKey();

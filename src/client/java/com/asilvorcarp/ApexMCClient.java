@@ -78,14 +78,14 @@ public class ApexMCClient implements ClientModInitializer {
         }
     }
 
-    private static void pingDirDistance(MinecraftClient client, ClientPlayerEntity player, float tickDelta, Vec3d dir, double dist) {
-        assert client.cameraEntity != null;
-        Vec3d cameraPos = client.cameraEntity.getPos();
-        Vec3d pingPos = cameraPos.add(dir.multiply(dist));
-        PingPoint p = new PingPoint(pingPos, player.getEntityName(), ModConfig.highlightColor, ModConfig.soundIndex);
-        addPointToRenderer(p);
-        sendPingToServer(p);
-    }
+    // private static void pingDirDistance(MinecraftClient client, ClientPlayerEntity player, float tickDelta, Vec3d dir, double dist) {
+    //     assert client.cameraEntity != null;
+    //     Vec3d cameraPos = client.cameraEntity.getPos();
+    //     Vec3d pingPos = cameraPos.add(dir.multiply(dist));
+    //     PingPoint p = new PingPoint(pingPos, player.getEntityName(), ModConfig.highlightColor, ModConfig.soundIndex);
+    //     addPointToRenderer(p);
+    //     sendPingToServer(p);
+    // }
 
     // also show some info about the thing pinging on
 
