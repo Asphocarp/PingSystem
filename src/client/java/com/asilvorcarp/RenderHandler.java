@@ -1,20 +1,20 @@
 package com.asilvorcarp;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import fi.dy.masa.malilib.interfaces.IRenderer;
-import fi.dy.masa.malilib.render.RenderUtils;
-import fi.dy.masa.malilib.util.Color4f;
-import fi.dy.masa.malilib.util.EntityUtils;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.joml.*;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 
 import java.lang.Math;
 import java.util.ArrayList;
@@ -24,8 +24,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.asilvorcarp.ApexMC.LOGGER;
 import static com.asilvorcarp.ApexMC.Vec3dToVector3d;
+import static com.asilvorcarp.ApexMCClient.pingKeyBinding;
 
-public class RenderHandler implements IRenderer {
+public class RenderHandler {
     public static final boolean DEBUG = false;
     // TODO be able to config this
     public static final float ICON_RESIZER = 1f;
@@ -63,8 +64,8 @@ public class RenderHandler implements IRenderer {
             pings.put(p.owner, list);
         } else {
             var pingList = pings.get(p.owner);
-            if (pingList.size() >= pingNumEach) {
-                pingList.subList(0, pingList.size() - pingNumEach + 1).clear();
+            if (pingList.size() >= ModConfig.pingNumEach) {
+                pingList.subList(0, pingList.size() - ModConfig.pingNumEach + 1).clear();
             }
             pingList.add(p);
         }
@@ -78,10 +79,9 @@ public class RenderHandler implements IRenderer {
         return onPing != null;
     }
 
-    @Override
-    public void onRenderWorldLast(MatrixStack matrixStack, Matrix4f projMatrix) {
+    public void onRenderWorldLast(WorldRenderContext context) {
         if (this.mc.world != null && this.mc.player != null && !this.mc.options.hudHidden) {
-            this.renderOverlays(matrixStack, projMatrix, this.mc);
+            this.renderOverlays(this.mc);
         }
     }
 
@@ -99,11 +99,11 @@ public class RenderHandler implements IRenderer {
         Quaternionfc rot2 = getDegreesQuaternion(horizontalRotationAxis, horizontalRotation);
         temp2.rotate(rot1);
         temp2.rotate(rot2);
-        return new Vec3d(temp2);
+        return new Vec3d(temp2.x(), temp2.y(), temp2.z());
     }
 
-    @Override
-    public void onRenderGameOverlayPost(DrawContext drawContext) {
+    public void onRenderGameOverlayPost(DrawContext drawContext, float tickDelta) {
+        MatrixStack matrixStack = drawContext.getMatrices();
         boolean setOnPing = false;
         for (var entry : this.pings.entrySet()) {
             var owner = entry.getKey();
@@ -112,9 +112,9 @@ public class RenderHandler implements IRenderer {
                 int width = client.getWindow().getScaledWidth();
                 int height = client.getWindow().getScaledHeight();
                 assert client.cameraEntity != null;
-                Vec3d cameraPos = client.cameraEntity.getPos();
+                Vec3d cameraPos = client.cameraEntity.getLerpedPos(tickDelta);
                 Vec3d targetPos = ping.pos;
-                Vec3d cameraDirection = client.cameraEntity.getRotationVec(1.0f);
+                Vec3d cameraDirection = client.cameraEntity.getRotationVec(tickDelta);
                 // get real fly/sprint fov
                 double fov = client.options.getFov().getValue();
                 if (client.player != null) {
@@ -123,13 +123,13 @@ public class RenderHandler implements IRenderer {
                 // get the icon center on screen
                 Vector2d v2 = getIconCenter(width, height, cameraDirection, fov, cameraPos, targetPos);
                 // render the icon
-                renderIconHUD(v2.x, v2.y, ping);
+                renderIconHUD(drawContext, v2.x, v2.y, ping);
                 // render info if pointing at it (and don't do twice)
                 if (!setOnPing) {
                     var mid = new Vector2d((double) width / 2, (double) height / 2);
                     var fromMid = v2.sub(mid);
                     if (fromMid.length() <= mid.length() / 25) {
-                        renderInfoHUD((int) (width / 2.0 + 5), (int) (height / 2.0 + 5), ping, drawContext);
+                        renderInfoHUD(drawContext, (int) (width / 2.0 + 5), (int) (height / 2.0 + 5), ping);
                         // set lookingAtPing
                         onPing = ping;
                         setOnPing = true;
@@ -247,9 +247,9 @@ public class RenderHandler implements IRenderer {
      * cx, cy: center of the icon
      * ping: the PingPoint
      */
-    private void renderIconHUD(double cx, double cy, PingPoint ping) {
+    private void renderIconHUD(DrawContext drawContext, double cx, double cy, PingPoint ping) {
         double zLevel = 0;
-        var realResizer = ICON_RESIZER / 32;
+        var realResizer = ModConfig.iconSize / 32;
         float u = 0, v = 0, width = 256 * realResizer, height = 256 * realResizer;
         float pixelWidth = 0.00390625F / realResizer;
 
@@ -257,16 +257,17 @@ public class RenderHandler implements IRenderer {
         double y = cy - height / 2;
 
         // TODO add background
-        RenderUtils.bindTexture(PING_BASIC);
+        RenderSystem.setShaderTexture(0, PING_BASIC);
 
-        // the following is RenderUtils.drawTexturedRect(0, 0, 0, 0, 128, 128);
-
+        MatrixStack matrixStack = drawContext.getMatrices();
+        matrixStack.push();
+        
         RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-        RenderSystem.applyModelViewMatrix();
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
-        RenderUtils.setupBlend();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
         buffer.vertex(x, y + height, zLevel).texture(u * pixelWidth, (v + height) * pixelWidth).next();
@@ -275,9 +276,11 @@ public class RenderHandler implements IRenderer {
         buffer.vertex(x, y, zLevel).texture(u * pixelWidth, v * pixelWidth).next();
 
         tessellator.draw();
+        
+        matrixStack.pop();
     }
 
-    private void renderInfoHUD(int topLeftX, int topLeftY, PingPoint ping, DrawContext dc) {
+    private void renderInfoHUD(DrawContext drawContext, int topLeftX, int topLeftY, PingPoint ping) {
         MinecraftClient client = MinecraftClient.getInstance();
         var player = client.player;
         if (player == null) {
@@ -290,18 +293,32 @@ public class RenderHandler implements IRenderer {
         if (!ping.owner.equals(player.getEntityName())) {
             textLines.add("%s".formatted(ping.owner));
         }
-        // render
-        TextRenderer textRenderer = client.textRenderer;
+        
+        // render text
         for (String line : textLines) {
-            dc.drawText(textRenderer, line, topLeftX, topLeftY, INFO_COLOR, true);
-            topLeftY += textRenderer.fontHeight + 2;
+            drawContext.drawText(client.textRenderer, line, topLeftX, topLeftY, ModConfig.infoColor, true);
+            topLeftY += client.textRenderer.fontHeight + 2;
         }
-        var keyIndicator = "Cancel (Z)";
-        dc.drawText(textRenderer, keyIndicator, topLeftX, topLeftY, 0xFFFFFFFF, true);
+        
+        String hotkey = humanReadableHotkey(pingKeyBinding);
+        var keyIndicator = "Cancel (" + hotkey + ")";
+        drawContext.drawText(client.textRenderer, keyIndicator, topLeftX, topLeftY, 0xFFFFFFFF, true);
     }
 
-    public void renderOverlays(MatrixStack matrixStack, Matrix4f projMatrix, MinecraftClient mc) {
-        Entity entity = EntityUtils.getCameraEntity();
+    @NotNull
+    public static String humanReadableHotkey(KeyBinding keybinding) {
+        var hotkeyPath = KeyBindingHelper.getBoundKeyOf(keybinding).toString().split("\\.");
+        // enough for keyboard
+        var hotkey = hotkeyPath[hotkeyPath.length - 1].toUpperCase();
+        // add "m" for mouse
+        if (hotkeyPath.length == 3 && hotkeyPath[1].equals("mouse")) {
+            hotkey = "M" + hotkey;
+        }
+        return hotkey;
+    }
+
+    public void renderOverlays(MinecraftClient mc) {
+        Entity entity = mc.getCameraEntity();
 
         if (entity == null) {
             return;
@@ -310,8 +327,8 @@ public class RenderHandler implements IRenderer {
         for (var entry : this.pings.entrySet()) {
             var owner = entry.getKey();
             var pingList = entry.getValue();
-            // let it die
-            pingList.removeIf(PingPoint::shouldVanish);
+            // let it vanish
+            pingList.removeIf(p -> p.shouldVanish(ModConfig.secondsToVanish));
             for (var ping : pingList) {
                 highlightPing(ping, mc);
             }
@@ -336,37 +353,113 @@ public class RenderHandler implements IRenderer {
         r /= 256;
         g /= 256;
         b /= 256;
-        Color4f color = new Color4f(r, g, b);
 
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.polygonOffset(-3f, -3f);
         RenderSystem.enablePolygonOffset();
-        RenderUtils.setupBlend();
-        RenderUtils.color(1f, 1f, 1f, 1f);
+        RenderSystem.enableBlend();
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.applyModelViewMatrix();
+
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-
-        RenderUtils.drawBoxAllSidesBatchedQuads(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 0.3f), buffer);
-
+        drawFilledBox(buffer, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, 0.3f);
         tessellator.draw();
 
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-
-        RenderUtils.drawBoxAllEdgesBatchedLines(minX, minY, minZ, maxX, maxY, maxZ, Color4f.fromColor(color, 1f), buffer);
-
+        drawBoxOutline(buffer, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, 1.0f);
         tessellator.draw();
 
         RenderSystem.polygonOffset(0f, 0f);
         RenderSystem.disablePolygonOffset();
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
+    }
+
+    /**
+     * Draws a filled box using the provided BufferBuilder.
+     * Replicates malilib's RenderUtils.drawBoxAllSidesBatchedQuads.
+     * Assumes BufferBuilder has been initialized with QUADS draw mode and POSITION_COLOR format.
+     */
+    private static void drawFilledBox(BufferBuilder buffer, double minX, double minY, double minZ, double maxX, double maxY, double maxZ, float r, float g, float b, float a) {
+        // West side (-X)
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+
+        // East side (+X)
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+
+        // North side (-Z)
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+
+        // South side (+Z)
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+
+        // Top side (+Y)
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+
+        // Bottom side (-Y)
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+    }
+
+    /**
+     * Draws the outline of a box using the provided BufferBuilder.
+     * Replicates malilib's RenderUtils.drawBoxAllEdgesBatchedLines.
+     * Assumes BufferBuilder has been initialized with DEBUG_LINES draw mode and POSITION_COLOR format.
+     */
+    private static void drawBoxOutline(BufferBuilder buffer, double minX, double minY, double minZ, double maxX, double maxY, double maxZ, float r, float g, float b, float a) {
+        // West side (-X)
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+
+        // East side (+X)
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+
+        // North side (-Z) (connecting lines)
+        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+
+        // South side (+Z) (connecting lines)
+        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
     }
 
     public void updateData(MinecraftClient mc) {

@@ -1,10 +1,11 @@
 package com.asilvorcarp;
 
-import fi.dy.masa.malilib.event.InitializationHandler;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -31,7 +32,7 @@ import static com.asilvorcarp.NetworkingConstants.REMOVE_PING_PACKET;
 
 public class ApexMCClient implements ClientModInitializer {
     public static final double MAX_REACH = 512.0D;
-    private static KeyBinding pingKeyBinding;
+    public static KeyBinding pingKeyBinding;
 
     @Override
     public void onInitializeClient() {
@@ -39,22 +40,30 @@ public class ApexMCClient implements ClientModInitializer {
         pingKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.apex_mc.ping", // The translation key of the keybinding's name
                 InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
-                GLFW.GLFW_KEY_Z, // The keycode of the key
-                "category.apex_mc.apex" // The translation key of the keybinding's category.
+                GLFW.GLFW_KEY_C, // The keycode of the key
+                "category.apex_mc.apex_mc" // The translation key of the keybinding's category.
         ));
 
-        InitializationHandler.getInstance().registerInitializationHandler(new InitHandler());
-
+        // Register Fabric events
+        // Tick handler for key presses
         ClientTickEvents.END_CLIENT_TICK.register(ApexMCClient::checkKeyPress);
+        // Tick handler for updating RenderHandler data (previously in ClientTickHandler)
+        ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler.getInstance()::onClientTick);
+
+        // Rendering handlers
+        WorldRenderEvents.AFTER_ENTITIES.register(RenderHandler.getInstance()::onRenderWorldLast);
+        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> 
+            RenderHandler.getInstance().onRenderGameOverlayPost(drawContext, tickDelta));
 
         ClientPlayNetworking.registerGlobalReceiver(PING_PACKET, (client, handler, buf, responseSender) -> {
             // Everything in this lambda is run on the render thread
             pingReceiver(buf);
         });
-
         ClientPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, (client, handler, buf, responseSender) -> {
             removePingReceiver(buf);
         });
+
+        ModConfig.loadConfig(ModConfig.CFG_FILE);
     }
 
     private static void checkKeyPress(MinecraftClient client) {
@@ -66,8 +75,7 @@ public class ApexMCClient implements ClientModInitializer {
             assert client.cameraEntity != null;
             Vec3d cameraDirection = client.cameraEntity.getRotationVec(tickDelta);
 
-            // TODO add config for include fluids
-            pingDirection(client, player, tickDelta, cameraDirection, false);
+            pingDirection(client, player, tickDelta, cameraDirection, ModConfig.includeFluids);
         }
     }
 
@@ -75,7 +83,7 @@ public class ApexMCClient implements ClientModInitializer {
         assert client.cameraEntity != null;
         Vec3d cameraPos = client.cameraEntity.getPos();
         Vec3d pingPos = cameraPos.add(dir.multiply(dist));
-        PingPoint p = new PingPoint(pingPos, player.getEntityName());
+        PingPoint p = new PingPoint(pingPos, player.getEntityName(), ModConfig.highlightColor, ModConfig.soundIndex);
         addPointToRenderer(p);
         sendPingToServer(p);
     }
@@ -116,13 +124,14 @@ public class ApexMCClient implements ClientModInitializer {
 
         return pingPos;
     }
+
     private static void pingPosition(ClientPlayerEntity player, Vec3d pingPos) {
         LOGGER.debug("Ping at " + pingPos);
-        PingPoint p = new PingPoint(pingPos, player.getEntityName());
+        PingPoint p = new PingPoint(pingPos, player.getEntityName(), ModConfig.highlightColor, ModConfig.soundIndex);
         RenderHandler renderer = RenderHandler.getInstance();
-        if(renderer.isOnPing()){
-           renderer.removeOnPing();
-           sendRemovePingToServer(renderer.getOnPing());
+        if (renderer.isOnPing()) {
+            renderer.removeOnPing();
+            sendRemovePingToServer(renderer.getOnPing());
         } else {
             addPointToRenderer(p);
             sendPingToServer(p);
@@ -163,7 +172,7 @@ public class ApexMCClient implements ClientModInitializer {
         }
     }
 
-    private static void sendRemovePingToServer(PingPoint p){
+    private static void sendRemovePingToServer(PingPoint p) {
         try {
             PacketByteBuf buf = p.toPacketByteBuf();
             ClientPlayNetworking.send(REMOVE_PING_PACKET, buf);
