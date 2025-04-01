@@ -12,7 +12,8 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
@@ -65,8 +66,8 @@ public class ApexMC implements ModInitializer {
         soundEventsForPing = new ArrayList<>();
         Arrays.stream(newSounds).forEach((soundStr) -> {
             Identifier soundId = new Identifier(soundStr);
-            SoundEvent soundEvent = new SoundEvent(soundId);
-            Registry.register(Registry.SOUND_EVENT, soundId, soundEvent);
+            SoundEvent soundEvent = SoundEvent.of(soundId);
+            Registry.register(Registries.SOUND_EVENT, soundId, soundEvent);
             soundEventsForPing.add(soundEvent);
         });
         soundEventsForPing.add(SoundEvents.BLOCK_ANVIL_BREAK);
