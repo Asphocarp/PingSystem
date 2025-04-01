@@ -74,7 +74,7 @@ public class RenderHandler {
 
     public void onRenderWorldLast(WorldRenderContext context) {
         if (this.mc.world != null && this.mc.player != null && !this.mc.options.hudHidden) {
-            this.renderOverlays(this.mc);
+            this.renderOverlays(this.mc, context);
         }
     }
 
@@ -312,7 +312,7 @@ public class RenderHandler {
         return hotkey;
     }
 
-    public void renderOverlays(MinecraftClient mc) {
+    public void renderOverlays(MinecraftClient mc, WorldRenderContext wrc) {
         Entity entity = mc.getCameraEntity();
 
         if (entity == null) {
@@ -325,30 +325,47 @@ public class RenderHandler {
             // let it vanish
             pingList.removeIf(p -> p.shouldVanish(ModConfig.secondsToVanish));
             for (var ping : pingList) {
-                highlightPing(ping, mc);
+                highlightPing(ping, mc, wrc);
             }
         }
     }
 
-    private static void highlightPing(PingPoint ping, MinecraftClient mc) {
-        Vec3d cameraPos = mc.gameRenderer.getCamera().getPos();
-        double x = ping.pos.x - cameraPos.x;
-        double y = ping.pos.y - cameraPos.y;
-        double z = ping.pos.z - cameraPos.z;
+    private static void highlightPing(PingPoint ping, MinecraftClient mc, WorldRenderContext wrc) {
+        MatrixStack matrices = wrc.matrixStack();
+        matrices.push();
+        
+        // Translate the matrix stack to the ping's position relative to the camera
+        Vec3d cameraPos = wrc.camera().getPos();
+        // Don't subtract cameraPos here, keep ping.pos in world coords for definition
+        // Vec3d relativePingPos = ping.pos.subtract(cameraPos); 
+        // Instead, translate relative to the camera *before* drawing
+        matrices.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+        // Now translate to the actual ping position in world space
+        matrices.translate(ping.pos.x, ping.pos.y, ping.pos.z);
 
-        assert mc.player != null;
-        double size = 0.3;
-        double minX = x - size / 2;
-        double minY = y - size / 2;
-        double minZ = z - size / 2;
-        double maxX = x + size / 2;
-        double maxY = y + size / 2;
-        double maxZ = z + size / 2;
-        float r = ping.color.getRed(), g = ping.color.getGreen(), b = ping.color.getBlue();
-        r /= 256;
-        g /= 256;
-        b /= 256;
+        // Get the final transformation matrix
+        Matrix4f matrix = matrices.peek().getPositionMatrix();
 
+        // Define Box size centered at the translated origin (which is now ping.pos)
+        float size = 0.3f;
+        float halfSize = size / 2.0f;
+        // Define vertices relative to the translated origin (0,0,0)
+        float minX = -halfSize;
+        float minY = -halfSize; 
+        float minZ = -halfSize;
+        float maxX = halfSize;
+        float maxY = halfSize;
+        float maxZ = halfSize;
+        
+        // Color
+        float r = ping.color.getRed() / 255f;
+        float g = ping.color.getGreen() / 255f;
+        float b = ping.color.getBlue() / 255f;
+        float fillAlpha = 0.3f;
+        float lineAlpha = 1.0f;
+        
+        // Setup rendering
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
@@ -356,107 +373,111 @@ public class RenderHandler {
         RenderSystem.enablePolygonOffset();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-
+        
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.applyModelViewMatrix();
-
+        
+        // Draw filled box, passing the matrix
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        drawFilledBox(buffer, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, 0.3f);
-        tessellator.draw();
-
+        drawFilledBox(buffer, matrix, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, fillAlpha);
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+        
+        // Draw outline, passing the matrix
+        buffer = tessellator.getBuffer();
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-        drawBoxOutline(buffer, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, 1.0f);
-        tessellator.draw();
-
+        drawBoxOutline(buffer, matrix, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, lineAlpha);
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+        
+        // Cleanup
         RenderSystem.polygonOffset(0f, 0f);
         RenderSystem.disablePolygonOffset();
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
+        RenderSystem.depthMask(true);
+        
+        matrices.pop();
     }
 
     /**
-     * Draws a filled box using the provided BufferBuilder.
+     * Draws a filled box using the provided BufferBuilder and transformation matrix.
      * Replicates malilib's RenderUtils.drawBoxAllSidesBatchedQuads.
      * Assumes BufferBuilder has been initialized with QUADS draw mode and POSITION_COLOR format.
      */
-    private static void drawFilledBox(BufferBuilder buffer, double minX, double minY, double minZ, double maxX, double maxY, double maxZ, float r, float g, float b, float a) {
+    private static void drawFilledBox(BufferBuilder buffer, Matrix4f matrix, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float r, float g, float b, float a) {
         // West side (-X)
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, minZ).color(r, g, b, a).next();
 
         // East side (+X)
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, maxZ).color(r, g, b, a).next();
 
         // North side (-Z)
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, minZ).color(r, g, b, a).next();
 
         // South side (+Z)
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, maxZ).color(r, g, b, a).next();
 
         // Top side (+Y)
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, minZ).color(r, g, b, a).next();
 
         // Bottom side (-Y)
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, minZ).color(r, g, b, a).next();
     }
 
     /**
-     * Draws the outline of a box using the provided BufferBuilder.
+     * Draws the outline of a box using the provided BufferBuilder and transformation matrix.
      * Replicates malilib's RenderUtils.drawBoxAllEdgesBatchedLines.
      * Assumes BufferBuilder has been initialized with DEBUG_LINES draw mode and POSITION_COLOR format.
      */
-    private static void drawBoxOutline(BufferBuilder buffer, double minX, double minY, double minZ, double maxX, double maxY, double maxZ, float r, float g, float b, float a) {
+    private static void drawBoxOutline(BufferBuilder buffer, Matrix4f matrix, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float r, float g, float b, float a) {
         // West side (-X)
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, minZ).color(r, g, b, a).next();
 
         // East side (+X)
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, maxZ).color(r, g, b, a).next();
 
         // North side (-Z) (connecting lines)
-        buffer.vertex(maxX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, minY, minZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, minZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, minZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, minZ).color(r, g, b, a).next();
 
         // South side (+Z) (connecting lines)
-        buffer.vertex(minX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, minY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(maxX, maxY, maxZ).color(r, g, b, a).next();
-        buffer.vertex(minX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, minY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, maxX, maxY, maxZ).color(r, g, b, a).next();
+        buffer.vertex(matrix, minX, maxY, maxZ).color(r, g, b, a).next();
     }
 
     public void updateData(MinecraftClient mc) {
