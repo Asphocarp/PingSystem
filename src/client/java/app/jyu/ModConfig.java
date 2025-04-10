@@ -1,5 +1,7 @@
-package com.asilvorcarp;
+package app.jyu;
 
+import app.jyu.ModConfig;
+import app.jyu.PingSystem;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -15,7 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import static com.asilvorcarp.ApexMC.MOD_ID;
+import static app.jyu.PingSystem.MOD_ID;
 
 public class ModConfig implements ModMenuApi, ConfigScreenFactory<Screen> {
     public static final File CFG_FILE = new File(
@@ -113,7 +115,7 @@ public class ModConfig implements ModMenuApi, ConfigScreenFactory<Screen> {
     }
 
     public static void setSoundIndex(int input) {
-        if (input < 0 || input > ApexMC.soundEventsForPing.size()) {
+        if (input < 0 || input > PingSystem.soundEventsForPing.size()) {
             input = 0;
         }
         ModConfig.soundIndex = (byte) input;

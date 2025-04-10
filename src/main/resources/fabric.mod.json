@@ -1,34 +1,34 @@
 {
 	"schemaVersion": 1,
-	"id": "apex_mc",
+	"id": "ping_system",
 	"version": "${version}",
-	"name": "Apex MC",
+	"name": "PingSystem",
 	"description": "Make MC Apex Again!",
 	"authors": [
 		"Asilvorcarp"
 	],
 	"contact": {
-		"homepage": "https://github.com/Asilvorcarp/ApexMC",
-		"sources": "https://github.com/Asilvorcarp/ApexMC"
+		"homepage": "https://github.com/Asilvorcarp/PingSystem",
+		"sources": "https://github.com/Asilvorcarp/PingSystem"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/apex_mc/icon.png",
+	"icon": "assets/ping_system/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.asilvorcarp.ApexMC"
+			"app.jyu.PingSystem"
 		],
 		"client": [
-			"com.asilvorcarp.ApexMCClient"
+			"app.jyu.PingSystemClient"
 		],
 		"modmenu": [
-			"com.asilvorcarp.ModConfig"
+			"app.jyu.ModConfig"
 		]
 	},
 	"mixins": [
-		"apex_mc.mixins.json",
+		"ping_system.mixins.json",
 		{
-			"config": "apex_mc.client.mixins.json",
+			"config": "ping_system.client.mixins.json",
 			"environment": "client"
 		}
 	],

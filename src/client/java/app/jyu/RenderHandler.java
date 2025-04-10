@@ -1,5 +1,9 @@
-package com.asilvorcarp;
+package app.jyu;
 
+import app.jyu.ModConfig;
+import app.jyu.PingPoint;
+import app.jyu.PingSystem;
+import app.jyu.RenderHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
@@ -17,9 +21,9 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.UUID;
 
-import static com.asilvorcarp.ApexMC.LOGGER;
-import static com.asilvorcarp.ApexMC.Vec3dToVector3d;
-import static com.asilvorcarp.ApexMCClient.pingKeyBinding;
+import static app.jyu.PingSystem.LOGGER;
+import static app.jyu.PingSystem.Vec3dToVector3d;
+import static app.jyu.PingSystemClient.pingKeyBinding;
 
 import java.lang.Math;
 import java.util.ArrayList;
@@ -44,7 +48,7 @@ public class RenderHandler {
     // Store calculated clip-space coordinates (x,y,z,w) for pings from the world render phase
     private final Map<UUID, Vector4f> pingClipCoordinates = new HashMap<>();
 
-    private static final Identifier PING_BASIC = new Identifier(ApexMC.MOD_ID, "textures/ping/ping_basic.png");
+    private static final Identifier PING_BASIC = new Identifier(PingSystem.MOD_ID, "textures/ping/ping_basic.png");
 
     public RenderHandler() {
         this.mc = MinecraftClient.getInstance();
@@ -95,7 +99,7 @@ public class RenderHandler {
         float horizontalRotation = (float) ((x - width / 2f) * anglePerPixel);
         float verticalRotation = (float) ((y - height / 2f) * anglePerPixel);
 
-        final Vector3f temp2 = ApexMC.Vec3dToV3f(cameraDir);
+        final Vector3f temp2 = PingSystem.Vec3dToV3f(cameraDir);
         Quaternionfc rot1 = getDegreesQuaternion(verticalRotationAxis, verticalRotation);
         Quaternionfc rot2 = getDegreesQuaternion(horizontalRotationAxis, horizontalRotation);
         temp2.rotate(rot1);
@@ -195,13 +199,13 @@ public class RenderHandler {
         double fov = client.options.getFov().getValue();
         double angleSize = fov / height;
 
-        Vector3f verticalRotationAxis = ApexMC.Vec3dToV3f(cameraDirection);
+        Vector3f verticalRotationAxis = PingSystem.Vec3dToV3f(cameraDirection);
         verticalRotationAxis.cross(new Vector3f(0, 1, 0));
         verticalRotationAxis.normalize();
-        Vector3f horizontalRotationAxis = ApexMC.Vec3dToV3f(cameraDirection);
+        Vector3f horizontalRotationAxis = PingSystem.Vec3dToV3f(cameraDirection);
         horizontalRotationAxis.cross(verticalRotationAxis);
         horizontalRotationAxis.normalize();
-        verticalRotationAxis = ApexMC.Vec3dToV3f(cameraDirection);
+        verticalRotationAxis = PingSystem.Vec3dToV3f(cameraDirection);
         verticalRotationAxis.cross(horizontalRotationAxis);
         cameraDirection.normalize();
 

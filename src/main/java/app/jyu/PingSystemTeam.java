@@ -1,21 +1,21 @@
-package com.asilvorcarp;
+package app.jyu;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ApexTeam {
+public class PingSystemTeam {
     private final Set<String> members;
 
-    ApexTeam(){
+    PingSystemTeam(){
         this.members = new HashSet<>();
     }
 
-    ApexTeam(Set<String> members){
+    PingSystemTeam(Set<String> members){
         this.members = members;
     }
 
-    ApexTeam(String... ids){
+    PingSystemTeam(String... ids){
         this.members = new HashSet<>(List.of(ids));
     }
 

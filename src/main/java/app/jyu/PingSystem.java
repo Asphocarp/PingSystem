@@ -1,4 +1,4 @@
-package com.asilvorcarp;
+package app.jyu;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -33,26 +33,26 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
-import static com.asilvorcarp.NetworkingConstants.PING_PACKET;
-import static com.asilvorcarp.NetworkingConstants.REMOVE_PING_PACKET;
+import static app.jyu.NetworkingConstants.PING_PACKET;
+import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
 
-public class ApexMC implements ModInitializer {
+public class PingSystem implements ModInitializer {
     // This logger is used to write text to the console and the log file.
     // It is considered best practice to use your mod id as the logger's name.
     // That way, it's clear which mod wrote info, warnings, and errors.
-    public static final String MOD_ID = "apex_mc";
+    public static final String MOD_ID = "ping_system";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static ArrayList<ApexTeam> teams = new ArrayList<>();
+    public static ArrayList<PingSystemTeam> teams = new ArrayList<>();
     public static boolean ENABLE_TEAMS = false;
     public static final long GLOW_DURATION_MS = 5000; // 5 seconds in milliseconds
     // Map to store UUIDs of glowing entities and their glow end time (System.currentTimeMillis())
     private static final Map<UUID, Long> glowingEntities = new ConcurrentHashMap<>();
 
     public static String[] newSounds = {
-            "apex_mc:ping_location",
-            "apex_mc:ping_item",
-            "apex_mc:ping_enemy",
-            "apex_mc:mozambique_lifeline",
+            "ping_system:ping_location",
+            "ping_system:ping_item",
+            "ping_system:ping_enemy",
+            "ping_system:mozambique_lifeline",
     };
     // currently include newSounds and SoundEvents.BLOCK_ANVIL_BREAK
     public static ArrayList<SoundEvent> soundEventsForPing;
@@ -124,7 +124,7 @@ public class ApexMC implements ModInitializer {
         soundEventsForPing.add(SoundEvents.BLOCK_ANVIL_BREAK);
 
         // Register server tick event to handle glow duration
-        ServerTickEvents.END_SERVER_TICK.register(ApexMC::onEndServerTick);
+        ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
     }
 
     public static void multicastPing(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
