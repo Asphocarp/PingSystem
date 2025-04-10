@@ -3,7 +3,8 @@
 	"package": "com.asilvorcarp.mixin.client",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
-		"ApexMCClientMixin"
+		"ApexMCClientMixin",
+		"WorldRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
