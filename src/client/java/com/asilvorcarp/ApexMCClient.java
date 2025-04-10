@@ -19,16 +19,21 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.lwjgl.glfw.GLFW;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import static com.asilvorcarp.ApexMC.LOGGER;
 import static com.asilvorcarp.NetworkingConstants.PING_PACKET;
 import static com.asilvorcarp.NetworkingConstants.REMOVE_PING_PACKET;
+
+import net.minecraft.entity.projectile.ProjectileUtil;
 
 public class ApexMCClient implements ClientModInitializer {
     public static final double MAX_REACH = 512.0D;
@@ -74,28 +79,20 @@ public class ApexMCClient implements ClientModInitializer {
             assert client.cameraEntity != null;
             Vec3d cameraDirection = client.cameraEntity.getRotationVec(tickDelta);
 
-            pingDirection(client, player, tickDelta, cameraDirection, ModConfig.includeFluids);
+            handlePingAction(client, player, tickDelta, cameraDirection, ModConfig.includeFluids);
         }
     }
 
-    // private static void pingDirDistance(MinecraftClient client, ClientPlayerEntity player, float tickDelta, Vec3d dir, double dist) {
-    //     assert client.cameraEntity != null;
-    //     Vec3d cameraPos = client.cameraEntity.getPos();
-    //     Vec3d pingPos = cameraPos.add(dir.multiply(dist));
-    //     PingPoint p = new PingPoint(pingPos, player.getEntityName(), ModConfig.highlightColor, ModConfig.soundIndex);
-    //     addPointToRenderer(p);
-    //     sendPingToServer(p);
-    // }
-
-    // also show some info about the thing pinging on
-
-    private static Vec3d pingDirection(MinecraftClient client, ClientPlayerEntity player, float tickDelta,
-                                       Vec3d dir, boolean includeFluids) {
+    // Renamed from pingDirection to handlePingAction
+    private static void handlePingAction(MinecraftClient client, ClientPlayerEntity player, float tickDelta,
+                                         Vec3d dir, boolean includeFluids) {
         assert client.world != null;
         assert client.cameraEntity != null;
-        HitResult hit = raycast(client.cameraEntity, MAX_REACH, tickDelta, includeFluids, dir);
+        HitResult hit = raycast(client.cameraEntity, MAX_REACH, tickDelta, includeFluids);
 
+        PingPoint pingToSend = null;
         Vec3d pingPos = null;
+
         switch (Objects.requireNonNull(hit).getType()) {
             case MISS -> player.sendMessage(Text.literal("Too far"), true);
             case BLOCK -> {
@@ -106,32 +103,37 @@ public class ApexMCClient implements ClientModInitializer {
                 final Text blockMes = block.getName();
                 player.sendMessage(blockMes, true);
                 pingPos = hit.getPos();
+                pingToSend = new PingPoint(pingPos, player.getEntityName(), new Color(ModConfig.highlightColor), ModConfig.soundIndex, PingPoint.PingType.LOCATION, null);
             }
-            // TODO (hard) follow entity
             case ENTITY -> {
                 EntityHitResult entityHit = (EntityHitResult) hit;
                 Entity entity = entityHit.getEntity();
                 final Text entityMes = entity.getName();
-                player.sendMessage(entityMes, false);
-                pingPos = hit.getPos();
+                player.sendMessage(entityMes, true);
+                // Use the center of the entity's bounding box for pingPos
+                pingPos = entity.getBoundingBox().getCenter(); 
+                pingToSend = new PingPoint(pingPos, player.getEntityName(), new Color(ModConfig.highlightColor), ModConfig.soundIndex, PingPoint.PingType.ENTITY, entity.getUuid());
             }
         }
 
-        if (pingPos != null) {
-            pingPosition(player, pingPos);
+        if (pingToSend != null) {
+            processPing(pingToSend);
         }
-
-        return pingPos;
     }
 
-    private static void pingPosition(ClientPlayerEntity player, Vec3d pingPos) {
-        LOGGER.debug("Ping at " + pingPos);
-        PingPoint p = new PingPoint(pingPos, player.getEntityName(), ModConfig.highlightColor, ModConfig.soundIndex);
+    // Renamed from pingPosition to processPing and accepts PingPoint
+    private static void processPing(PingPoint p) {
+        LOGGER.debug("Processing Ping at " + p.pos + " Type: " + p.type + (p.entityUUID != null ? " Entity: " + p.entityUUID : ""));
         RenderHandler renderer = RenderHandler.getInstance();
+        // Check if player is trying to cancel an existing ping
         if (renderer.isOnPing()) {
+            // Remove the ping the player is looking at
             renderer.removeOnPing();
             sendRemovePingToServer(renderer.getOnPing());
+            // Reset onPing state in renderer
+            renderer.resetOnPing(); 
         } else {
+            // Otherwise, add the new ping
             addPointToRenderer(p);
             sendPingToServer(p);
         }
@@ -146,20 +148,57 @@ public class ApexMCClient implements ClientModInitializer {
     }
 
     private static HitResult raycast(
-            Entity entity,
+            Entity cameraEntity,
             double maxDistance,
             float tickDelta,
-            boolean includeFluids,
-            Vec3d direction
+            boolean includeFluids
     ) {
-        Vec3d end = entity.getCameraPosVec(tickDelta).add(direction.multiply(maxDistance));
-        return entity.getWorld().raycast(new RaycastContext(
-                entity.getCameraPosVec(tickDelta),
-                end,
+        Vec3d cameraPos = cameraEntity.getCameraPosVec(tickDelta);
+        Vec3d rotationVec = cameraEntity.getRotationVec(tickDelta);
+        Vec3d endVec = cameraPos.add(rotationVec.multiply(maxDistance));
+        Box searchBox = cameraEntity.getBoundingBox().stretch(rotationVec.multiply(maxDistance)).expand(1.0D, 1.0D, 1.0D);
+
+        // 1. Raycast for Blocks
+        BlockHitResult blockHitResult = cameraEntity.getWorld().raycast(new RaycastContext(
+                cameraPos,
+                endVec,
                 RaycastContext.ShapeType.OUTLINE,
                 includeFluids ? RaycastContext.FluidHandling.ANY : RaycastContext.FluidHandling.NONE,
-                entity
+                cameraEntity
         ));
+
+        // 2. Raycast for Entities
+        double currentMaxDistSq = endVec.squaredDistanceTo(cameraPos);
+        if (blockHitResult.getType() != HitResult.Type.MISS) {
+            currentMaxDistSq = blockHitResult.getPos().squaredDistanceTo(cameraPos);
+        }
+        
+        // Predicate to filter which entities can be targeted
+        Predicate<Entity> entityPredicate = entity -> !entity.isSpectator() && entity.canHit();
+
+        // Use ProjectileUtil.raycast which is commonly used for this purpose
+        EntityHitResult entityHitResult = ProjectileUtil.raycast(
+                cameraEntity, 
+                cameraPos, 
+                endVec, 
+                searchBox, 
+                entityPredicate, 
+                currentMaxDistSq
+        );
+
+        // 3. Compare Results
+        if (entityHitResult != null) {
+            double entityDistSq = entityHitResult.getPos().squaredDistanceTo(cameraPos);
+            // If entity is closer than block (or if block was a miss), return entity hit
+            if (entityDistSq < currentMaxDistSq || blockHitResult.getType() == HitResult.Type.MISS) {
+                 LOGGER.debug("Raycast hit entity: " + entityHitResult.getEntity().getName().getString());
+                return entityHitResult;
+            }
+        }
+        
+        // Otherwise, return the block hit (or miss if both missed)
+        LOGGER.debug("Raycast hit block: " + (blockHitResult.getType() != HitResult.Type.MISS ? blockHitResult.getBlockPos().toString() : "MISS"));
+        return blockHitResult;
     }
 
     public static void sendPingToServer(PingPoint p) {

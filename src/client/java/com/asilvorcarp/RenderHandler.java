@@ -13,16 +13,20 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.joml.*;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import static com.asilvorcarp.ApexMC.LOGGER;
+import static com.asilvorcarp.ApexMC.Vec3dToVector3d;
+import static com.asilvorcarp.ApexMCClient.pingKeyBinding;
 
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import static com.asilvorcarp.ApexMC.LOGGER;
-import static com.asilvorcarp.ApexMC.Vec3dToVector3d;
-import static com.asilvorcarp.ApexMCClient.pingKeyBinding;
 
 public class RenderHandler {
     public static final boolean DEBUG = false;
@@ -72,7 +76,7 @@ public class RenderHandler {
 
     public void onRenderWorldLast(WorldRenderContext context) {
         if (this.mc.world != null && this.mc.player != null && !this.mc.options.hudHidden) {
-            this.renderOverlays(this.mc, context);
+            this.renderPingEffects(context);
         }
     }
 
@@ -309,25 +313,67 @@ public class RenderHandler {
         return hotkey;
     }
 
-    public void renderOverlays(MinecraftClient mc, WorldRenderContext wrc) {
-        Entity entity = mc.getCameraEntity();
-
-        if (entity == null) {
+    public void renderPingEffects(WorldRenderContext wrc) {
+        Entity cameraEntity = mc.getCameraEntity();
+        if (cameraEntity == null || mc.world == null) {
             return;
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        final long highlightDurationSeconds = 5; // Highlight duration
+
         for (var entry : this.pings.entrySet()) {
-            var owner = entry.getKey();
             var pingList = entry.getValue();
-            // let it vanish
-            pingList.removeIf(p -> p.shouldVanish(ModConfig.secondsToVanish));
-            for (var ping : pingList) {
-                highlightPing(ping, mc, wrc);
-            }
+            
+            // Process pings and remove expired ones/update effects
+            pingList.removeIf(ping -> {
+                boolean shouldRemove = ping.shouldVanish(ModConfig.secondsToVanish);
+                if (shouldRemove) {
+                    // If ping is removed, ensure any glowing effect is also turned off
+                    if (ping.type == PingPoint.PingType.ENTITY && ping.entityUUID != null) {
+                        Entity targetEntity = findEntityByUUID(ping.entityUUID);
+                        if (targetEntity != null) {
+                            targetEntity.setGlowing(false);
+                        }
+                    }
+                    return true; // Remove the ping
+                }
+
+                // Handle rendering based on ping type
+                if (ping.type == PingPoint.PingType.LOCATION) {
+                    highlightPingLocation(ping, mc, wrc); // Existing method renamed
+                } else if (ping.type == PingPoint.PingType.ENTITY && ping.entityUUID != null) {
+                    Entity targetEntity = findEntityByUUID(ping.entityUUID);
+                    if (targetEntity != null) {
+                        // **Update ping position to follow the entity**
+                        ping.pos = targetEntity.getBoundingBox().getCenter();
+                        
+                        // Apply glowing effect for the highlight duration
+                        Duration timeSincePing = Duration.between(ping.createTime, now);
+                        if (timeSincePing.getSeconds() < highlightDurationSeconds) {
+                            targetEntity.setGlowing(true);
+                            // You might want to set a specific glowing color if needed
+                            // targetEntity.setGlowingColor(ping.color.getRGB()); // Requires mixin potentially
+                        } else {
+                            // Turn off glowing after duration expires, even if ping persists longer
+                            targetEntity.setGlowing(false);
+                        }
+                        
+                        // Optionally, still render the location marker at the entity's current center
+                        // highlightPingLocation(ping, mc, wrc); 
+                        
+                    } else {
+                         // Optionally, render a location ping if entity not found (or handle differently)
+                         // Keep the original ping.pos if entity disappears
+                         highlightPingLocation(ping, mc, wrc); 
+                    }
+                }
+                return false; // Keep the ping
+            });
         }
     }
 
-    private static void highlightPing(PingPoint ping, MinecraftClient mc, WorldRenderContext wrc) {
+    private static void highlightPingLocation(PingPoint ping, MinecraftClient mc, WorldRenderContext wrc) {
         MatrixStack matrices = wrc.matrixStack();
         matrices.push();
         
@@ -393,6 +439,16 @@ public class RenderHandler {
         RenderSystem.depthMask(true);
         
         matrices.pop();
+    }
+    
+    private Entity findEntityByUUID(UUID uuid) {
+        if (mc.world == null) return null;
+        for (Entity entity : mc.world.getEntities()) {
+            if (entity.getUuid().equals(uuid)) {
+                return entity;
+            }
+        }
+        return null;
     }
 
     /**
@@ -487,5 +543,9 @@ public class RenderHandler {
 
     public void removePing(PingPoint p) {
         pings.get(p.owner).removeIf((lhs -> lhs.id.equals(p.id)));
+    }
+
+    public void resetOnPing() {
+        this.onPing = null;
     }
 }
