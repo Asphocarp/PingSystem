@@ -25,6 +25,9 @@ public class PingPoint implements Serializable {
     // New fields
     public PingType type;
     public UUID entityUUID; // Nullable: only set for ENTITY type
+    
+    // Client-side state, not serialized
+    public transient boolean clientSideIsCurrentlyGlowing = false;
 
     // Constructor for location pings
     public PingPoint(Vec3d pos, String owner, Color color, byte soundIdx) {

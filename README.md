@@ -41,8 +41,9 @@ ls -la build/libs
 
 ## Todo
 
-- [ ] (hard) ping entity
-- [ ] server
+- [x] (hard) ping entity
+- [ ] run server
+- [ ] Display the same size across different GUI scales.
 - [ ] (hard) support forge
 - [ ] get current key for info
 - [ ] confirm ping of teammate; team system

@@ -19,10 +19,19 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraft.entity.Entity;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.World;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import static com.asilvorcarp.NetworkingConstants.PING_PACKET;
 import static com.asilvorcarp.NetworkingConstants.REMOVE_PING_PACKET;
@@ -35,6 +44,9 @@ public class ApexMC implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static ArrayList<ApexTeam> teams = new ArrayList<>();
     public static boolean ENABLE_TEAMS = false;
+    public static final long GLOW_DURATION_MS = 5000; // 5 seconds in milliseconds
+    // Map to store UUIDs of glowing entities and their glow end time (System.currentTimeMillis())
+    private static final Map<UUID, Long> glowingEntities = new ConcurrentHashMap<>();
 
     public static String[] newSounds = {
             "apex_mc:ping_location",
@@ -55,10 +67,49 @@ public class ApexMC implements ModInitializer {
         // TODO (later) add team command, save state to file
 
         // register receiver
-        ServerPlayNetworking.registerGlobalReceiver(NetworkingConstants.PING_PACKET, ((server, player, handler, buf, responseSender) -> {
-            multicastPing(player, PING_PACKET, buf);
+        ServerPlayNetworking.registerGlobalReceiver(PING_PACKET, ((server, player, handler, buf, responseSender) -> {
+            // --- Start: Handle Entity Glow Trigger --- 
+            // Need to deserialize PingPoint here to check its type
+            // Clone the buffer because deserialization might consume it, and multicast needs the original
+            PacketByteBuf bufCopy = new PacketByteBuf(buf.copy()); // Use constructor for deep copy
+            PingPoint pingPoint = null;
+            try {
+                pingPoint = PingPoint.fromPacketByteBuf(bufCopy);
+            } catch (Exception e) {
+                LOGGER.error("[PingSystem Server] Failed to deserialize PingPoint on PING_PACKET receive for glow check.", e);
+            }
+            bufCopy.release(); // Release the copied buffer
+
+            if (pingPoint != null && pingPoint.type == PingPoint.PingType.ENTITY && pingPoint.entityUUID != null) {
+                UUID entityUUID = pingPoint.entityUUID;
+                long glowEndTime = System.currentTimeMillis() + GLOW_DURATION_MS;
+
+                server.execute(() -> { // Ensure execution on the main server thread
+                    Entity entity = player.getServerWorld().getEntity(entityUUID);
+                    if (entity == null) {
+                        for (ServerWorld world : server.getWorlds()) {
+                            if (world == player.getServerWorld()) continue;
+                            entity = world.getEntity(entityUUID);
+                            if (entity != null) break;
+                        }
+                    }
+
+                    if (entity != null) {
+                        LOGGER.info("[PingSystem Server] PING_PACKET: Received highlight request for {}. Setting glowing until {}.", entity.getName().getString(), glowEndTime);
+                        entity.setGlowing(true);
+                        glowingEntities.put(entityUUID, glowEndTime); 
+                    } else {
+                        LOGGER.warn("[PingSystem Server] PING_PACKET: Received highlight request for UUID {}, but entity not found.", entityUUID);
+                    }
+                });
+            }
+            // --- End: Handle Entity Glow Trigger --- 
+
+            // Proceed to multicast the original ping data to other clients
+            multicastPing(player, PING_PACKET, buf); 
         }));
-        ServerPlayNetworking.registerGlobalReceiver(NetworkingConstants.REMOVE_PING_PACKET, ((server, player, handler, buf, responseSender) -> {
+        
+        ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, ((server, player, handler, buf, responseSender) -> {
             multicastRemovePing(player, REMOVE_PING_PACKET, buf);
         }));
 
@@ -71,6 +122,9 @@ public class ApexMC implements ModInitializer {
             soundEventsForPing.add(soundEvent);
         });
         soundEventsForPing.add(SoundEvents.BLOCK_ANVIL_BREAK);
+
+        // Register server tick event to handle glow duration
+        ServerTickEvents.END_SERVER_TICK.register(ApexMC::onEndServerTick);
     }
 
     public static void multicastPing(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
@@ -150,5 +204,30 @@ public class ApexMC implements ModInitializer {
         ret.z = (float) v.z;
         ret.x = (float) v.x;
         return ret;
+    }
+
+    // Server tick handler to turn off glowing
+    private static void onEndServerTick(MinecraftServer server) {
+        long currentTime = System.currentTimeMillis();
+        
+        // Use iterator to safely remove entries while iterating
+        glowingEntities.entrySet().removeIf(entry -> {
+            UUID entityUUID = entry.getKey();
+            long endTime = entry.getValue();
+
+            if (currentTime >= endTime) {
+                server.execute(() -> { // Ensure execution on the main server thread
+                    for (ServerWorld world : server.getWorlds()) {
+                        Entity entity = world.getEntity(entityUUID);
+                        if (entity != null && entity.isGlowing()) { // Check if it's still glowing (might have been turned off otherwise)
+                            LOGGER.info("[PingSystem Server] Turning off glow for expired entity: {}", entity.getName().getString());
+                            entity.setGlowing(false);
+                        }
+                    }
+                });
+                return true; // Remove from map
+            }
+            return false; // Keep in map
+        });
     }
 }

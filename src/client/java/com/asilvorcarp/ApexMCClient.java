@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -28,6 +29,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.UUID;
 
 import static com.asilvorcarp.ApexMC.LOGGER;
 import static com.asilvorcarp.NetworkingConstants.PING_PACKET;
@@ -122,17 +124,13 @@ public class ApexMCClient implements ClientModInitializer {
     private static void processPing(PingPoint p) {
         LOGGER.debug("Processing Ping at " + p.pos + " Type: " + p.type + (p.entityUUID != null ? " Entity: " + p.entityUUID : ""));
         RenderHandler renderer = RenderHandler.getInstance();
-        // Check if player is trying to cancel an existing ping
         if (renderer.isOnPing()) {
-            // Remove the ping the player is looking at
             renderer.removeOnPing();
             sendRemovePingToServer(renderer.getOnPing());
-            // Reset onPing state in renderer
             renderer.resetOnPing(); 
         } else {
-            // Otherwise, add the new ping
             addPointToRenderer(p);
-            sendPingToServer(p);
+            sendPingToServer(p); // Only send the main ping packet
         }
     }
 

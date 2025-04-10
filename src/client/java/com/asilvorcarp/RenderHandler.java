@@ -15,8 +15,6 @@ import org.joml.*;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static com.asilvorcarp.ApexMC.LOGGER;
@@ -83,7 +81,7 @@ public class RenderHandler {
 
     public void onRenderWorldLast(WorldRenderContext context) {
         if (this.mc.world != null && this.mc.player != null && !this.mc.options.hudHidden) {
-            this.renderPingEffects(context);
+            this.renderLocationPings(context);
             this.calculatePingScreenCoordinates(context);
         }
     }
@@ -291,51 +289,32 @@ public class RenderHandler {
         return hotkey;
     }
 
-    public void renderPingEffects(WorldRenderContext wrc) {
+    public void renderLocationPings(WorldRenderContext wrc) {
         Entity cameraEntity = mc.getCameraEntity();
         if (cameraEntity == null || mc.world == null) {
             return;
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        final long highlightDurationSeconds = 5; // Highlight duration
-
         for (var entry : this.pings.entrySet()) {
             var pingList = entry.getValue();
             
-            // Process pings and remove expired ones/update effects
+            // Only remove expired pings and their screen coords
             pingList.removeIf(ping -> {
                 boolean shouldRemove = ping.shouldVanish(ModConfig.secondsToVanish);
                 if (shouldRemove) {
-                    // If ping is removed, ensure any glowing effect is also turned off
-                    if (ping.type == PingPoint.PingType.ENTITY && ping.entityUUID != null) {
-                        Entity targetEntity = findEntityByUUID(ping.entityUUID);
-                        if (targetEntity != null) {
-                            targetEntity.setGlowing(false);
-                        }
-                    }
-                    // Also remove from screen coordinates map
+                    // No need to handle glowing here anymore
                     pingClipCoordinates.remove(ping.id);
                     return true; // Remove the ping
                 }
 
-                // Handle entity glowing state
-                if (ping.type == PingPoint.PingType.ENTITY && ping.entityUUID != null) {
-                    Entity targetEntity = findEntityByUUID(ping.entityUUID);
-                    if (targetEntity != null) {
-                        Duration timeSincePing = Duration.between(ping.createTime, now);
-                        if (timeSincePing.getSeconds() < highlightDurationSeconds) {
-                            targetEntity.setGlowing(true);
-                        } else {
-                            targetEntity.setGlowing(false);
-                        }
-                    } // If entity not found, glowing state implicitly ends
-                }
-                // Keep location pings drawn (or fallback entity pings)
-                else if (ping.type == PingPoint.PingType.LOCATION || ping.entityUUID == null || findEntityByUUID(ping.entityUUID) == null) {
+                // Only render location box if it's a location ping 
+                // OR an entity ping whose entity is gone (fallback)
+                if (ping.type == PingPoint.PingType.LOCATION || 
+                   (ping.type == PingPoint.PingType.ENTITY && (ping.entityUUID == null || findEntityByUUID(ping.entityUUID) == null)))
+                {
                     highlightPingLocation(ping, mc, wrc);
                 }
-                
+                 
                 return false; // Keep the ping
             });
         }
