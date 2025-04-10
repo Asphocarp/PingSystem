@@ -74,20 +74,17 @@ public class ApexMCClient implements ClientModInitializer {
         while (pingKeyBinding.wasPressed()) {
             assert client.player != null;
             var player = client.player;
-
-            float tickDelta = 1.0f; // TODO test this
             assert client.cameraEntity != null;
-            Vec3d cameraDirection = client.cameraEntity.getRotationVec(tickDelta);
-
-            handlePingAction(client, player, tickDelta, cameraDirection, ModConfig.includeFluids);
+            handlePingAction(client, player, ModConfig.includeFluids);
         }
     }
 
     // Renamed from pingDirection to handlePingAction
-    private static void handlePingAction(MinecraftClient client, ClientPlayerEntity player, float tickDelta,
-                                         Vec3d dir, boolean includeFluids) {
+    private static void handlePingAction(MinecraftClient client, ClientPlayerEntity player,
+                                         boolean includeFluids) {
         assert client.world != null;
         assert client.cameraEntity != null;
+        float tickDelta = client.getTickDelta(); 
         HitResult hit = raycast(client.cameraEntity, MAX_REACH, tickDelta, includeFluids);
 
         PingPoint pingToSend = null;
