@@ -27,6 +27,7 @@ import java.lang.Math;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import net.minecraft.util.math.MathHelper;
 
 public class RenderHandler {
     public static final boolean DEBUG = false;
@@ -39,6 +40,9 @@ public class RenderHandler {
     // the ping that is pointed to
     private PingPoint onPing;
 
+    // Store the effective FOV from the previous frame for interpolation
+    private double lastEffectiveFov = 70.0; // Initialize with default FOV or first calculated value
+
     private static final Identifier PING_BASIC = new Identifier(ApexMC.MOD_ID, "textures/ping/ping_basic.png");
 
     public RenderHandler() {
@@ -46,6 +50,10 @@ public class RenderHandler {
         this.debug_count = 0;
         this.pings = new HashMap<>();
         this.onPing = null;
+        // Initialize last FOV based on current settings if possible, or use default
+        if (mc != null && mc.options != null) {
+            this.lastEffectiveFov = mc.options.getFov().getValue(); 
+        }
     }
 
     public static RenderHandler getInstance() {
@@ -99,6 +107,16 @@ public class RenderHandler {
 
     public void onRenderGameOverlayPost(DrawContext drawContext, float tickDelta) {
         boolean setOnPing = false;
+        
+        // Calculate the target FOV for the current game state
+        double targetFov = mc.options.getFov().getValue();
+        if (mc.player != null) {
+            targetFov *= mc.player.getFovMultiplier();
+        }
+
+        // Interpolate FOV using tickDelta
+        double interpolatedFov = MathHelper.lerp(tickDelta, this.lastEffectiveFov, targetFov);
+
         for (var entry : this.pings.entrySet()) {
             var owner = entry.getKey();
             for (var ping : entry.getValue()) {
@@ -107,15 +125,16 @@ public class RenderHandler {
                 int height = client.getWindow().getScaledHeight();
                 assert client.cameraEntity != null;
                 Vec3d cameraPos = client.cameraEntity.getLerpedPos(tickDelta);
-                Vec3d targetPos = ping.pos;
                 Vec3d cameraDirection = client.cameraEntity.getRotationVec(tickDelta);
-                // get real fly/sprint fov
-                double fov = client.options.getFov().getValue();
-                if (client.player != null) {
-                    fov *= client.player.getFovMultiplier();
-                }
-                // get the icon center on screen
-                Vector2d v2 = getIconCenter(width, height, cameraDirection, fov, cameraPos, targetPos);
+                
+                // Use the interpolated FOV calculated outside the loop
+                // double fov = client.options.getFov().getValue(); // Remove calculation from here
+                // if (client.player != null) {
+                //     fov *= client.player.getFovMultiplier();
+                // }
+                
+                // get the icon center on screen - pass interpolatedFov
+                Vector2d v2 = getIconCenter(width, height, cameraDirection, interpolatedFov, cameraPos, ping, tickDelta);
                 // render the icon
                 renderIconHUD(drawContext, v2.x, v2.y, ping);
                 // render info if pointing at it (and don't do twice)
@@ -123,7 +142,8 @@ public class RenderHandler {
                     var mid = new Vector2d((double) width / 2, (double) height / 2);
                     var fromMid = v2.sub(mid);
                     if (fromMid.length() <= mid.length() / 25) {
-                        renderInfoHUD(drawContext, (int) (width / 2.0 + 5), (int) (height / 2.0 + 5), ping);
+                        // Pass tickDelta and ping to renderInfoHUD
+                        renderInfoHUD(drawContext, (int) (width / 2.0 + 5), (int) (height / 2.0 + 5), ping, tickDelta);
                         // set lookingAtPing
                         onPing = ping;
                         setOnPing = true;
@@ -134,6 +154,12 @@ public class RenderHandler {
         if (!setOnPing) {
             onPing = null;
         }
+
+        // Update lastEffectiveFov for the next frame's interpolation
+        // Using targetFov ensures we interpolate towards the actual goal state
+        this.lastEffectiveFov = targetFov; 
+        // Alternatively, could use interpolatedFov, but might cause slight drift
+        // this.lastEffectiveFov = interpolatedFov;
     }
 
     public static Vec3d XY2Vec3d(Vector2i xy) {
@@ -163,7 +189,25 @@ public class RenderHandler {
 
     @NotNull
     private Vector2d getIconCenter(int width, int height, Vec3d cameraDir,
-                                   double fov, Vec3d cameraPos, Vec3d targetPos) {
+                                   double fov, Vec3d cameraPos, PingPoint ping, float tickDelta) {
+        
+        // Determine the effective target position with interpolation for entities
+        Vec3d effectiveTargetPos;
+        if (ping.type == PingPoint.PingType.ENTITY && ping.entityUUID != null) {
+            Entity targetEntity = findEntityByUUID(ping.entityUUID);
+            if (targetEntity != null) {
+                // Use interpolated position - getLerpedPos gives feet position, adjust for center
+                Vec3d interpolatedFeetPos = targetEntity.getLerpedPos(tickDelta);
+                effectiveTargetPos = interpolatedFeetPos.add(0, targetEntity.getHeight() / 2.0, 0); // Approx center
+            } else {
+                // Entity not found, use the last known position stored in ping.pos
+                effectiveTargetPos = ping.pos;
+            }
+        } else {
+            // For location pings, just use the static position
+            effectiveTargetPos = ping.pos;
+        }
+
         double halfWidth = width / 2.0, halfHeight = height / 2.0;
         Matrix4d viewMatrix = new Matrix4d();
         // eye position
@@ -180,9 +224,10 @@ public class RenderHandler {
         }
         // the look-at transformation
         viewMatrix.setLookAt(eyeVector, centerVector, upVector);
-        Vector3d tarVector = Vec3dToVector3d(targetPos);
-        // TODO but why???
-        tarVector.y -= 1.618;
+        
+        // Use the calculated effectiveTargetPos here
+        Vector3d tarVector = Vec3dToVector3d(effectiveTargetPos);
+        tarVector.y -= 1.618; // do not remove this, though I don't know why
         Vector4d worldPositionVector = new Vector4d(tarVector, 1);
         Vector4d tarPosCamSpace = new Vector4d();
         viewMatrix.transform(worldPositionVector, tarPosCamSpace);
@@ -276,15 +321,30 @@ public class RenderHandler {
         // matrixStack.pop();
     }
 
-    private void renderInfoHUD(DrawContext drawContext, int topLeftX, int topLeftY, PingPoint ping) {
+    private void renderInfoHUD(DrawContext drawContext, int topLeftX, int topLeftY, PingPoint ping, float tickDelta) {
         MinecraftClient client = MinecraftClient.getInstance();
         var player = client.player;
         if (player == null) {
             return;
         }
+
+        // Calculate distance using interpolated position for entities
+        Vec3d effectiveTargetPos;
+        if (ping.type == PingPoint.PingType.ENTITY && ping.entityUUID != null) {
+            Entity targetEntity = findEntityByUUID(ping.entityUUID);
+            if (targetEntity != null) {
+                Vec3d interpolatedFeetPos = targetEntity.getLerpedPos(tickDelta);
+                effectiveTargetPos = interpolatedFeetPos.add(0, targetEntity.getHeight() / 2.0, 0); // Approx center
+            } else {
+                effectiveTargetPos = ping.pos; // Fallback to last known pos
+            }
+        } else {
+            effectiveTargetPos = ping.pos;
+        }
+        
         List<String> textLines = new ArrayList<>();
-        var playerPos = player.getPos();
-        var dist = playerPos.distanceTo(ping.pos);
+        var playerPos = player.getPos(); // Player position doesn't need interpolation here
+        var dist = playerPos.distanceTo(effectiveTargetPos); // Use interpolated target pos
         textLines.add("%.0f m".formatted(dist));
         if (!ping.owner.equals(player.getEntityName())) {
             textLines.add("%s".formatted(ping.owner));
@@ -345,8 +405,8 @@ public class RenderHandler {
                 } else if (ping.type == PingPoint.PingType.ENTITY && ping.entityUUID != null) {
                     Entity targetEntity = findEntityByUUID(ping.entityUUID);
                     if (targetEntity != null) {
-                        // **Update ping position to follow the entity**
-                        ping.pos = targetEntity.getBoundingBox().getCenter();
+                        // **Remove ping position update**
+                        // ping.pos = targetEntity.getBoundingBox().getCenter();
                         
                         // Apply glowing effect for the highlight duration
                         Duration timeSincePing = Duration.between(ping.createTime, now);
