@@ -5,11 +5,11 @@
 	"name": "PingSystem",
 	"description": "Make MC Apex Again!",
 	"authors": [
-		"Asilvorcarp"
+		"Asphocarp"
 	],
 	"contact": {
-		"homepage": "https://github.com/Asilvorcarp/PingSystem",
-		"sources": "https://github.com/Asilvorcarp/PingSystem"
+		"homepage": "https://github.com/Asphocarp/PingSystem",
+		"sources": "https://github.com/Asphocarp/PingSystem"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/ping_system/icon.png",
