@@ -1,8 +1,5 @@
 package app.jyu;
 
-import app.jyu.ModConfig;
-import app.jyu.PingPoint;
-import app.jyu.PingSystem;
 import app.jyu.RenderHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -17,12 +14,9 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.joml.*;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.UUID;
 
-import static app.jyu.PingSystem.LOGGER;
-import static app.jyu.PingSystem.Vec3dToVector3d;
 import static app.jyu.PingSystemClient.pingKeyBinding;
 
 import java.lang.Math;

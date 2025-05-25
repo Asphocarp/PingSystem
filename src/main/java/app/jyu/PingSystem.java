@@ -21,11 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.World;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;

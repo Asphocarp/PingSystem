@@ -1,7 +1,6 @@
 package app.jyu;
 
 import app.jyu.ModConfig;
-import app.jyu.PingSystem;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;

@@ -1,8 +1,6 @@
 package app.jyu;
 
 import app.jyu.ClientTickHandler;
-import app.jyu.RenderHandler;
-
 import net.minecraft.client.MinecraftClient;
 
 public class ClientTickHandler {

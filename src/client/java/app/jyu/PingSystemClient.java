@@ -6,7 +6,6 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -26,17 +25,10 @@ import net.minecraft.world.RaycastContext;
 import org.lwjgl.glfw.GLFW;
 
 import app.jyu.PingSystemClient;
-import app.jyu.ClientTickHandler;
-import app.jyu.ModConfig;
-import app.jyu.PingPoint;
-import app.jyu.RenderHandler;
-
 import java.awt.*;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.UUID;
-
 import static app.jyu.PingSystem.LOGGER;
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
