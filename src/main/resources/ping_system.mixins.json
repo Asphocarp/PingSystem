@@ -3,6 +3,7 @@
 	"package": "app.jyu.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
+		"MixinLivingEntity"
 	],
 	"injectors": {
 		"defaultRequire": 1

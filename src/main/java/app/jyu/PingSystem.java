@@ -2,26 +2,47 @@ package app.jyu;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.tag.DamageTypeTags;
+import net.minecraft.registry.tag.EntityTypeTags;
+
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.MinecraftServer;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -31,6 +52,47 @@ import java.util.Map;
 
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
+
+// Data classes for storing blocked events
+class BlockedEntityAttackEvent {
+    public final net.minecraft.entity.player.PlayerEntity player;
+    public final net.minecraft.world.World world;
+    public final Hand hand;
+    public final Entity entity;
+    public final net.minecraft.util.hit.EntityHitResult hitResult;
+    public final float damageAmount;
+    public final DamageSource damageSource;
+    public final long timestamp;
+    
+    public BlockedEntityAttackEvent(net.minecraft.entity.player.PlayerEntity player, net.minecraft.world.World world, Hand hand, Entity entity, net.minecraft.util.hit.EntityHitResult hitResult, float damageAmount, DamageSource damageSource) {
+        this.player = player;
+        this.world = world;
+        this.hand = hand;
+        this.entity = entity;
+        this.hitResult = hitResult;
+        this.damageAmount = damageAmount;
+        this.damageSource = damageSource;
+        this.timestamp = System.currentTimeMillis();
+    }
+}
+
+class BlockedBlockBreakEvent {
+    public final net.minecraft.world.World world;
+    public final net.minecraft.entity.player.PlayerEntity player;
+    public final BlockPos pos;
+    public final BlockState state;
+    public final net.minecraft.block.entity.BlockEntity blockEntity;
+    public final long timestamp;
+    
+    public BlockedBlockBreakEvent(net.minecraft.world.World world, net.minecraft.entity.player.PlayerEntity player, BlockPos pos, BlockState state, net.minecraft.block.entity.BlockEntity blockEntity) {
+        this.world = world;
+        this.player = player;
+        this.pos = pos;
+        this.state = state;
+        this.blockEntity = blockEntity;
+        this.timestamp = System.currentTimeMillis();
+    }
+}
 
 public class PingSystem implements ModInitializer {
     // This logger is used to write text to the console and the log file.
@@ -43,6 +105,12 @@ public class PingSystem implements ModInitializer {
     public static final long GLOW_DURATION_MS = 5000; // 5 seconds in milliseconds
     // Map to store UUIDs of glowing entities and their glow end time (System.currentTimeMillis())
     private static final Map<UUID, Long> glowingEntities = new ConcurrentHashMap<>();
+    
+    // Storage for blocked events waiting for ping cancellation
+    // Ping ID -> ArrayList of BlockedEntityAttackEvent
+    private static final Map<UUID, BlockedEntityAttackEvent> blockedEntityAttacks = new ConcurrentHashMap<>();
+    // Ping ID -> BlockedBlockBreakEvent
+    private static final Map<UUID, BlockedBlockBreakEvent> blockedBlockBreaks = new ConcurrentHashMap<>();
 
     public static String[] newSounds = {
             "ping_system:ping_location",
@@ -62,53 +130,6 @@ public class PingSystem implements ModInitializer {
 
         // TODO (later) add team command, save state to file
 
-        // register receiver
-        ServerPlayNetworking.registerGlobalReceiver(PING_PACKET, ((server, player, handler, buf, responseSender) -> {
-            // --- Start: Handle Entity Glow Trigger --- 
-            // Need to deserialize PingPoint here to check its type
-            // Clone the buffer because deserialization might consume it, and multicast needs the original
-            PacketByteBuf bufCopy = new PacketByteBuf(buf.copy()); // Use constructor for deep copy
-            PingPoint pingPoint = null;
-            try {
-                pingPoint = PingPoint.fromPacketByteBuf(bufCopy);
-            } catch (Exception e) {
-                LOGGER.error("[PingSystem Server] Failed to deserialize PingPoint on PING_PACKET receive for glow check.", e);
-            }
-            bufCopy.release(); // Release the copied buffer
-
-            if (pingPoint != null && pingPoint.type == PingPoint.PingType.ENTITY && pingPoint.entityUUID != null) {
-                UUID entityUUID = pingPoint.entityUUID;
-                long glowEndTime = System.currentTimeMillis() + GLOW_DURATION_MS;
-
-                server.execute(() -> { // Ensure execution on the main server thread
-                    Entity entity = player.getServerWorld().getEntity(entityUUID);
-                    if (entity == null) {
-                        for (ServerWorld world : server.getWorlds()) {
-                            if (world == player.getServerWorld()) continue;
-                            entity = world.getEntity(entityUUID);
-                            if (entity != null) break;
-                        }
-                    }
-
-                    if (entity != null) {
-                        LOGGER.info("[PingSystem Server] PING_PACKET: Received highlight request for {}. Setting glowing until {}.", entity.getName().getString(), glowEndTime);
-                        entity.setGlowing(true);
-                        glowingEntities.put(entityUUID, glowEndTime); 
-                    } else {
-                        LOGGER.warn("[PingSystem Server] PING_PACKET: Received highlight request for UUID {}, but entity not found.", entityUUID);
-                    }
-                });
-            }
-            // --- End: Handle Entity Glow Trigger --- 
-
-            // Proceed to multicast the original ping data to other clients
-            multicastPing(player, PING_PACKET, buf); 
-        }));
-        
-        ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, ((server, player, handler, buf, responseSender) -> {
-            multicastRemovePing(player, REMOVE_PING_PACKET, buf);
-        }));
-
         // register all new sound events
         soundEventsForPing = new ArrayList<>();
         Arrays.stream(newSounds).forEach((soundStr) -> {
@@ -119,11 +140,106 @@ public class PingSystem implements ModInitializer {
         });
         soundEventsForPing.add(SoundEvents.BLOCK_ANVIL_BREAK);
 
-        // Register server tick event to handle glow duration
+        // register all event handlers
+        ServerPlayNetworking.registerGlobalReceiver(PING_PACKET, PingSystem::onReceivingPingPacket);
+        ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, PingSystem::onReceivingRemovePingPacket);
+        PlayerBlockBreakEvents.BEFORE.register(PingSystem::onBlockBreak);
         ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
     }
 
-    public static void multicastPing(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
+    public static void onReceivingRemovePingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){
+        // Extract ping ID before multicasting to determine which events to execute
+        PacketByteBuf bufCopy = new PacketByteBuf(buf.copy());
+        UUID removedPingId = null;
+        try {
+            PingPoint removedPing = PingPoint.fromPacketByteBuf(bufCopy);
+            removedPingId = removedPing.id;
+        } catch (Exception e) {
+            LOGGER.error("[PingSystem Server] Failed to deserialize PingPoint on REMOVE_PING_PACKET receive for event execution.", e);
+        }
+        bufCopy.release();
+        // Handle ping removal
+        multicastRemovePingIncludeSelf(player, REMOVE_PING_PACKET, buf);
+        // Execute only the blocked events associated with this specific ping
+        if (removedPingId != null) {
+            executeBlockedEventsForPing(removedPingId);
+        }
+    }
+
+    public static void onReceivingPingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){
+        // --- Start: Handle Entity Glow Trigger --- 
+        // Need to deserialize PingPoint here to check its type
+        // Clone the buffer because deserialization might consume it, and multicast needs the original
+        PacketByteBuf bufCopy = new PacketByteBuf(buf.copy()); // Use constructor for deep copy
+        PingPoint pingPoint = null;
+        try {
+            pingPoint = PingPoint.fromPacketByteBuf(bufCopy);
+        } catch (Exception e) {
+            LOGGER.error("[PingSystem Server] Failed to deserialize PingPoint on PING_PACKET receive for glow check.", e);
+        }
+        bufCopy.release(); // Release the copied buffer
+
+        if (pingPoint != null && pingPoint.type == PingPoint.PingType.ENTITY && pingPoint.entityUUID != null) {
+            UUID entityUUID = pingPoint.entityUUID;
+            long glowEndTime = System.currentTimeMillis() + GLOW_DURATION_MS;
+
+            server.execute(() -> { // Ensure execution on the main server thread
+                Entity entity = player.getServerWorld().getEntity(entityUUID);
+                if (entity == null) {
+                    for (ServerWorld world : server.getWorlds()) {
+                        if (world == player.getServerWorld()) continue;
+                        entity = world.getEntity(entityUUID);
+                        if (entity != null) break;
+                    }
+                }
+
+                if (entity != null) {
+                    LOGGER.info("[PingSystem Server] PING_PACKET: Received highlight request for {}. Setting glowing until {}.", entity.getName().getString(), glowEndTime);
+                    entity.setGlowing(true);
+                    glowingEntities.put(entityUUID, glowEndTime); 
+                } else {
+                    LOGGER.warn("[PingSystem Server] PING_PACKET: Received highlight request for UUID {}, but entity not found.", entityUUID);
+                }
+            });
+        }
+        // --- End: Handle Entity Glow Trigger --- 
+
+        // Proceed to multicast the original ping data to other clients
+        multicastPingExcludeSelf(player, PING_PACKET, buf); 
+    }
+
+    public static void multicastPingIncludeSelf(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
+        if (ENABLE_TEAMS) {
+            // TODO implement teams
+        } else {
+            SoundEvent soundEvent;
+            try {
+                var p = PingPoint.fromPacketByteBuf(buf);
+                soundEvent = soundIdxToEvent(p.sound);
+            } catch (Exception e) {
+                LOGGER.error("server fail to deserialize the ping packet", e);
+                return;
+            }
+            for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
+                var senderName = sender.getEntityName();
+                var teammateName = teammate.getEntityName();
+                // play sound for all // TODO: how to play for only a few people?
+                teammate.getWorld().playSound(
+                        null, // Player - if non-null, will play sound for every nearby player *except* the specified player
+                        teammate.getBlockPos(), // The position of where the sound will come from
+                        soundEvent,
+                        SoundCategory.BLOCKS, // This determines which of the volume sliders affect this sound
+                        1f, // Volume multiplier, 1 is normal, 0.5 is half volume, etc
+                        1f // Pitch multiplier, 1 is normal, 0.5 is half pitch, etc
+                );
+                var bufNew = PacketByteBufs.copy(buf.asByteBuf());
+                ServerPlayNetworking.send(teammate, channelName, bufNew);
+                LOGGER.info("%s send ping to %s".formatted(senderName, teammateName));
+            }
+        }
+    }
+
+    public static void multicastPingExcludeSelf(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
         if (ENABLE_TEAMS) {
             // TODO implement teams
         } else {
@@ -185,6 +301,20 @@ public class PingSystem implements ModInitializer {
         }
     }
 
+    public static void multicastRemovePingIncludeSelf(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
+        if (ENABLE_TEAMS) {
+            // TODO implement teams
+        } else {
+            for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
+                var senderName = sender.getEntityName();
+                var teammateName = teammate.getEntityName();
+                var bufNew = PacketByteBufs.copy(buf.asByteBuf());
+                ServerPlayNetworking.send(teammate, channelName, bufNew);
+                LOGGER.info("%s send remove ping to %s".formatted(senderName, teammateName));
+            }
+        }
+    }
+
     @NotNull
     static Vector3d Vec3dToVector3d(Vec3d cameraDir) {
         Vector3d ret = new Vector3d();
@@ -202,7 +332,7 @@ public class PingSystem implements ModInitializer {
         return ret;
     }
 
-    // Server tick handler to turn off glowing
+    // Server tick handler to turn off glowing and clean up expired blocked events
     private static void onEndServerTick(MinecraftServer server) {
         long currentTime = System.currentTimeMillis();
         
@@ -225,5 +355,163 @@ public class PingSystem implements ModInitializer {
             }
             return false; // Keep in map
         });
+        
+        // Clean up expired blocked events (timeout after 30 seconds)
+        cleanupExpiredBlockedEvents(currentTime);
+    }
+    
+    // Check if a block is an ore/mineral block
+    private static boolean isOreBlock(Block block) {
+        Identifier blockId = Registries.BLOCK.getId(block);
+        String blockName = blockId.getPath();
+        
+        // Check for all types of ores (including deepslate variants)
+        return blockName.contains("_ore") || 
+               blockName.equals("coal_ore") ||
+               blockName.equals("iron_ore") ||
+               blockName.equals("gold_ore") ||
+               blockName.equals("diamond_ore") ||
+               blockName.equals("emerald_ore") ||
+               blockName.equals("lapis_ore") ||
+               blockName.equals("redstone_ore") ||
+               blockName.equals("copper_ore") ||
+               blockName.equals("nether_gold_ore") ||
+               blockName.equals("nether_quartz_ore") ||
+               blockName.equals("ancient_debris") ||
+               // Deepslate variants
+               blockName.equals("deepslate_coal_ore") ||
+               blockName.equals("deepslate_iron_ore") ||
+               blockName.equals("deepslate_gold_ore") ||
+               blockName.equals("deepslate_diamond_ore") ||
+               blockName.equals("deepslate_emerald_ore") ||
+               blockName.equals("deepslate_lapis_ore") ||
+               blockName.equals("deepslate_redstone_ore") ||
+               blockName.equals("deepslate_copper_ore");
+    }
+    
+    // Server-side event handler for block breaking - blocks the break and creates a ping (ONLY FOR ORES)
+    private static boolean onBlockBreak(net.minecraft.world.World world, net.minecraft.entity.player.PlayerEntity player, BlockPos pos, BlockState state, net.minecraft.block.entity.BlockEntity blockEntity) {
+        if (!world.isClient() && player instanceof ServerPlayerEntity serverPlayer) {
+            Block block = state.getBlock();
+            
+            // Only trigger for ore blocks
+            if (!isOreBlock(block)) {
+                return true; // Allow break to proceed for non-ore blocks
+            }
+            // Store the blocked break event
+            UUID pingId = UUID.randomUUID();
+            BlockedBlockBreakEvent blockedEvent = new BlockedBlockBreakEvent(world, player, pos, state, blockEntity);
+            blockedBlockBreaks.put(pingId, blockedEvent);
+            
+            // Create ping for the ore block being broken
+            Vec3d pingPos = Vec3d.ofCenter(pos);
+            PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), new java.awt.Color(0x00FF00), (byte)0, PingPoint.PingType.LOCATION, null);
+            pingToSend.id = pingId; // Associate ping with blocked event
+            
+            // Create and send ping packet to all players
+            try {
+                PacketByteBuf buf = pingToSend.toPacketByteBuf();
+                multicastPingIncludeSelf(serverPlayer, PING_PACKET, buf);
+                LOGGER.info("Created auto-ping for ore break: " + state.getBlock().getName().getString() + " (blocked until ping removed)");
+            } catch (Exception e) {
+                LOGGER.error("Failed to create ping for block break", e);
+                // If ping creation fails, allow the break to proceed
+                blockedBlockBreaks.remove(pingId);
+                return true; // Allow break to proceed
+            }
+            
+            return false; // Block the break (false = cancel)
+        }
+        return true; // Allow break to proceed
+    }
+    
+    // Clean up blocked events that have expired (timeout after 30 seconds)
+    private static void cleanupExpiredBlockedEvents(long currentTime) {
+        final long BLOCKED_EVENT_TIMEOUT_MS = 30000; // 30 seconds
+        
+        // Clean up expired entity damage blocks
+        blockedEntityAttacks.entrySet().removeIf(entry -> {
+            BlockedEntityAttackEvent event = entry.getValue();
+            boolean expired = currentTime - event.timestamp > BLOCKED_EVENT_TIMEOUT_MS;
+            if (expired) {
+                LOGGER.warn("Cleaned up expired blocked entity damage for player: " + event.player.getEntityName() + " (ping ID: " + entry.getKey() + ")");
+            }
+            return expired;
+        });
+
+        // Clean up expired block breaks
+        blockedBlockBreaks.entrySet().removeIf(entry -> {
+            BlockedBlockBreakEvent event = entry.getValue();
+            boolean expired = currentTime - event.timestamp > BLOCKED_EVENT_TIMEOUT_MS;
+            if (expired) {
+                LOGGER.warn("Cleaned up expired blocked block break for player: " + event.player.getEntityName() + " (ping ID: " + entry.getKey() + ")");
+            }
+            return expired;
+        });
+    }
+    
+    // Execute blocked events associated with a specific ping ID
+    private static void executeBlockedEventsForPing(UUID pingId) {
+        // Execute blocked entity damage if it matches this ping ID
+        BlockedEntityAttackEvent entityAttackEvent = blockedEntityAttacks.remove(pingId);
+        if (entityAttackEvent != null) {
+            executeEntityDamage(entityAttackEvent);
+            LOGGER.info("Executed blocked entity damage for ping ID: " + pingId + " (player: " + entityAttackEvent.player.getEntityName() + ", damage: " + entityAttackEvent.damageAmount + ")");
+        }
+        
+        // Execute blocked block break if it matches this ping ID
+        BlockedBlockBreakEvent blockBreakEvent = blockedBlockBreaks.remove(pingId);
+        if (blockBreakEvent != null) {
+            executeBlockBreak(blockBreakEvent);
+            LOGGER.info("Executed blocked block break for ping ID: " + pingId + " (player: " + blockBreakEvent.player.getEntityName() + ")");
+        }
+    }
+    
+    // Execute the stored entity damage event
+    private static void executeEntityDamage(BlockedEntityAttackEvent event) {
+        if (event.entity.isAlive() && event.entity instanceof LivingEntity livingEntity) {
+            // Apply the stored damage directly by subtracting health to avoid infinite loop
+            float newHealth = Math.max(0, livingEntity.getHealth() - event.damageAmount);
+            livingEntity.setHealth(newHealth);
+            LOGGER.info("Applied stored damage: " + event.damageAmount + " to " + event.entity.getName().getString() +
+                        ", remaining health: " + livingEntity.getHealth());
+        }
+    }
+    
+    // Execute the stored block break event
+    private static void executeBlockBreak(BlockedBlockBreakEvent event) {
+        if (event.world.getBlockState(event.pos).equals(event.state)) {
+            // Break the block
+            event.world.breakBlock(event.pos, true, event.player);
+        }
+    }
+
+    public static void onAfterDamage(LivingEntity target, DamageSource source, float amount,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (target.isDead() || !cir.getReturnValue() || target.getWorld().isClient() || !(source.getAttacker() instanceof ServerPlayerEntity serverPlayer)) { return; }
+
+        // gen ping
+        Vec3d pingPos = target.getBoundingBox().getCenter();
+        PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), new java.awt.Color(0xFF0000), (byte)2, PingPoint.PingType.ENTITY, target.getUuid());
+        try {
+            PacketByteBuf buf = pingToSend.toPacketByteBuf();
+            multicastPingIncludeSelf(serverPlayer, PING_PACKET, buf);
+            LOGGER.info("Created auto-ping for attacked target: " + target.getName().getString() + " (damage blocked until ping removed)");
+        } catch (Exception e) {
+            LOGGER.error("Failed to create ping for attacked target", e);
+            return;
+        }
+
+        BlockedEntityAttackEvent blockedEvent = new BlockedEntityAttackEvent(
+            serverPlayer, target.getWorld(), Hand.MAIN_HAND, target, null, amount, source);
+        blockedEntityAttacks.put(pingToSend.id, blockedEvent);
+        target.heal(amount);
+        LOGGER.info("Healed back damage to entity: {} (amount: {}, ping ID: {}, remaining health: {})",
+            target.getName().getString(), amount, pingToSend.id, target.getHealth());
+    }
+
+    public static void beforeIsBlocking(LivingEntity self, CallbackInfoReturnable<Boolean> cir) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'beforeIsBlocking'");
     }
 }
