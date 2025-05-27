@@ -27,14 +27,13 @@ public class MixinLivingEntity {
       method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z",
       at = @At(
         value  = "INVOKE",
-        target = "Lnet/minecraft/entity/LivingEntity;blockedByShield(Lnet/minecraft/entity/damage/DamageSource;)Z",
-        shift  = At.Shift.BEFORE
+        target = "Lnet/minecraft/entity/LivingEntity;blockedByShield(Lnet/minecraft/entity/damage/DamageSource;)Z"
+        // shift  = At.Shift.BEFORE
       ),
       cancellable = true
     )
     public void beforeInvokingBlockedByShieldInDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity self = (LivingEntity)(Object)this;
         PingSystem.beforeInvokingBlockedByShieldInDamage(self, source, amount, cir);
-        cir.setReturnValue(true);
     }
 } 

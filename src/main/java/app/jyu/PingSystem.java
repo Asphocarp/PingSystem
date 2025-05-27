@@ -507,6 +507,8 @@ public class PingSystem implements ModInitializer {
         // only one ping each entity
         if (blockingEntityToPingId.get(self.getUuid()) != null) {
             LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Blocking damage and only one ping each entity is allowed");
+            // TODO: why setReturnValue to true but still not excuting takeShieldHit;
+            self.takeKnockback(0.5, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
             cir.setReturnValue(true);
             return;
         }
@@ -528,6 +530,8 @@ public class PingSystem implements ModInitializer {
             serverPlayer, self.getWorld(), Hand.MAIN_HAND, self, null, amount, source);
         blockedEntityAttacks.put(pingToSend.id, blockedEvent);
         LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Blocked damage and created ping for entity: " + self.getName().getString() + " (damage blocked until ping removed)");
+        // TODO: why setReturnValue to true but still not excuting takeShieldHit; and why the dir is reversed
+        self.takeKnockback(0.5, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
         cir.setReturnValue(true);
     }
 }
