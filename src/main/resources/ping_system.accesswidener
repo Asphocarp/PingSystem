@@ -1,0 +1,17 @@
+accessWidener v2 named
+# TODO: seem to be not needed anymore
+accessible method net/minecraft/entity/Entity scheduleVelocityUpdate ()V
+accessible method net/minecraft/entity/LivingEntity takeShieldHit (Lnet/minecraft/entity/LivingEntity;)V
+accessible method net/minecraft/entity/LivingEntity getDeathSound ()Lnet/minecraft/sound/SoundEvent;
+accessible method net/minecraft/entity/LivingEntity getSoundVolume ()F
+accessible method net/minecraft/entity/LivingEntity playHurtSound (Lnet/minecraft/entity/damage/DamageSource;)V
+accessible method net/minecraft/entity/LivingEntity tryUseTotem (Lnet/minecraft/entity/damage/DamageSource;)Z
+
+accessible field net/minecraft/entity/LivingEntity lastDamageTaken F
+mutable field net/minecraft/entity/LivingEntity lastDamageTaken F
+accessible field net/minecraft/entity/LivingEntity playerHitTimer I
+accessible field net/minecraft/entity/LivingEntity attackingPlayer Lnet/minecraft/entity/player/PlayerEntity;
+accessible field net/minecraft/entity/LivingEntity lastDamageSource Lnet/minecraft/entity/damage/DamageSource;
+accessible field net/minecraft/entity/LivingEntity lastDamageTime J
+
+accessible method net/minecraft/entity/LivingEntity applyDamage (Lnet/minecraft/entity/damage/DamageSource;F)V

@@ -33,6 +33,7 @@ loom {
         }
     }
 
+    accessWidenerPath = file("src/main/resources/ping_system.accesswidener")
 }
 
 project.ext.jomlVersion = "1.10.5"

@@ -43,5 +43,6 @@
 	"recommends":{
 		"modmenu": "*",
 		"cloth-config": "*"
-	}
+	},
+    "accessWidener": "ping_system.accesswidener"
 }

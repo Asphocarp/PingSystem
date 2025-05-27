@@ -106,9 +106,14 @@ public class PingSystem implements ModInitializer {
     // Map to store UUIDs of glowing entities and their glow end time (System.currentTimeMillis())
     private static final Map<UUID, Long> glowingEntities = new ConcurrentHashMap<>();
     
+    // ThreadLocal flag to prevent re-entrancy in damage logic
+    public static final ThreadLocal<Boolean> IS_APPLYING_BLOCKED_DAMAGE = ThreadLocal.withInitial(() -> false);
+    
     // Storage for blocked events waiting for ping cancellation
     // Ping ID -> ArrayList of BlockedEntityAttackEvent
     private static final Map<UUID, BlockedEntityAttackEvent> blockedEntityAttacks = new ConcurrentHashMap<>();
+    // Entity ID -> Ping ID // TODO: to optimize (one or many ping per entity)
+    public static final Map<UUID, UUID> blockingEntityToPingId = new ConcurrentHashMap<>();
     // Ping ID -> BlockedBlockBreakEvent
     private static final Map<UUID, BlockedBlockBreakEvent> blockedBlockBreaks = new ConcurrentHashMap<>();
 
@@ -435,6 +440,7 @@ public class PingSystem implements ModInitializer {
             boolean expired = currentTime - event.timestamp > BLOCKED_EVENT_TIMEOUT_MS;
             if (expired) {
                 LOGGER.warn("Cleaned up expired blocked entity damage for player: " + event.player.getEntityName() + " (ping ID: " + entry.getKey() + ")");
+                blockingEntityToPingId.remove(event.entity.getUuid());
             }
             return expired;
         });
@@ -453,65 +459,75 @@ public class PingSystem implements ModInitializer {
     // Execute blocked events associated with a specific ping ID
     private static void executeBlockedEventsForPing(UUID pingId) {
         // Execute blocked entity damage if it matches this ping ID
-        BlockedEntityAttackEvent entityAttackEvent = blockedEntityAttacks.remove(pingId);
-        if (entityAttackEvent != null) {
-            executeEntityDamage(entityAttackEvent);
-            LOGGER.info("Executed blocked entity damage for ping ID: " + pingId + " (player: " + entityAttackEvent.player.getEntityName() + ", damage: " + entityAttackEvent.damageAmount + ")");
+        BlockedEntityAttackEvent aEvent = blockedEntityAttacks.remove(pingId);
+        if (aEvent != null) {
+            if (aEvent.entity.isAlive() && aEvent.entity instanceof LivingEntity livingEntity) {
+                // It's safer to create a new DamageSource using the attacker (aEvent.player)
+                // at the time of dealing damage, to avoid issues with stale DamageSource objects.
+                // aEvent.player is the player whose attack was originally blocked.
+                DamageSource newDamageSource;
+                if (aEvent.player != null && aEvent.player.isAlive()) {
+                    newDamageSource = livingEntity.getDamageSources().playerAttack(aEvent.player);
+                } else {
+                    // Fallback if the original attacker is no longer valid
+                    newDamageSource = livingEntity.getDamageSources().generic();
+                    LOGGER.warn("Original attacker for blocked damage (ping ID: {}) is no longer valid. Using generic damage.", pingId);
+                }
+
+                IS_APPLYING_BLOCKED_DAMAGE.set(true);
+                try {
+                    livingEntity.damage(newDamageSource, aEvent.damageAmount);
+                } finally {
+                    IS_APPLYING_BLOCKED_DAMAGE.set(false); // Or .set(false) if you prefer explicit false over initial value
+                }
+            }
+            blockingEntityToPingId.remove(aEvent.entity.getUuid());
+            LOGGER.info("Executed blocked entity damage for ping ID: " + pingId + " (player: " + aEvent.player.getEntityName() + ", damage: " + aEvent.damageAmount + ")");
         }
-        
         // Execute blocked block break if it matches this ping ID
-        BlockedBlockBreakEvent blockBreakEvent = blockedBlockBreaks.remove(pingId);
-        if (blockBreakEvent != null) {
-            executeBlockBreak(blockBreakEvent);
-            LOGGER.info("Executed blocked block break for ping ID: " + pingId + " (player: " + blockBreakEvent.player.getEntityName() + ")");
-        }
-    }
-    
-    // Execute the stored entity damage event
-    private static void executeEntityDamage(BlockedEntityAttackEvent event) {
-        if (event.entity.isAlive() && event.entity instanceof LivingEntity livingEntity) {
-            // Apply the stored damage directly by subtracting health to avoid infinite loop
-            float newHealth = Math.max(0, livingEntity.getHealth() - event.damageAmount);
-            livingEntity.setHealth(newHealth);
-            LOGGER.info("Applied stored damage: " + event.damageAmount + " to " + event.entity.getName().getString() +
-                        ", remaining health: " + livingEntity.getHealth());
-        }
-    }
-    
-    // Execute the stored block break event
-    private static void executeBlockBreak(BlockedBlockBreakEvent event) {
-        if (event.world.getBlockState(event.pos).equals(event.state)) {
-            // Break the block
-            event.world.breakBlock(event.pos, true, event.player);
+        BlockedBlockBreakEvent bEvent = blockedBlockBreaks.remove(pingId);
+        if (bEvent != null) {
+            if (bEvent.world.getBlockState(bEvent.pos).equals(bEvent.state)) {
+                bEvent.world.breakBlock(bEvent.pos, true, bEvent.player);
+            }
+            LOGGER.info("Executed blocked block break for ping ID: " + pingId + " (player: " + bEvent.player.getEntityName() + ")");
         }
     }
 
-    public static void onAfterDamage(LivingEntity target, DamageSource source, float amount,
-            CallbackInfoReturnable<Boolean> cir) {
-        if (target.isDead() || !cir.getReturnValue() || target.getWorld().isClient() || !(source.getAttacker() instanceof ServerPlayerEntity serverPlayer)) { return; }
+    public static void beforeInvokingBlockedByShieldInDamage(LivingEntity self, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        LOGGER.info(">> beforeInvokingBlockedByShieldInDamage");
+        if (IS_APPLYING_BLOCKED_DAMAGE.get()) {
+            LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Skipping mixin logic for blocked damage because it's from executeBlockedEventsForPing");
+            return; // Skip mixin logic if this damage application is from executeBlockedEventsForPing
+        }
+        if (self.isDead() || self.getWorld().isClient() || !(source.getSource() instanceof ServerPlayerEntity serverPlayer)) { 
+            return; 
+        }
 
+        // only one ping each entity
+        if (blockingEntityToPingId.get(self.getUuid()) != null) {
+            LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Blocking damage and only one ping each entity is allowed");
+            cir.setReturnValue(true);
+            return;
+        }
         // gen ping
-        Vec3d pingPos = target.getBoundingBox().getCenter();
-        PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), new java.awt.Color(0xFF0000), (byte)2, PingPoint.PingType.ENTITY, target.getUuid());
+        Vec3d pingPos = self.getBoundingBox().getCenter();
+        PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), new java.awt.Color(0xFF0000), (byte)2, PingPoint.PingType.ENTITY, self.getUuid());
         try {
             PacketByteBuf buf = pingToSend.toPacketByteBuf();
             multicastPingIncludeSelf(serverPlayer, PING_PACKET, buf);
-            LOGGER.info("Created auto-ping for attacked target: " + target.getName().getString() + " (damage blocked until ping removed)");
+            LOGGER.info("Created auto-ping for attacked entity: " + self.getName().getString() + " (damage blocked until ping removed)");
         } catch (Exception e) {
-            LOGGER.error("Failed to create ping for attacked target", e);
+            LOGGER.error("<< beforeInvokingBlockedByShieldInDamage: Failed to create ping for attacked entity", e);
             return;
         }
-
+        // Store the mapping between the blocking self and the ping ID
+        blockingEntityToPingId.put(self.getUuid(), pingToSend.id);
+        // Store the blocked event
         BlockedEntityAttackEvent blockedEvent = new BlockedEntityAttackEvent(
-            serverPlayer, target.getWorld(), Hand.MAIN_HAND, target, null, amount, source);
+            serverPlayer, self.getWorld(), Hand.MAIN_HAND, self, null, amount, source);
         blockedEntityAttacks.put(pingToSend.id, blockedEvent);
-        target.heal(amount);
-        LOGGER.info("Healed back damage to entity: {} (amount: {}, ping ID: {}, remaining health: {})",
-            target.getName().getString(), amount, pingToSend.id, target.getHealth());
-    }
-
-    public static void beforeIsBlocking(LivingEntity self, CallbackInfoReturnable<Boolean> cir) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'beforeIsBlocking'");
+        LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Blocked damage and created ping for entity: " + self.getName().getString() + " (damage blocked until ping removed)");
+        cir.setReturnValue(true);
     }
 }

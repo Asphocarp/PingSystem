@@ -1,8 +1,20 @@
 package app.jyu.mixin;
 
 import app.jyu.PingSystem;
+import net.minecraft.advancement.criterion.Criteria;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityStatuses;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.tag.DamageTypeTags;
+import net.minecraft.registry.tag.EntityTypeTags;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.stat.Stats;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,16 +23,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public class MixinLivingEntity {
-    
-    @Inject(method = "damage", at = @At("RETURN"))
-    private void onAfterDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(
+      method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z",
+      at = @At(
+        value  = "INVOKE",
+        target = "Lnet/minecraft/entity/LivingEntity;blockedByShield(Lnet/minecraft/entity/damage/DamageSource;)Z",
+        shift  = At.Shift.BEFORE
+      ),
+      cancellable = true
+    )
+    public void beforeInvokingBlockedByShieldInDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity self = (LivingEntity)(Object)this;
-        PingSystem.onAfterDamage(self, source, amount, cir);
-    }
-
-    @Inject(method = "isBlocking", at = @At("HEAD"), cancellable = true)
-    public void beforeIsBlocking(CallbackInfoReturnable<Boolean> cir) {
-        LivingEntity self = (LivingEntity)(Object)this;
-        PingSystem.beforeIsBlocking(self, cir);
+        PingSystem.beforeInvokingBlockedByShieldInDamage(self, source, amount, cir);
+        cir.setReturnValue(true);
     }
 } 
