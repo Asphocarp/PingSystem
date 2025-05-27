@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.UUID;
 
+import static app.jyu.PingSystem.LOGGER;
 import static app.jyu.PingSystemClient.pingKeyBinding;
 
 import java.lang.Math;
@@ -166,10 +167,10 @@ public class RenderHandler {
                     var midVec = new Vector2d(halfWidth, halfHeight);
                     var iconVec = new Vector2d(screenX, screenY);
                     var fromMid = iconVec.sub(midVec);
-                    // Use a threshold based on screen size (e.g., 1/25th of width or height)
-                    double threshold = Math.min(width, height) / 25.0;
+                    // Use a threshold based on screen size (e.g., 1/5th of width or height)
+                    double threshold = Math.min(width, height) / 5.0; // used to be 25, TODO: add config for this
                     if (fromMid.lengthSquared() <= threshold * threshold) { // Use squared length for efficiency
-                        renderInfoHUD(drawContext, (int) (halfWidth + 5), (int) (halfHeight + 5), ping);
+                        renderInfoHUD(drawContext, (int) (halfWidth), (int) (halfHeight), ping);
                         onPing = ping;
                         setOnPing = true;
                     }
@@ -247,32 +248,57 @@ public class RenderHandler {
     }
 
     private void renderInfoHUD(DrawContext drawContext, int topLeftX, int topLeftY, PingPoint ping) {
+        // the input X, Y is currently just the center of the screen
+        topLeftX += 8;
+
         MinecraftClient client = MinecraftClient.getInstance();
         var player = client.player;
         if (player == null) {
             return;
         }
 
-        // Distance calculation now uses the static/initial ping position
-        // as the HUD info appears when looking *towards* the icon,
-        // which is already placed based on interpolated world pos.
-        // Alternatively, pass effectiveTargetPos if needed, but world pos is simpler here.
         List<String> textLines = new ArrayList<>();
         var playerPos = player.getPos(); 
-        var dist = playerPos.distanceTo(ping.pos); // Use original ping pos for distance display
-        textLines.add("%.0f m".formatted(dist));
-        if (!ping.owner.equals(player.getEntityName())) {
-            textLines.add("%s".formatted(ping.owner));
+        // calc dist
+        // TODO: fix: use real dist for entity
+        double dist;
+        if (ping.type == PingPoint.PingType.ENTITY) {
+            // get current entity pos
+            Entity entity = findEntityByUUID(ping.entityUUID);
+            if (entity != null) {
+                dist = playerPos.distanceTo(entity.getPos());
+            } else {
+                dist = 0;
+            }
+        } else {
+            dist = playerPos.distanceTo(ping.pos);
         }
-        
+        // show quiz info
+        if (ping.quiz != null) {
+            textLines.add(ping.quiz.question);
+            for (int i = 0; i < ping.quiz.options.length; i++) {
+                textLines.add("%d. %s".formatted(i + 1, ping.quiz.options[i]));
+            }
+        } else {
+            LOGGER.error("PingPoint has no quiz: {}", ping.id);
+        }
+
+        // total height
+        int totalHeight = textLines.size() * (client.textRenderer.fontHeight + 2) + client.textRenderer.fontHeight;
+        topLeftY -= totalHeight*0.5;
         // render text
         for (String line : textLines) {
             drawContext.drawText(client.textRenderer, line, topLeftX, topLeftY, ModConfig.infoColor, true);
             topLeftY += client.textRenderer.fontHeight + 2;
         }
-        
+
         String hotkey = humanReadableHotkey(pingKeyBinding);
-        var keyIndicator = "Cancel (" + hotkey + ")";
+        String keyIndicator = "";
+        if (!ping.owner.equals(player.getEntityName())) {
+            keyIndicator = "Cancel (%s) | %.1f m by %s".formatted(hotkey, dist, ping.owner);
+        } else {
+            keyIndicator = "Cancel (%s) | %.1f m".formatted(hotkey, dist);
+        }
         drawContext.drawText(client.textRenderer, keyIndicator, topLeftX, topLeftY, 0xFFFFFFFF, true);
     }
 
@@ -337,6 +363,9 @@ public class RenderHandler {
 
         // Define Box size centered at the translated origin (which is now ping.pos)
         float size = 0.3f;
+        if (ping.type == PingPoint.PingType.LOCATION) {
+            size = 1.0f;
+        }
         float halfSize = size / 2.0f;
         // Define vertices relative to the translated origin (0,0,0)
         float minX = -halfSize;

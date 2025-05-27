@@ -33,6 +33,9 @@ public class Quiz implements Serializable {
     public Integer answer; // 0-based
     public UUID uuid;
 
+    private static volatile ConcurrentHashMap<UUID, Quiz> QUIZ_MAP;
+    private static final Random rg = new Random();
+
     // Temporary class to match JSON structure for GSON deserialization
     private static class QuizJsonItem {
         @SerializedName("question")
@@ -45,46 +48,68 @@ public class Quiz implements Serializable {
         String uuidString;
     }
 
-    public static ConcurrentHashMap<UUID, Quiz> getQuizMap() {
-        ConcurrentHashMap<UUID, Quiz> quizMap = new ConcurrentHashMap<>();
-        Gson gson = new Gson();
-        Type listType = new TypeToken<List<QuizJsonItem>>() {}.getType();
+    public static ConcurrentHashMap<UUID, Quiz> loadQuizMap() {
+        // load quiz map from file assets/ping_system/quiz/cet4.json (only once)
+        PingSystem.LOGGER.info("Loading quiz map");
+        // Double-Checked Locking for thread-safe lazy initialization
+        if (QUIZ_MAP == null) {
+            synchronized (Quiz.class) {
+                if (QUIZ_MAP == null) {
+                    ConcurrentHashMap<UUID, Quiz> quizMap = new ConcurrentHashMap<>();
+                    Gson gson = new Gson();
+                    Type listType = new TypeToken<List<QuizJsonItem>>() {}.getType();
 
-        try (InputStream inputStream = Quiz.class.getClassLoader().getResourceAsStream("assets/ping_system/quiz/cet4.json");
-             Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-            if (inputStream == null) {
-                System.err.println("Cannot find the quiz file.");
-                return quizMap; // Return empty map or throw an exception
+                    try (InputStream inputStream = Quiz.class.getClassLoader().getResourceAsStream("assets/ping_system/quiz/cet4.json");
+                         Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+                        if (inputStream == null) {
+                            PingSystem.LOGGER.error("Cannot find the quiz file: assets/ping_system/quiz/cet4.json");
+                            // Return an empty map or throw a specific exception if the file is critical
+                            QUIZ_MAP = new ConcurrentHashMap<>(); // Initialize to empty to avoid repeated attempts
+                            return QUIZ_MAP;
+                        }
+                        List<QuizJsonItem> quizItems = gson.fromJson(reader, listType);
+                        for (QuizJsonItem item : quizItems) {
+                            Quiz quiz = new Quiz();
+                            quiz.question = item.questionText;
+                            quiz.options = item.optionList;
+                            quiz.answer = item.answerIndex; // Assuming JSON answer is now 0-based as per your changes
+                            quiz.uuid = UUID.fromString(item.uuidString);
+                            quizMap.put(quiz.uuid, quiz);
+                        }
+                        QUIZ_MAP = quizMap;
+                    } catch (Exception e) {
+                        PingSystem.LOGGER.error("Error loading quiz map", e);
+                        // In case of an error, initialize to an empty map or rethrow
+                        QUIZ_MAP = new ConcurrentHashMap<>();
+                    }
+                }
             }
-            List<QuizJsonItem> quizItems = gson.fromJson(reader, listType);
-            for (QuizJsonItem item : quizItems) {
-                Quiz quiz = new Quiz();
-                quiz.question = item.questionText;
-                quiz.options = item.optionList;
-                quiz.answer = item.answerIndex; // The JSON answer is 1-based
-                quiz.uuid = UUID.fromString(item.uuidString);
-                quizMap.put(quiz.uuid, quiz);
-            }
-        } catch (Exception e) {
-            e.printStackTrace(); // Handle exception: log it, or rethrow as a runtime exception
         }
-        return quizMap;
+        // log (for debug)
+        if (!QUIZ_MAP.isEmpty()) {
+            Quiz firstQuiz = QUIZ_MAP.values().iterator().next();
+            PingSystem.LOGGER.info("Quiz map loaded. First item: question='{}', options={}, answer={}, uuid={}",
+                firstQuiz.question, java.util.Arrays.toString(firstQuiz.options), firstQuiz.answer, firstQuiz.uuid);
+        } else {
+            PingSystem.LOGGER.info("Quiz map loaded but is empty.");
+        }
+        return QUIZ_MAP;
     }
 
-    public static Quiz randNoAnswer(ConcurrentHashMap<UUID, Quiz> map) {
-        if (map == null || map.isEmpty()) {
+    public static Quiz randNoAnswer() {
+        if (QUIZ_MAP == null || QUIZ_MAP.isEmpty()) {
+            PingSystem.LOGGER.error("Quiz map is empty");
             return null;
         }
-        List<UUID> keys = new ArrayList<>(map.keySet());
-        Random random = new Random();
-        UUID randomKey = keys.get(random.nextInt(keys.size()));
-        var item = map.get(randomKey);
+        List<UUID> keys = new ArrayList<>(QUIZ_MAP.keySet());
+        UUID randomKey = keys.get(rg.nextInt(keys.size()));
+        var item = QUIZ_MAP.get(randomKey);
         item.answer = null;
         return item;
     }
 
-    public static boolean isCorrectAns(ConcurrentHashMap<UUID, Quiz> map, UUID uuid, int answerIdx) {
-        var item = map.get(uuid);
+    public static boolean isCorrectAns(UUID uuid, int answerIdx) {
+        var item = QUIZ_MAP.get(uuid);
         return item.answer == answerIdx;
     }
 }

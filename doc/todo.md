@@ -1,5 +1,8 @@
+- [ ] shuffle the data / prepare the data & toefl data; gen quiz
 - [ ] 0 render quiz on screen, indicator points to the mob?
+- [ ] render block ping as same size
 - [ ] 0? allow more ping
+- [ ] correct/wrong, send the answer, feedback (good/bad)
 - [ ] 0 碎甲声音
 - [ ] 1 阻挡声音
 
@@ -12,6 +15,10 @@
 
 - [ ] 2 可以允许暂停(单人), config里设置(就通过弹出GUI?)
 - [ ] 2 可能只hook on death比较合理，甚至可以让他复活得更强
+
+show:
+- support PvP!!!
+- cursor emotion
 
 done:
 - [x] 0 no more cancel / ping func (of PingSystem) - cancel is only for debug

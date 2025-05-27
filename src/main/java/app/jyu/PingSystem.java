@@ -152,7 +152,7 @@ public class PingSystem implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
 
         // load all quizzes
-        Quiz.getQuizMap();
+        Quiz.loadQuizMap();
     }
 
     public static void onReceivingRemovePingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){
@@ -499,6 +499,7 @@ public class PingSystem implements ModInitializer {
 
     public static void beforeInvokingBlockedByShieldInDamage(LivingEntity self, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LOGGER.info(">> beforeInvokingBlockedByShieldInDamage");
+        var CURRENT_STRENGTH = 0.25; // TODO: add config for this
         if (IS_APPLYING_BLOCKED_DAMAGE.get()) {
             LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Skipping mixin logic for blocked damage because it's from executeBlockedEventsForPing");
             return; // Skip mixin logic if this damage application is from executeBlockedEventsForPing
@@ -511,7 +512,7 @@ public class PingSystem implements ModInitializer {
         if (blockingEntityToPingId.get(self.getUuid()) != null) {
             LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Blocking damage and only one ping each entity is allowed");
             // TODO: why setReturnValue to true but still not excuting takeShieldHit;
-            self.takeKnockback(0.5, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
+            self.takeKnockback(CURRENT_STRENGTH, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
             cir.setReturnValue(true);
             return;
         }
@@ -534,7 +535,7 @@ public class PingSystem implements ModInitializer {
         blockedEntityAttacks.put(pingToSend.id, blockedEvent);
         LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Blocked damage and created ping for entity: " + self.getName().getString() + " (damage blocked until ping removed)");
         // TODO: why setReturnValue to true but still not excuting takeShieldHit; and why the dir is reversed
-        self.takeKnockback(0.5, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
+        self.takeKnockback(CURRENT_STRENGTH, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
         cir.setReturnValue(true);
     }
 }

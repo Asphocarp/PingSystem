@@ -62,7 +62,15 @@ public class PingPoint implements Serializable {
         this.type = type;
         // Ensure entityUUID is only set for ENTITY type
         this.entityUUID = (type == PingType.ENTITY) ? entityUUID : null; 
-        this.quiz = Quiz.randomQuiz();
+        this.quiz = Quiz.randNoAnswer();
+
+        // // log quiz content here
+        // if (this.quiz != null) {
+        //     PingSystem.LOGGER.debug("PingPoint created with quiz: question='{}', options={}, answer={}, uuid={}",
+        //         this.quiz.question, java.util.Arrays.toString(this.quiz.options), this.quiz.answer, this.quiz.uuid);
+        // } else { // should not happen
+        //     PingSystem.LOGGER.error("PingPoint created without quiz");
+        // }
     }
 
     // Deprecated constructor, adapt or remove if not needed elsewhere
@@ -93,6 +101,7 @@ public class PingPoint implements Serializable {
         // Serialize new fields
         stream.writeObject(type);
         stream.writeObject(entityUUID); // Can be null
+        stream.writeObject(quiz);
     }
 
     // for Vec3d is not serializable
@@ -111,6 +120,7 @@ public class PingPoint implements Serializable {
         // Deserialize new fields
         type = (PingType) stream.readObject();
         entityUUID = (UUID) stream.readObject(); // Can be null
+        quiz = (Quiz) stream.readObject();
     }
 
     public byte[] toByteArray() throws IOException {
