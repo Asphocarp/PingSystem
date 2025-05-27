@@ -150,6 +150,9 @@ public class PingSystem implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, PingSystem::onReceivingRemovePingPacket);
         PlayerBlockBreakEvents.BEFORE.register(PingSystem::onBlockBreak);
         ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
+
+        // load all quizzes
+        Quiz.getQuizMap();
     }
 
     public static void onReceivingRemovePingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){

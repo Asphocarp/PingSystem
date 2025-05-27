@@ -159,6 +159,7 @@ public class RenderHandler {
 
                 // Render the icon at the calculated screen position
                 renderIconHUD(drawContext, screenX, screenY, ping);
+                // TODO: render current quiz (hold z to zoom in the quiz, x to hide/show the quiz)
 
                 // Update onPing status based on proximity to screen center
                 if (!setOnPing) {

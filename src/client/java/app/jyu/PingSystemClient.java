@@ -77,58 +77,17 @@ public class PingSystemClient implements ClientModInitializer {
             assert client.cameraEntity != null;
             handlePingAction(client, player, ModConfig.includeFluids);
         }
+        // TODO: while holding z, render the quiz larger on screen (hold z to zoom in the quiz, x to hide/show the quiz)
     }
 
     // Renamed from pingDirection to handlePingAction
     private static void handlePingAction(MinecraftClient client, ClientPlayerEntity player,
                                          boolean includeFluids) {
-        assert client.world != null;
-        assert client.cameraEntity != null;
-        float tickDelta = client.getTickDelta(); 
-        HitResult hit = raycast(client.cameraEntity, MAX_REACH, tickDelta, includeFluids);
-
-        PingPoint pingToSend = null;
-        Vec3d pingPos = null;
-
-        switch (Objects.requireNonNull(hit).getType()) {
-            case MISS -> player.sendMessage(Text.literal("Too far"), true);
-            case BLOCK -> {
-                BlockHitResult blockHit = (BlockHitResult) hit;
-                BlockPos blockPos = blockHit.getBlockPos();
-                BlockState blockState = client.world.getBlockState(blockPos);
-                Block block = blockState.getBlock();
-                final Text blockMes = block.getName();
-                player.sendMessage(blockMes, true);
-                pingPos = hit.getPos();
-                pingToSend = new PingPoint(pingPos, player.getEntityName(), new Color(ModConfig.highlightColor), ModConfig.soundIndex, PingPoint.PingType.LOCATION, null);
-            }
-            case ENTITY -> {
-                EntityHitResult entityHit = (EntityHitResult) hit;
-                Entity entity = entityHit.getEntity();
-                final Text entityMes = entity.getName();
-                player.sendMessage(entityMes, true);
-                // Use the center of the entity's bounding box for pingPos
-                pingPos = entity.getBoundingBox().getCenter(); 
-                pingToSend = new PingPoint(pingPos, player.getEntityName(), new Color(ModConfig.highlightColor), ModConfig.soundIndex, PingPoint.PingType.ENTITY, entity.getUuid());
-            }
-        }
-
-        if (pingToSend != null) {
-            processPing(pingToSend);
-        }
-    }
-
-    // Renamed from pingPosition to processPing and accepts PingPoint
-    private static void processPing(PingPoint p) {
-        LOGGER.debug("Processing Ping at " + p.pos + " Type: " + p.type + (p.entityUUID != null ? " Entity: " + p.entityUUID : ""));
         RenderHandler renderer = RenderHandler.getInstance();
         if (renderer.isOnPing()) {
             renderer.removeOnPing();
             sendRemovePingToServer(renderer.getOnPing());
             renderer.resetOnPing(); 
-        } else {
-            addPointToRenderer(p);
-            sendPingToServer(p); // Only send the main ping packet
         }
     }
 
@@ -140,12 +99,7 @@ public class PingSystemClient implements ClientModInitializer {
         RenderHandler.getInstance().removePing(p);
     }
 
-    private static HitResult raycast(
-            Entity cameraEntity,
-            double maxDistance,
-            float tickDelta,
-            boolean includeFluids
-    ) {
+    private static HitResult raycast( Entity cameraEntity, double maxDistance, float tickDelta, boolean includeFluids) {
         Vec3d cameraPos = cameraEntity.getCameraPosVec(tickDelta);
         Vec3d rotationVec = cameraEntity.getRotationVec(tickDelta);
         Vec3d endVec = cameraPos.add(rotationVec.multiply(maxDistance));

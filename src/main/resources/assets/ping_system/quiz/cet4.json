@@ -1,0 +1,58 @@
+[
+    {
+      "question": "n. 环境",
+      "options": [
+        "environment",
+        "instrument",
+        "argument",
+        "entertainment"
+      ],
+      "answer": 0,
+      "uuid": "f9a7e1d0-c1b3-4e5a-9f0e-7d8c6b5a4f3c"
+    },
+    {
+      "question": "v. 分配",
+      "options": [
+        "assign",
+        "afford",
+        "attend",
+        "assist"
+      ],
+      "answer": 0,
+      "uuid": "a2b8d7e4-f1c9-4b8e-8f6d-3c4a1b9e8f7d"
+    },
+    {
+      "question": "adj. 熟悉的",
+      "options": [
+        "familiar",
+        "finance",
+        "formal",
+        "famine"
+      ],
+      "answer": 0,
+      "uuid": "c3d9e8f1-a2b8-4c7d-9e6f-1b8a7f5d4e3c"
+    },
+    {
+      "question": "n. 挑战",
+      "options": [
+        "challenge",
+        "change",
+        "charge",
+        "chance"
+      ],
+      "answer": 0,
+      "uuid": "b4e0f9a7-d1c2-4a5b-8e9f-0d7c6a5b4f3e"
+    },
+    {
+      "question": "v. 维持",
+      "options": [
+        "maintain",
+        "obtain",
+        "remain",
+        "explain"
+      ],
+      "answer": 0,
+      "uuid": "e5f1a0b9-c8d7-4e6f-a1b2-9c8d7e4f5b6a"
+    }
+]
+  

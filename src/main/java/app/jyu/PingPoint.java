@@ -25,6 +25,18 @@ public class PingPoint implements Serializable {
     // New fields
     public PingType type;
     public UUID entityUUID; // Nullable: only set for ENTITY type
+    // set for quiz question and options
+    // {
+    //     "question": "n. 环境",
+    //     "options": [
+    //       "environment",
+    //       "instrument",
+    //       "argument",
+    //       "entertainment"
+    //     ],
+    //     "answer": 1
+    // },
+    public Quiz quiz; 
     
     // Client-side state, not serialized
     public transient boolean clientSideIsCurrentlyGlowing = false;
@@ -50,6 +62,7 @@ public class PingPoint implements Serializable {
         this.type = type;
         // Ensure entityUUID is only set for ENTITY type
         this.entityUUID = (type == PingType.ENTITY) ? entityUUID : null; 
+        this.quiz = Quiz.randomQuiz();
     }
 
     // Deprecated constructor, adapt or remove if not needed elsewhere
