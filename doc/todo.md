@@ -1,14 +1,14 @@
-- [ ] shuffle the data / prepare the data & toefl data; gen quiz
-- [ ] support exist many ping for each entity (and match the nearest to the screen center)
-- [ ] 0 render quiz on screen, indicator points to the mob?
-- [ ] remove all ping system stuff
-- [ ] 0? allow more ping
-- [ ] correct/wrong, send the answer, feedback (good/bad)
+- fix: do not forget to remove ping
+- [ ] select book (and other global server-side config, like highlight color)
+- [ ] many ping coexist (at most 1 for each entity) (and match the nearest to the screen center as the active one)
+
+- [ ] 0 add channel for ping (default channel string is "default") (only forward pings to this channel (teammates subscript to this channel))
 - [ ] 0 碎甲声音
 - [ ] 1 阻挡声音
 
 - naming: QuizCraft
 
+- [ ] 1 screen border indicator, with margin?
 - [ ] 1 current MVP .damage() needs some fix. it use current weapon and can be blocked by current shield.
 - [ ] 1 wrong answer, the mob become huge (for dramatic effect)
 - [ ] stats for memo words (like anki?)
@@ -30,5 +30,8 @@ key diff:
 - better algo?
 
 done:
+- [x] correct/wrong, send the answer, feedback (good/bad)
 - [x] 0 no more cancel / ping func (of PingSystem) - cancel is only for debug
 - [x] fix render block ping as same size and normal color
+- [x] shuffle the data / prepare the data & toefl data; gen quiz
+- [x] 0 render quiz on screen, indicator points to the mob?

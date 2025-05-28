@@ -112,8 +112,7 @@ public class Quiz implements Serializable {
         return item;
     }
 
-    public static boolean isCorrectAns(UUID uuid, int answerIdx) {
-        var item = QUIZ_MAP.get(uuid);
-        return item.answer == answerIdx;
+    public boolean isCorrectAnswer(int answerIdx) {
+        return answer == answerIdx;
     }
 }

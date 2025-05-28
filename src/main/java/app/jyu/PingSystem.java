@@ -143,8 +143,6 @@ public class PingSystem implements ModInitializer {
         // Proceed with mild caution.
         LOGGER.info("Make MC Apex Again!");
 
-        // TODO (later) add team command, save state to file
-
         // load all quizzes
         Quiz.loadQuizMap();
         Book.loadBooks();
@@ -168,23 +166,25 @@ public class PingSystem implements ModInitializer {
     }
 
     public static void onReceivingRemovePingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){
-        // Extract ping ID before multicasting to determine which events to execute
+        // for debug, player here force remove the ping and pretend to be correct
+
+        // get pingToRemove
         PacketByteBuf bufCopy = new PacketByteBuf(buf.copy());
-        UUID removedPingId = null;
+        PingPoint pingToRemove = null;
         try {
-            PingPoint removedPing = PingPoint.fromPacketByteBuf(bufCopy);
-            removedPingId = removedPing.id;
+            pingToRemove = PingPoint.fromPacketByteBuf(bufCopy);
         } catch (Exception e) {
             LOGGER.error("[PingSystem Server] Failed to deserialize PingPoint on REMOVE_PING_PACKET receive for event execution.", e);
+            return;
         }
         bufCopy.release();
-        // Handle ping removal
-        multicastRemovePingIncludeSelf(player, REMOVE_PING_PACKET, buf);
-        // Execute only the blocked events associated with this specific ping
-        if (removedPingId != null) {
-            executeBlockedEventsForPing(removedPingId, true);
-            // Note: activePings is already cleaned up in executeBlockedEventsForPing
+        if (pingToRemove == null) {
+            LOGGER.warn("[PingSystem Server] Could not find ping for remove ping packet from player {}", player.getEntityName());
+            return;
         }
+
+        executeBlockedEventsForPing(pingToRemove, true);
+        removePingAndMulticast(player, pingToRemove);
     }
 
     public static void onReceivingAnswerPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
@@ -193,46 +193,24 @@ public class PingSystem implements ModInitializer {
             LOGGER.info("[PingSystem Server] Received answer from player {}: ping UUID {}, answer index {}", 
                 answerPacket.playerName, answerPacket.pingUUID, answerPacket.answerIndex);
             
-            // First, we need to find the quiz UUID from the ping to check the answer
-            // Since we don't store the ping directly, we need to get it from blocked events
-            UUID quizUUID = getQuizUUIDFromPing(answerPacket.pingUUID);
-            
-            if (quizUUID == null) {
+            // get the ping
+            PingPoint ping = activePings.get(answerPacket.pingUUID);
+            if (ping == null) {
+                LOGGER.warn("[PingSystem Server] Could not find ping for answer packet from player {}", answerPacket.playerName);
+                return;
+            }
+            if (ping.quiz == null) {
                 LOGGER.warn("[PingSystem Server] Could not find quiz for ping UUID {}", answerPacket.pingUUID);
                 return;
             }
             
             // Check if the answer is correct
-            boolean isCorrect = Quiz.isCorrectAns(quizUUID, answerPacket.answerIndex);
-            
-            if (isCorrect) {
-                LOGGER.info("[PingSystem Server] Correct answer from {}, executing blocked events for ping {}", 
-                    answerPacket.playerName, answerPacket.pingUUID);
-                executeBlockedEventsForPing(answerPacket.pingUUID, true);
-            } else {
-                LOGGER.info("[PingSystem Server] Incorrect answer from {}, no action taken", answerPacket.playerName);
-                executeBlockedEventsForPing(answerPacket.pingUUID, false);
-                // TODO: Handle incorrect answers (e.g., penalty, feedback, statistics, etc.)
-                // Potential actions:
-                // - Send feedback message to player
-                // - Apply penalty (damage, effect, etc.)
-                // - Track incorrect answer statistics
-                // - Increase difficulty for next quiz
-                // - Lock player out temporarily
-            }
-            
+            boolean isCorrect = ping.quiz.isCorrectAnswer(answerPacket.answerIndex);
+            executeBlockedEventsForPing(ping, isCorrect);
+            removePingAndMulticast(player, ping);
         } catch (Exception e) {
             LOGGER.error("[PingSystem Server] Failed to process answer packet from player {}", player.getEntityName(), e);
         }
-    }
-
-    // Helper method to get quiz UUID from ping UUID
-    private static UUID getQuizUUIDFromPing(UUID pingUUID) {
-        PingPoint ping = activePings.get(pingUUID);
-        if (ping != null && ping.quiz != null) {
-            return ping.quiz.uuid;
-        }
-        return null;
     }
 
     public static void onReceivingPingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){
@@ -278,68 +256,60 @@ public class PingSystem implements ModInitializer {
     }
 
     public static void multicastPingIncludeSelf(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
-        if (ENABLE_TEAMS) {
-            // TODO implement teams
-        } else {
-            SoundEvent soundEvent;
-            try {
-                var p = PingPoint.fromPacketByteBuf(buf);
-                soundEvent = soundIdxToEvent(p.sound);
-            } catch (Exception e) {
-                LOGGER.error("server fail to deserialize the ping packet", e);
-                return;
-            }
-            for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
-                var senderName = sender.getEntityName();
-                var teammateName = teammate.getEntityName();
-                // play sound for all // TODO: how to play for only a few people?
-                teammate.getWorld().playSound(
-                        null, // Player - if non-null, will play sound for every nearby player *except* the specified player
-                        teammate.getBlockPos(), // The position of where the sound will come from
-                        soundEvent,
-                        SoundCategory.BLOCKS, // This determines which of the volume sliders affect this sound
-                        1f, // Volume multiplier, 1 is normal, 0.5 is half volume, etc
-                        1f // Pitch multiplier, 1 is normal, 0.5 is half pitch, etc
-                );
-                var bufNew = PacketByteBufs.copy(buf.asByteBuf());
-                ServerPlayNetworking.send(teammate, channelName, bufNew);
-                LOGGER.info("%s send ping to %s".formatted(senderName, teammateName));
-            }
+        SoundEvent soundEvent;
+        try {
+            var p = PingPoint.fromPacketByteBuf(buf);
+            soundEvent = soundIdxToEvent(p.sound);
+        } catch (Exception e) {
+            LOGGER.error("server fail to deserialize the ping packet", e);
+            return;
+        }
+        for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
+            var senderName = sender.getEntityName();
+            var teammateName = teammate.getEntityName();
+            // play sound for all // TODO: how to play for only a few people?
+            teammate.getWorld().playSound(
+                    null, // Player - if non-null, will play sound for every nearby player *except* the specified player
+                    teammate.getBlockPos(), // The position of where the sound will come from
+                    soundEvent,
+                    SoundCategory.BLOCKS, // This determines which of the volume sliders affect this sound
+                    1f, // Volume multiplier, 1 is normal, 0.5 is half volume, etc
+                    1f // Pitch multiplier, 1 is normal, 0.5 is half pitch, etc
+            );
+            var bufNew = PacketByteBufs.copy(buf.asByteBuf());
+            ServerPlayNetworking.send(teammate, channelName, bufNew);
+            LOGGER.info("%s send ping to %s".formatted(senderName, teammateName));
         }
     }
 
     public static void multicastPingExcludeSelf(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
-        if (ENABLE_TEAMS) {
-            // TODO implement teams
-        } else {
-            SoundEvent soundEvent;
-            try {
-                var p = PingPoint.fromPacketByteBuf(buf);
-                soundEvent = soundIdxToEvent(p.sound);
-            } catch (Exception e) {
-                LOGGER.error("server fail to deserialize the ping packet", e);
-                return;
+        SoundEvent soundEvent;
+        try {
+            var p = PingPoint.fromPacketByteBuf(buf);
+            soundEvent = soundIdxToEvent(p.sound);
+        } catch (Exception e) {
+            LOGGER.error("server fail to deserialize the ping packet", e);
+            return;
+        }
+        for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
+            var senderName = sender.getEntityName();
+            var teammateName = teammate.getEntityName();
+            // play sound for all // TODO how to play for only one
+            teammate.getWorld().playSound(
+                    null, // Player - if non-null, will play sound for every nearby player *except* the specified player
+                    teammate.getBlockPos(), // The position of where the sound will come from
+                    soundEvent,
+                    SoundCategory.BLOCKS, // This determines which of the volume sliders affect this sound
+                    1f, // Volume multiplier, 1 is normal, 0.5 is half volume, etc
+                    1f // Pitch multiplier, 1 is normal, 0.5 is half pitch, etc
+            );
+            // packet skip oneself
+            if (Objects.equals(teammateName, senderName)) {
+                continue;
             }
-            for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
-                var senderName = sender.getEntityName();
-                var teammateName = teammate.getEntityName();
-                // play sound for all // TODO how to play for only one
-                teammate.getWorld().playSound(
-                        null, // Player - if non-null, will play sound for every nearby player *except* the specified player
-                        teammate.getBlockPos(), // The position of where the sound will come from
-                        soundEvent,
-                        SoundCategory.BLOCKS, // This determines which of the volume sliders affect this sound
-                        1f, // Volume multiplier, 1 is normal, 0.5 is half volume, etc
-                        1f // Pitch multiplier, 1 is normal, 0.5 is half pitch, etc
-                );
-                // packet skip oneself
-                if (Objects.equals(teammateName, senderName)) {
-                    continue;
-                }
-                var bufNew = PacketByteBufs.copy(buf.asByteBuf());
-                ServerPlayNetworking.send(teammate, channelName, bufNew);
-                LOGGER.info("%s send ping to %s".formatted(senderName, teammateName));
-            }
+            var bufNew = PacketByteBufs.copy(buf.asByteBuf());
+            ServerPlayNetworking.send(teammate, channelName, bufNew);
+            LOGGER.info("%s send ping to %s".formatted(senderName, teammateName));
         }
     }
 
@@ -352,34 +322,21 @@ public class PingSystem implements ModInitializer {
         }
     }
 
-    public static void multicastRemovePing(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
-        if (ENABLE_TEAMS) {
-            // TODO implement teams
-        } else {
-            for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
-                var senderName = sender.getEntityName();
-                var teammateName = teammate.getEntityName();
-                // packet skip oneself
-                if (Objects.equals(teammateName, senderName)) {
-                    continue;
-                }
-                var bufNew = PacketByteBufs.copy(buf.asByteBuf());
-                ServerPlayNetworking.send(teammate, channelName, bufNew);
+    public static void removePingAndMulticast(ServerPlayerEntity sender, PingPoint ping) {
+        // TODO: support ping channel (for teams)
+        // TODO: 2 maybe only allow owner / same team to remove ping
+        // remove the ping
+        activePings.remove(ping.id);
+        // multicast remove ping
+        var senderName = sender.getEntityName();
+        for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
+            var teammateName = teammate.getEntityName();
+            try {
+                var buf = ping.toPacketByteBuf();
+                ServerPlayNetworking.send(teammate, REMOVE_PING_PACKET, buf);
                 LOGGER.info("%s send remove ping to %s".formatted(senderName, teammateName));
-            }
-        }
-    }
-
-    public static void multicastRemovePingIncludeSelf(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
-        if (ENABLE_TEAMS) {
-            // TODO implement teams
-        } else {
-            for (ServerPlayerEntity teammate : PlayerLookup.world((ServerWorld) sender.getWorld())) {
-                var senderName = sender.getEntityName();
-                var teammateName = teammate.getEntityName();
-                var bufNew = PacketByteBufs.copy(buf.asByteBuf());
-                ServerPlayNetworking.send(teammate, channelName, bufNew);
-                LOGGER.info("%s send remove ping to %s".formatted(senderName, teammateName));
+            } catch (Exception e) {
+                LOGGER.error("server fail to serialize the ping packet for %s send remove ping to %s".formatted(senderName, teammateName), e);
             }
         }
     }
@@ -527,44 +484,121 @@ public class PingSystem implements ModInitializer {
     }
     
     // Execute blocked events associated with a specific ping ID
-    private static void executeBlockedEventsForPing(UUID pingId, boolean isCorrect) {
-        // Execute blocked entity damage if it matches this ping ID
-        BlockedEntityAttackEvent aEvent = blockedEntityAttacks.remove(pingId);
-        if (aEvent != null) {
-            if (aEvent.entity.isAlive() && aEvent.entity instanceof LivingEntity livingEntity) {
-                // It's safer to create a new DamageSource using the attacker (aEvent.player)
-                // at the time of dealing damage, to avoid issues with stale DamageSource objects.
-                // aEvent.player is the player whose attack was originally blocked.
-                DamageSource newDamageSource;
-                if (aEvent.player != null && aEvent.player.isAlive()) {
-                    newDamageSource = livingEntity.getDamageSources().playerAttack(aEvent.player);
-                } else {
-                    // Fallback if the original attacker is no longer valid
-                    newDamageSource = livingEntity.getDamageSources().generic();
-                    LOGGER.warn("Original attacker for blocked damage (ping ID: {}) is no longer valid. Using generic damage.", pingId);
-                }
-
-                IS_APPLYING_BLOCKED_DAMAGE.set(true);
-                try {
-                    livingEntity.damage(newDamageSource, aEvent.damageAmount);
-                } finally {
-                    IS_APPLYING_BLOCKED_DAMAGE.set(false); // Or .set(false) if you prefer explicit false over initial value
-                }
-            }
-            blockingEntityToPingId.remove(aEvent.entity.getUuid());
-            LOGGER.info("Executed blocked entity damage for ping ID: " + pingId + " (player: " + aEvent.player.getEntityName() + ", damage: " + aEvent.damageAmount + ")");
-        }
-        // Execute blocked block break if it matches this ping ID
-        BlockedBlockBreakEvent bEvent = blockedBlockBreaks.remove(pingId);
-        if (bEvent != null) {
-            if (bEvent.world.getBlockState(bEvent.pos).equals(bEvent.state)) {
-                bEvent.world.breakBlock(bEvent.pos, true, bEvent.player);
-            }
-            LOGGER.info("Executed blocked block break for ping ID: " + pingId + " (player: " + bEvent.player.getEntityName() + ")");
+    private static void executeBlockedEventsForPing(PingPoint ping, boolean isCorrect) {
+        String correctAnswer = "";
+        String correctPair = "";
+        if (ping != null && ping.quiz != null) {
+            correctAnswer = ping.quiz.options[ping.quiz.answer];
+            correctPair = String.format("%s: %s", correctAnswer, ping.quiz.question);
         }
         
+        // Execute blocked entity damage if it matches this ping ID
+        BlockedEntityAttackEvent aEvent = blockedEntityAttacks.remove(ping.id);
+        if (aEvent != null) {
+            if (isCorrect) {
+                // Reward: Resume damage and give player Strength I for 6 seconds
+                if (aEvent.entity.isAlive() && aEvent.entity instanceof LivingEntity livingEntity) {
+                    // Apply the original damage
+                    DamageSource newDamageSource;
+                    if (aEvent.player != null && aEvent.player.isAlive()) {
+                        newDamageSource = livingEntity.getDamageSources().playerAttack(aEvent.player);
+                    } else {
+                        newDamageSource = livingEntity.getDamageSources().generic();
+                        LOGGER.warn("Original attacker for blocked damage (ping ID: {}) is no longer valid. Using generic damage.", ping.id);
+                    }
+
+                    // avoid inf loop
+                    IS_APPLYING_BLOCKED_DAMAGE.set(true);
+                    try {
+                        livingEntity.damage(newDamageSource, aEvent.damageAmount);
+                    } finally {
+                        IS_APPLYING_BLOCKED_DAMAGE.set(false);
+                    }
+                    
+                    // Give player Strength I for 6 seconds (120 ticks)
+                    if (aEvent.player instanceof ServerPlayerEntity serverPlayer) {
+                        serverPlayer.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                            net.minecraft.entity.effect.StatusEffects.STRENGTH, 120, 0));
+                        serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a✓ Correct! You gained Strength for 6 seconds!"), false);
+                        serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a  Your answer was: §e" + correctPair), false);
+                    }
+                }
+                LOGGER.info("Executed blocked entity damage with reward for ping ID: " + ping.id + " (player: " + aEvent.player.getEntityName() + ", damage: " + aEvent.damageAmount + ")");
+            } else {
+                // Penalty: Cancel damage and deal 5 true damage to player
+                if (aEvent.player instanceof ServerPlayerEntity serverPlayer) {
+                    serverPlayer.damage(serverPlayer.getDamageSources().generic(), 5.0f);
+                    serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c✗ Wrong answer! You took 5 damage."), false);
+                    serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c  Correct answer was: §e" + correctPair), false);
+                }
+                LOGGER.info("Applied entity damage penalty for ping ID: " + ping.id + " (player: " + aEvent.player.getEntityName() + ")");
+            }
+            blockingEntityToPingId.remove(aEvent.entity.getUuid());
+        }
+        
+        // Execute blocked block break if it matches this ping ID
+        BlockedBlockBreakEvent bEvent = blockedBlockBreaks.remove(ping.id);
+        if (bEvent != null) {
+            if (isCorrect) {
+                // Reward: Resume break and 25% chance for double drop
+                if (bEvent.world.getBlockState(bEvent.pos).equals(bEvent.state)) {
+                    bEvent.world.breakBlock(bEvent.pos, true, bEvent.player);
+                    
+                    // 25% chance for extra break (double drop)
+                    if (Math.random() < 0.25) {
+                        // Simulate another break by dropping items again
+                        var drops = net.minecraft.block.Block.getDroppedStacks(bEvent.state, (net.minecraft.server.world.ServerWorld) bEvent.world, bEvent.pos, bEvent.blockEntity, bEvent.player, net.minecraft.item.ItemStack.EMPTY);
+                        for (net.minecraft.item.ItemStack stack : drops) {
+                            net.minecraft.block.Block.dropStack(bEvent.world, bEvent.pos, stack);
+                        }
+                        if (bEvent.player instanceof ServerPlayerEntity serverPlayer) {
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a✓ Correct! Lucky! You got double drops!"), false);
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a  Your answer was: §e" + correctPair), false);
+                        }
+                    } else {
+                        if (bEvent.player instanceof ServerPlayerEntity serverPlayer) {
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a✓ Correct! Block broken successfully!"), false);
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a  Your answer was: §e" + correctPair), false);
+                        }
+                    }
+                }
+                LOGGER.info("Executed blocked block break with reward for ping ID: " + ping.id + " (player: " + bEvent.player.getEntityName() + ")");
+            } else {
+                // Penalty: No drops and destroy iron pickaxe or lower
+                if (bEvent.world.getBlockState(bEvent.pos).equals(bEvent.state)) {
+                    // Break block without drops
+                    bEvent.world.breakBlock(bEvent.pos, false, bEvent.player);
+                    
+                    // Destroy iron pickaxe or lower
+                    if (bEvent.player instanceof ServerPlayerEntity serverPlayer) {
+                        net.minecraft.item.ItemStack mainHand = serverPlayer.getMainHandStack();
+                        if (isPickaxeIronOrLower(mainHand)) {
+                            mainHand.setCount(0); // Destroy the tool
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c✗ Wrong answer! Your pickaxe broke and no drops!"), false);
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c  Correct answer was: §e" + correctPair), false);
+                        } else {
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c✗ Wrong answer! No drops!"), false);
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c  Correct answer was: §e" + correctPair), false);
+                        }
+                    }
+                }
+                LOGGER.info("Applied block break penalty for ping ID: " + ping.id + " (player: " + bEvent.player.getEntityName() + ")");
+            }
+        }
+
         // Clean up active ping
-        activePings.remove(pingId);
+        activePings.remove(ping.id);
+    }
+    
+    // Helper method to check if pickaxe is iron or lower tier
+    private static boolean isPickaxeIronOrLower(net.minecraft.item.ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        
+        net.minecraft.item.Item item = stack.getItem();
+        return item == net.minecraft.item.Items.WOODEN_PICKAXE ||
+               item == net.minecraft.item.Items.STONE_PICKAXE ||
+               item == net.minecraft.item.Items.IRON_PICKAXE ||
+               item == net.minecraft.item.Items.GOLDEN_PICKAXE;
     }
 
     public static void beforeInvokingBlockedByShieldInDamage(LivingEntity self, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
