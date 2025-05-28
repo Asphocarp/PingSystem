@@ -167,8 +167,7 @@ public class RenderHandler {
                 renderIconHUD(drawContext, screenX, screenY, ping);
 
                 // Check if this ping is the nearest to screen center
-                double deltaX = screenX - halfWidth;
-                double deltaY = screenY - halfHeight;
+                double deltaX = screenX - halfWidth, deltaY = screenY - halfHeight;
                 double distanceSquared = deltaX * deltaX + deltaY * deltaY;
                 if (distanceSquared <= thresholdSquared && distanceSquared < nearestDistanceSquared) {
                     nearestPing = ping;
