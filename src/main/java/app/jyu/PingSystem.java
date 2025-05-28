@@ -169,7 +169,7 @@ public class PingSystem implements ModInitializer {
     }
 
     public static void onReceivingRemovePingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){
-        // for debug, player here force remove the ping and pretend to be correct
+        // for debug, player here force remove the ping and give up (as wrong answer)
 
         // get pingToRemove
         PacketByteBuf bufCopy = new PacketByteBuf(buf.copy());
@@ -186,7 +186,7 @@ public class PingSystem implements ModInitializer {
             return;
         }
 
-        executeBlockedEventsForPing(pingToRemove, true);
+        executeBlockedEventsForPing(pingToRemove, false);
         removePingAndMulticast(player, pingToRemove);
     }
 
@@ -613,7 +613,7 @@ public class PingSystem implements ModInitializer {
     public static boolean redirectBlockedByShield(LivingEntity self, DamageSource source) {
         float amount = CURRENT_DAMAGE_AMOUNT.get();
         LOGGER.info(">> redirectBlockedByShield with amount: {}", amount);
-        var CURRENT_STRENGTH = 0.25; // TODO: add config for this
+        var CURRENT_STRENGTH = 0.2; // TODO: add config for this
         if (self.isDead() || self.getWorld().isClient() || !(source.getSource() instanceof ServerPlayerEntity serverPlayer)) { 
             return self.blockedByShield(source); // Call original method
         }

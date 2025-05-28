@@ -224,7 +224,6 @@ public class PingSystemClient implements ClientModInitializer {
         }
     }
 
-    @Deprecated
     private static void sendRemovePingToServer(PingPoint p) {
         try {
             PacketByteBuf buf = p.toPacketByteBuf();
