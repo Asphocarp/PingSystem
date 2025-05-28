@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -53,6 +54,10 @@ import java.util.Map;
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
 import static app.jyu.NetworkingConstants.ANSWER_PACKET;
+import static app.jyu.NetworkingConstants.REQUEST_CONFIG_PACKET;
+import static app.jyu.NetworkingConstants.UPDATE_CONFIG_PACKET;
+import static app.jyu.NetworkingConstants.OPEN_CONFIG_GUI_PACKET;
+import static app.jyu.NetworkingConstants.SYNC_CONFIG_PACKET;
 
 // Data classes for storing blocked events
 class BlockedEntityAttackEvent {
@@ -164,8 +169,23 @@ public class PingSystem implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(PING_PACKET, PingSystem::onReceivingPingPacket);
         ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, PingSystem::onReceivingRemovePingPacket);
         ServerPlayNetworking.registerGlobalReceiver(ANSWER_PACKET, PingSystem::onReceivingAnswerPacket);
+        
+        // register server config event handlers
+        ServerPlayNetworking.registerGlobalReceiver(REQUEST_CONFIG_PACKET, PingSystem::onReceivingRequestConfigPacket);
+        ServerPlayNetworking.registerGlobalReceiver(UPDATE_CONFIG_PACKET, PingSystem::onReceivingUpdateConfigPacket);
+        ServerPlayNetworking.registerGlobalReceiver(OPEN_CONFIG_GUI_PACKET, PingSystem::onReceivingOpenConfigGuiPacket);
+        
         PlayerBlockBreakEvents.BEFORE.register(PingSystem::onBlockBreak);
         ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
+        
+        // Initialize server config when server starts
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            LOGGER.info("Loading PingSystem server configuration...");
+            ServerConfig.loadConfig(server);
+        });
+        
+        // Register commands
+        PingConfigCommand.register();
     }
 
     public static void onReceivingRemovePingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){
@@ -660,5 +680,88 @@ public class PingSystem implements ModInitializer {
         LOGGER.info("<< redirectBlockedByShield: Blocked damage and created ping for entity: " + self.getName().getString() + " (damage blocked until ping removed)");
         self.takeKnockback(CURRENT_STRENGTH, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
         return true; // Pretend it was blocked by shield
+    }
+
+    /**
+     * Handle request for server configuration from client
+     */
+    public static void onReceivingRequestConfigPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
+        LOGGER.info("[PingSystem Server] Player {} requested server config", player.getEntityName());
+        
+        // Create and send config sync packet
+        try {
+            PacketByteBuf configBuf = ServerConfig.createConfigPacket();
+            
+            // Add available books info
+            Map<Integer, String> books = ServerConfig.getAvailableBooks();
+            configBuf.writeInt(books.size());
+            for (Map.Entry<Integer, String> entry : books.entrySet()) {
+                configBuf.writeInt(entry.getKey());
+                configBuf.writeString(entry.getValue());
+            }
+            
+            ServerPlayNetworking.send(player, SYNC_CONFIG_PACKET, configBuf);
+            LOGGER.info("[PingSystem Server] Sent config to player {}", player.getEntityName());
+            
+        } catch (Exception e) {
+            LOGGER.error("[PingSystem Server] Failed to send config to player {}", player.getEntityName(), e);
+        }
+    }
+    
+    /**
+     * Handle config update from client (OP only)
+     */
+    public static void onReceivingUpdateConfigPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
+        LOGGER.info("[PingSystem Server] Player {} attempting to update server config", player.getEntityName());
+        
+        // Check permissions
+        if (!ServerConfig.hasConfigPermission(player)) {
+            LOGGER.warn("[PingSystem Server] Player {} does not have permission to update server config", player.getEntityName());
+            return;
+        }
+        
+        try {
+            // Update config from packet
+            ServerConfig.updateFromPacket(buf, server);
+            LOGGER.info("[PingSystem Server] Server config updated by player {}", player.getEntityName());
+            
+            // Broadcast config update to all players
+            PacketByteBuf broadcastBuf = ServerConfig.createConfigPacket();
+            Map<Integer, String> books = ServerConfig.getAvailableBooks();
+            broadcastBuf.writeInt(books.size());
+            for (Map.Entry<Integer, String> entry : books.entrySet()) {
+                broadcastBuf.writeInt(entry.getKey());
+                broadcastBuf.writeString(entry.getValue());
+            }
+            
+            for (ServerPlayerEntity allPlayer : PlayerLookup.all(server)) {
+                try {
+                    PacketByteBuf playerBuf = PacketByteBufs.create();
+                    playerBuf.writeBytes(broadcastBuf.copy());
+                    ServerPlayNetworking.send(allPlayer, SYNC_CONFIG_PACKET, playerBuf);
+                } catch (Exception e) {
+                    LOGGER.error("[PingSystem Server] Failed to broadcast config update to player {}", allPlayer.getEntityName(), e);
+                }
+            }
+            
+        } catch (Exception e) {
+            LOGGER.error("[PingSystem Server] Failed to update server config from player {}", player.getEntityName(), e);
+        }
+    }
+    
+    /**
+     * Handle request to open config GUI (OP only)
+     */
+    public static void onReceivingOpenConfigGuiPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
+        LOGGER.info("[PingSystem Server] Player {} requesting to open config GUI", player.getEntityName());
+        
+        // Check permissions
+        if (!ServerConfig.hasConfigPermission(player)) {
+            LOGGER.warn("[PingSystem Server] Player {} does not have permission to open config GUI", player.getEntityName());
+            return;
+        }
+        
+        // Simply send current config - the client will handle opening the GUI
+        onReceivingRequestConfigPacket(server, player, handler, PacketByteBufs.create(), responseSender);
     }
 }

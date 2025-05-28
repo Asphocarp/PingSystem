@@ -11,9 +11,11 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -33,8 +35,13 @@ import static app.jyu.PingSystem.LOGGER;
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
 import static app.jyu.NetworkingConstants.ANSWER_PACKET;
+import static app.jyu.NetworkingConstants.SYNC_CONFIG_PACKET;
+import static app.jyu.NetworkingConstants.OPEN_CONFIG_GUI_PACKET;
 
 import net.minecraft.entity.projectile.ProjectileUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PingSystemClient implements ClientModInitializer {
     public static final double MAX_REACH = 512.0D;
@@ -99,6 +106,17 @@ public class PingSystemClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, (client, handler, buf, responseSender) -> {
             removePingReceiver(buf);
+        });
+
+        // Register server config sync receiver
+        ClientPlayNetworking.registerGlobalReceiver(SYNC_CONFIG_PACKET, (client, handler, buf, responseSender) -> {
+            syncConfigReceiver(buf);
+        });
+
+        // Register config GUI open receiver
+        ClientPlayNetworking.registerGlobalReceiver(OPEN_CONFIG_GUI_PACKET, (client, handler, buf, responseSender) -> {
+            // Open the GUI on client side
+            client.execute(() -> openServerConfigGui());
         });
 
         ModConfig.loadConfig(ModConfig.CFG_FILE);
@@ -251,5 +269,90 @@ public class PingSystemClient implements ClientModInitializer {
         } catch (Exception e) {
             LOGGER.error("Fail to deserialize the remove ping packet received", e);
         }
+    }
+
+    // Static reference to config screen for reuse
+    private static ServerConfigScreen configScreen = null;
+    
+    /**
+     * Handle server config sync packet
+     */
+    private static void syncConfigReceiver(PacketByteBuf buf) {
+        try {
+            // Read config values
+            int bookId = buf.readInt();
+            int highlightColor = buf.readInt();
+            boolean quizEnabled = buf.readBoolean();
+            int quizTimeout = buf.readInt();
+            boolean autoPingEnabled = buf.readBoolean();
+            
+            // Read available books
+            int bookCount = buf.readInt();
+            Map<Integer, String> availableBooks = new HashMap<>();
+            for (int i = 0; i < bookCount; i++) {
+                int id = buf.readInt();
+                String name = buf.readString();
+                availableBooks.put(id, name);
+            }
+            
+            // Update config screen if it exists
+            if (configScreen != null) {
+                configScreen.updateConfig(bookId, highlightColor, quizEnabled, quizTimeout, autoPingEnabled, availableBooks);
+            } else {
+                // Store for later use when opening config screen
+                lastReceivedConfig = new ConfigData(bookId, highlightColor, quizEnabled, quizTimeout, autoPingEnabled, availableBooks);
+            }
+            
+            PingSystem.LOGGER.info("[PingSystem Client] Received server config: bookId={}, highlightColor=0x{}, quizEnabled={}", 
+                bookId, Integer.toHexString(highlightColor), quizEnabled);
+                
+        } catch (Exception e) {
+            PingSystem.LOGGER.error("[PingSystem Client] Failed to handle server config sync", e);
+        }
+    }
+    
+    // Store last received config for when GUI is opened
+    private static ConfigData lastReceivedConfig = null;
+    
+    private static class ConfigData {
+        final int bookId;
+        final int highlightColor;
+        final boolean quizEnabled;
+        final int quizTimeout;
+        final boolean autoPingEnabled;
+        final Map<Integer, String> availableBooks;
+        
+        ConfigData(int bookId, int highlightColor, boolean quizEnabled, int quizTimeout, boolean autoPingEnabled, Map<Integer, String> availableBooks) {
+            this.bookId = bookId;
+            this.highlightColor = highlightColor;
+            this.quizEnabled = quizEnabled;
+            this.quizTimeout = quizTimeout;
+            this.autoPingEnabled = autoPingEnabled;
+            this.availableBooks = availableBooks;
+        }
+    }
+    
+    /**
+     * Open server config GUI (OP only)
+     */
+    public static void openServerConfigGui() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null) return;
+        
+        // Open the GUI directly
+        client.execute(() -> {
+            configScreen = new ServerConfigScreen(client.currentScreen);
+            if (lastReceivedConfig != null) {
+                configScreen.updateConfig(
+                    lastReceivedConfig.bookId,
+                    lastReceivedConfig.highlightColor,
+                    lastReceivedConfig.quizEnabled,
+                    lastReceivedConfig.quizTimeout,
+                    lastReceivedConfig.autoPingEnabled,
+                    lastReceivedConfig.availableBooks
+                );
+            }
+            client.setScreen(configScreen);
+        });
     }
 } 
