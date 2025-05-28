@@ -28,14 +28,12 @@ public class ServerConfig {
     public static final int DEFAULT_HIGHLIGHT_COLOR = 0xFFEB9D39;
     public static final boolean DEFAULT_QUIZ_ENABLED = true;
     public static final int DEFAULT_QUIZ_TIMEOUT_SECONDS = 30;
-    public static final boolean DEFAULT_AUTO_PING_ENABLED = true;
     
     // Current configuration values
     private static volatile int currentBookId = DEFAULT_CURRENT_BOOK_ID;
     private static volatile int highlightColor = DEFAULT_HIGHLIGHT_COLOR;
     private static volatile boolean quizEnabled = DEFAULT_QUIZ_ENABLED;
     private static volatile int quizTimeoutSeconds = DEFAULT_QUIZ_TIMEOUT_SECONDS;
-    private static volatile boolean autoPingEnabled = DEFAULT_AUTO_PING_ENABLED;
     
     // Cache for book info
     private static final Map<Integer, String> bookInfoCache = new ConcurrentHashMap<>();
@@ -86,10 +84,9 @@ public class ServerConfig {
             highlightColor = Integer.parseInt(props.getProperty("highlightColor", String.valueOf(DEFAULT_HIGHLIGHT_COLOR)));
             quizEnabled = Boolean.parseBoolean(props.getProperty("quizEnabled", String.valueOf(DEFAULT_QUIZ_ENABLED)));
             quizTimeoutSeconds = Integer.parseInt(props.getProperty("quizTimeoutSeconds", String.valueOf(DEFAULT_QUIZ_TIMEOUT_SECONDS)));
-            autoPingEnabled = Boolean.parseBoolean(props.getProperty("autoPingEnabled", String.valueOf(DEFAULT_AUTO_PING_ENABLED)));
             
-            LOGGER.info("Loaded server config: bookId={}, highlightColor=0x{}, quizEnabled={}, quizTimeout={}s, autoPingEnabled={}", 
-                currentBookId, Integer.toHexString(highlightColor), quizEnabled, quizTimeoutSeconds, autoPingEnabled);
+            LOGGER.info("Loaded server config: bookId={}, highlightColor=0x{}, quizEnabled={}, quizTimeout={}s", 
+                currentBookId, Integer.toHexString(highlightColor), quizEnabled, quizTimeoutSeconds);
                 
         } catch (Exception e) {
             LOGGER.error("Failed to load server config, using defaults", e);
@@ -112,7 +109,6 @@ public class ServerConfig {
             props.setProperty("highlightColor", String.valueOf(highlightColor));
             props.setProperty("quizEnabled", String.valueOf(quizEnabled));
             props.setProperty("quizTimeoutSeconds", String.valueOf(quizTimeoutSeconds));
-            props.setProperty("autoPingEnabled", String.valueOf(autoPingEnabled));
             
             props.store(Files.newOutputStream(configPath), "PingSystem Server Configuration");
             LOGGER.info("Saved server config to: {}", configPath);
@@ -131,7 +127,6 @@ public class ServerConfig {
         highlightColor = DEFAULT_HIGHLIGHT_COLOR;
         quizEnabled = DEFAULT_QUIZ_ENABLED;
         quizTimeoutSeconds = DEFAULT_QUIZ_TIMEOUT_SECONDS;
-        autoPingEnabled = DEFAULT_AUTO_PING_ENABLED;
     }
     
     // Getters
@@ -139,7 +134,6 @@ public class ServerConfig {
     public static int getHighlightColor() { return highlightColor; }
     public static boolean isQuizEnabled() { return quizEnabled; }
     public static int getQuizTimeoutSeconds() { return quizTimeoutSeconds; }
-    public static boolean isAutoPingEnabled() { return autoPingEnabled; }
     
     // Setters (with validation)
     public static void setCurrentBookId(int bookId) {
@@ -170,11 +164,6 @@ public class ServerConfig {
         }
     }
     
-    public static void setAutoPingEnabled(boolean enabled) {
-        autoPingEnabled = enabled;
-        LOGGER.info("Server config: Set auto ping enabled to {}", enabled);
-    }
-    
     // Utility methods
     public static String getBookName(int bookId) {
         return bookInfoCache.getOrDefault(bookId, "Unknown Book " + bookId);
@@ -193,7 +182,6 @@ public class ServerConfig {
         buf.writeInt(highlightColor);
         buf.writeBoolean(quizEnabled);
         buf.writeInt(quizTimeoutSeconds);
-        buf.writeBoolean(autoPingEnabled);
         return buf;
     }
     
@@ -206,7 +194,6 @@ public class ServerConfig {
             setHighlightColor(buf.readInt());
             setQuizEnabled(buf.readBoolean());
             setQuizTimeoutSeconds(buf.readInt());
-            setAutoPingEnabled(buf.readBoolean());
             
             // Save immediately after update
             saveConfig(server);

@@ -11,7 +11,6 @@ PingSystem 现在支持服务器端全局配置，允许OP管理员方便地修�
 - **高亮颜色**: 设置ping高亮的颜色
 - **Quiz系统**: 启用/禁用quiz功能
 - **Quiz超时**: 设置quiz的超时时间（秒）
-- **自动Ping**: 启用/禁用攻击和挖矿时的自动ping
 
 ### 可用词典列表
 - 0: CET-4 (大学英语四级)
@@ -48,7 +47,6 @@ PingSystem 现在支持服务器端全局配置，允许OP管理员方便地修�
 2. **高亮颜色**: 输入16进制颜色代码（格式：0xAARRGGBB）
 3. **Quiz系统启用**: 勾选框控制是否开启quiz功能
 4. **Quiz超时时间**: 设置quiz的超时时间（1-300秒）
-5. **自动Ping启用**: 控制是否在攻击怪物和挖矿时自动创建ping
 
 ### 保存配置
 - 点击"Save"按钮保存配置到服务器
@@ -72,7 +70,6 @@ currentBookId=1
 highlightColor=-1378503
 quizEnabled=true
 quizTimeoutSeconds=30
-autoPingEnabled=true
 ```
 
 ## 注意事项

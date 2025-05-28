@@ -62,7 +62,7 @@ public class PingPoint implements Serializable {
         this.type = type;
         // Ensure entityUUID is only set for ENTITY type
         this.entityUUID = (type == PingType.ENTITY) ? entityUUID : null; 
-        this.quiz = ServerConfig.isQuizEnabled() ? Book.getRandomQuiz(ServerConfig.getCurrentBookId()) : null;
+        this.quiz = Book.getRandomQuiz(ServerConfig.getCurrentBookId());
 
         // // log quiz content here
         // if (this.quiz != null) {

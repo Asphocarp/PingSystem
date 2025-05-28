@@ -284,7 +284,6 @@ public class PingSystemClient implements ClientModInitializer {
             int highlightColor = buf.readInt();
             boolean quizEnabled = buf.readBoolean();
             int quizTimeout = buf.readInt();
-            boolean autoPingEnabled = buf.readBoolean();
             
             // Read available books
             int bookCount = buf.readInt();
@@ -297,10 +296,10 @@ public class PingSystemClient implements ClientModInitializer {
             
             // Update config screen if it exists
             if (configScreen != null) {
-                configScreen.updateConfig(bookId, highlightColor, quizEnabled, quizTimeout, autoPingEnabled, availableBooks);
+                configScreen.updateConfig(bookId, highlightColor, quizEnabled, quizTimeout, availableBooks);
             } else {
                 // Store for later use when opening config screen
-                lastReceivedConfig = new ConfigData(bookId, highlightColor, quizEnabled, quizTimeout, autoPingEnabled, availableBooks);
+                lastReceivedConfig = new ConfigData(bookId, highlightColor, quizEnabled, quizTimeout, availableBooks);
             }
             
             PingSystem.LOGGER.info("[PingSystem Client] Received server config: bookId={}, highlightColor=0x{}, quizEnabled={}", 
@@ -319,15 +318,13 @@ public class PingSystemClient implements ClientModInitializer {
         final int highlightColor;
         final boolean quizEnabled;
         final int quizTimeout;
-        final boolean autoPingEnabled;
         final Map<Integer, String> availableBooks;
         
-        ConfigData(int bookId, int highlightColor, boolean quizEnabled, int quizTimeout, boolean autoPingEnabled, Map<Integer, String> availableBooks) {
+        ConfigData(int bookId, int highlightColor, boolean quizEnabled, int quizTimeout, Map<Integer, String> availableBooks) {
             this.bookId = bookId;
             this.highlightColor = highlightColor;
             this.quizEnabled = quizEnabled;
             this.quizTimeout = quizTimeout;
-            this.autoPingEnabled = autoPingEnabled;
             this.availableBooks = availableBooks;
         }
     }
@@ -348,7 +345,6 @@ public class PingSystemClient implements ClientModInitializer {
                     lastReceivedConfig.highlightColor,
                     lastReceivedConfig.quizEnabled,
                     lastReceivedConfig.quizTimeout,
-                    lastReceivedConfig.autoPingEnabled,
                     lastReceivedConfig.availableBooks
                 );
             }

@@ -14,6 +14,8 @@ import net.minecraft.util.Formatting;
 
 import java.awt.*;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import static app.jyu.NetworkingConstants.UPDATE_CONFIG_PACKET;
 
@@ -25,7 +27,6 @@ public class ServerConfigScreen extends Screen {
     private int highlightColor = 0xFFEB9D39;
     private boolean quizEnabled = true;
     private int quizTimeoutSeconds = 30;
-    private boolean autoPingEnabled = true;
     
     // Available books (received from server)
     private Map<Integer, String> availableBooks;
@@ -35,7 +36,6 @@ public class ServerConfigScreen extends Screen {
     private TextFieldWidget colorField;
     private CheckboxWidget quizEnabledCheckbox;
     private TextFieldWidget timeoutField;
-    private CheckboxWidget autoPingCheckbox;
     private ButtonWidget saveButton;
     private ButtonWidget cancelButton;
     
@@ -49,12 +49,11 @@ public class ServerConfigScreen extends Screen {
         this.selectedBookId = currentBookId;
     }
     
-    public void updateConfig(int bookId, int color, boolean quiz, int timeout, boolean autoPing, Map<Integer, String> books) {
+    public void updateConfig(int bookId, int color, boolean quiz, int timeout, Map<Integer, String> books) {
         this.currentBookId = bookId;
         this.highlightColor = color;
         this.quizEnabled = quiz;
         this.quizTimeoutSeconds = timeout;
-        this.autoPingEnabled = autoPing;
         this.availableBooks = books;
         this.selectedBookId = bookId;
         
@@ -71,8 +70,8 @@ public class ServerConfigScreen extends Screen {
         int centerX = this.width / 2;
         int startY = 70;
         int currentY = startY;
-        int spacing = 35; // More consistent spacing
-        int buttonWidth = 250; // Slightly wider for better appearance
+        int spacing = 35;
+        int buttonWidth = 250;
         int buttonHeight = 20;
         
         // Book selection button
@@ -86,7 +85,7 @@ public class ServerConfigScreen extends Screen {
         this.addDrawableChild(bookSelectionButton);
         
         // Color field (with space for label above)
-        currentY += spacing + 15; // Extra space for label
+        currentY += spacing + 15;
         colorField = new TextFieldWidget(this.textRenderer, centerX - buttonWidth / 2, currentY, buttonWidth, buttonHeight, Text.literal("Color"));
         colorField.setText("0x" + Integer.toHexString(highlightColor).toUpperCase());
         this.addDrawableChild(colorField);
@@ -97,15 +96,10 @@ public class ServerConfigScreen extends Screen {
         this.addDrawableChild(quizEnabledCheckbox);
         
         // Timeout field (with space for label above)
-        currentY += spacing + 15; // Extra space for label
+        currentY += spacing + 15;
         timeoutField = new TextFieldWidget(this.textRenderer, centerX - buttonWidth / 2, currentY, buttonWidth, buttonHeight, Text.literal("Timeout"));
         timeoutField.setText(String.valueOf(quizTimeoutSeconds));
         this.addDrawableChild(timeoutField);
-        
-        // Auto ping checkbox
-        currentY += spacing;
-        autoPingCheckbox = new CheckboxWidget(centerX - buttonWidth / 2, currentY, buttonWidth, buttonHeight, Text.literal("Auto-Ping on Actions"), autoPingEnabled);
-        this.addDrawableChild(autoPingCheckbox);
         
         // Save and Cancel buttons with more space above
         currentY += spacing + 15;
@@ -154,7 +148,7 @@ public class ServerConfigScreen extends Screen {
         
         // Labels for text fields - properly aligned with their input fields
         int centerX = this.width / 2;
-        int labelX = centerX - 125; // Align labels to the left of input fields
+        int labelX = centerX - (250/2); // Align labels to the left of input fields, same as button start
         
         // Color field label
         if (colorField != null) {
@@ -170,64 +164,88 @@ public class ServerConfigScreen extends Screen {
     }
     
     private void renderBookSelectionPopup(DrawContext context, int mouseX, int mouseY) {
-        int popupX = this.width / 2 - 150;
-        int popupY = 80;
-        int popupWidth = 300;
-        int maxBooks = Math.min(10, availableBooks.size());
-        int popupHeight = maxBooks * 20 + 20;
+        int popupX = bookSelectionButton.getX();
+        int popupY = bookSelectionButton.getY() + bookSelectionButton.getHeight() + 2;
+        int popupWidth = bookSelectionButton.getWidth();
         
+        List<Map.Entry<Integer, String>> sortedBooks = new ArrayList<>(availableBooks.entrySet());
+        sortedBooks.sort(Map.Entry.comparingByKey());
+
+        int maxDisplayItems = 10;
+        int displayItemCount = Math.min(sortedBooks.size(), maxDisplayItems);
+        int popupHeight = (displayItemCount * (this.textRenderer.fontHeight + 5)) + 10; // Adjusted for padding
+
         // Background
-        context.fill(popupX - 5, popupY - 5, popupX + popupWidth + 5, popupY + popupHeight + 5, 0xFF000000);
-        context.fill(popupX, popupY, popupX + popupWidth, popupY + popupHeight, 0xFF333333);
+        context.fill(popupX - 1, popupY - 1, popupX + popupWidth + 1, popupY + popupHeight + 1, 0xFF000000); // Border
+        context.fill(popupX, popupY, popupX + popupWidth, popupY + popupHeight, 0xCC333333); // Semi-transparent background
         
-        // Header
-        context.drawTextWithShadow(this.textRenderer, "Select Dictionary:", popupX + 5, popupY + 5, 0xFFFFFF);
-        
-        // Book list
-        int y = popupY + 20;
-        for (Map.Entry<Integer, String> entry : availableBooks.entrySet()) {
+        int itemY = popupY + 5;
+        for (Map.Entry<Integer, String> entry : sortedBooks) {
             int bookId = entry.getKey();
-            String bookName = entry.getValue();
+            String bookName = String.format("%d: %s", bookId, entry.getValue());
             
             boolean isHovered = mouseX >= popupX && mouseX <= popupX + popupWidth && 
-                               mouseY >= y && mouseY <= y + 15;
+                               mouseY >= itemY && mouseY <= itemY + this.textRenderer.fontHeight + 2;
             boolean isSelected = bookId == selectedBookId;
             
-            int color = isSelected ? 0xFF55FF55 : (isHovered ? 0xFF555555 : 0xFFFFFFFF);
+            int textColor = isSelected ? 0xFF55FF55 : (isHovered ? 0xFFDDDDDD : 0xFFFFFFFF);
             context.drawTextWithShadow(this.textRenderer, 
-                String.format("%d. %s", bookId, bookName), 
-                popupX + 10, y, color);
+                bookName, 
+                popupX + 5, itemY + 1, textColor);
             
-            y += 20;
-            if (y > popupY + popupHeight - 20) break; // Prevent overflow
+            itemY += this.textRenderer.fontHeight + 5;
+            if (itemY >= popupY + popupHeight - 5) break; 
         }
     }
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (showBookSelection && availableBooks != null) {
-            int popupX = this.width / 2 - 150;
-            int popupY = 80;
-            int popupWidth = 300;
+        if (button == 0 && showBookSelection && availableBooks != null) {
+            int popupX = bookSelectionButton.getX();
+            int popupY = bookSelectionButton.getY() + bookSelectionButton.getHeight() + 2;
+            int popupWidth = bookSelectionButton.getWidth();
+
+            List<Map.Entry<Integer, String>> sortedBooks = new ArrayList<>(availableBooks.entrySet());
+            sortedBooks.sort(Map.Entry.comparingByKey());
             
-            // Check if clicked inside popup
-            if (mouseX >= popupX && mouseX <= popupX + popupWidth && mouseY >= popupY + 20) {
-                int y = popupY + 20;
-                for (Map.Entry<Integer, String> entry : availableBooks.entrySet()) {
-                    if (mouseY >= y && mouseY <= y + 15) {
-                        selectedBookId = entry.getKey();
-                        showBookSelection = false;
-                        updateButtonTexts();
-                        return true;
-                    }
-                    y += 20;
+            int itemY = popupY + 5;
+            for (Map.Entry<Integer, String> entry : sortedBooks) {
+                if (mouseX >= popupX && mouseX <= popupX + popupWidth && 
+                    mouseY >= itemY && mouseY <= itemY + this.textRenderer.fontHeight + 2) {
+                    
+                    selectedBookId = entry.getKey();
+                    showBookSelection = false;
+                    updateButtonTexts();
+                    return true;
                 }
-            } else {
-                showBookSelection = false;
-                return true;
+                itemY += this.textRenderer.fontHeight + 5;
             }
+            // If clicked outside the book list area but popup was shown, close it
+            showBookSelection = false;
+            return true; 
         }
         
+        // Handle clicks on other elements like the book selection button itself
+        if (bookSelectionButton.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (saveButton.mouseClicked(mouseX, mouseY, button)) {
+             return true;
+        }
+        if (cancelButton.mouseClicked(mouseX, mouseY, button)) {
+             return true;
+        }
+        if(quizEnabledCheckbox.mouseClicked(mouseX, mouseY, button)){
+            return true;
+        }
+        // Let text fields handle their clicks
+        if (colorField.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (timeoutField.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
     
@@ -249,27 +267,34 @@ public class ServerConfigScreen extends Screen {
             buf.writeInt(color);
             buf.writeBoolean(quizEnabledCheckbox.isChecked());
             buf.writeInt(timeout);
-            buf.writeBoolean(autoPingCheckbox.isChecked());
             
             // Send to server
             ClientPlayNetworking.send(UPDATE_CONFIG_PACKET, buf);
             
             // Show success message and close
-            MinecraftClient.getInstance().player.sendMessage(
-                Text.literal("Server configuration updated!").formatted(Formatting.GREEN), false);
+            if (MinecraftClient.getInstance().player != null) {
+                MinecraftClient.getInstance().player.sendMessage(
+                    Text.literal("Server configuration updated!").formatted(Formatting.GREEN), false);
+            }
             this.close();
             
         } catch (NumberFormatException e) {
-            MinecraftClient.getInstance().player.sendMessage(
-                Text.literal("Invalid number format in fields!").formatted(Formatting.RED), false);
+            if (MinecraftClient.getInstance().player != null) {
+                MinecraftClient.getInstance().player.sendMessage(
+                    Text.literal("Invalid number format in fields!").formatted(Formatting.RED), false);
+            }
         } catch (Exception e) {
-            MinecraftClient.getInstance().player.sendMessage(
-                Text.literal("Failed to save configuration: " + e.getMessage()).formatted(Formatting.RED), false);
+             if (MinecraftClient.getInstance().player != null) {
+                MinecraftClient.getInstance().player.sendMessage(
+                    Text.literal("Failed to save configuration: " + e.getMessage()).formatted(Formatting.RED), false);
+             }
         }
     }
     
     @Override
     public void close() {
-        this.client.setScreen(this.parent);
+        if (this.client != null) {
+            this.client.setScreen(this.parent);
+        }
     }
 } 

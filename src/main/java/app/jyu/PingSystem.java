@@ -126,10 +126,12 @@ public class PingSystem implements ModInitializer {
     public static final ThreadLocal<Float> CURRENT_DAMAGE_AMOUNT = ThreadLocal.withInitial(() -> 0.0f);
     
     // Storage for blocked events waiting for ping cancellation
-    // Ping ID -> ArrayList of BlockedEntityAttackEvent
-    private static final Map<UUID, BlockedEntityAttackEvent> blockedEntityAttacks = new ConcurrentHashMap<>();
     // Entity ID -> Ping ID // TODO: to optimize (one or many ping per entity)
     public static final Map<UUID, UUID> blockingEntityToPingId = new ConcurrentHashMap<>();
+    // Ping ID -> BlockedEntityAttackEvent
+    private static final Map<UUID, BlockedEntityAttackEvent> blockedEntityAttacks = new ConcurrentHashMap<>();
+    // Block Pos -> Ping ID
+    public static final Map<BlockPos, UUID> blockingBlockPosToPingId = new ConcurrentHashMap<>();
     // Ping ID -> BlockedBlockBreakEvent
     private static final Map<UUID, BlockedBlockBreakEvent> blockedBlockBreaks = new ConcurrentHashMap<>();
     // Active pings for answer processing
@@ -440,42 +442,36 @@ public class PingSystem implements ModInitializer {
     
     // Server-side event handler for block breaking - blocks the break and creates a ping (ONLY FOR ORES)
     private static boolean onBlockBreak(net.minecraft.world.World world, net.minecraft.entity.player.PlayerEntity player, BlockPos pos, BlockState state, net.minecraft.block.entity.BlockEntity blockEntity) {
-        if (!world.isClient() && player instanceof ServerPlayerEntity serverPlayer) {
-            Block block = state.getBlock();
-            
-            // Only trigger for ore blocks
-            if (!isOreBlock(block)) {
-                return true; // Allow break to proceed for non-ore blocks
-            }
-            // Store the blocked break event
-            UUID pingId = UUID.randomUUID();
-            BlockedBlockBreakEvent blockedEvent = new BlockedBlockBreakEvent(world, player, pos, state, blockEntity);
-            blockedBlockBreaks.put(pingId, blockedEvent);
-            
-            // Create ping for the ore block being broken
-            Vec3d pingPos = Vec3d.ofCenter(pos);
-            PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), BLOCK_BREAK_PING_COLOR, BLOCK_BREAK_PING_SOUND_INDEX, PingPoint.PingType.LOCATION, null);
-            pingToSend.id = pingId; // Associate ping with blocked event
-            
-            // Store ping for answer processing
-            activePings.put(pingId, pingToSend);
-            
-            // Create and send ping packet to all players
-            try {
-                PacketByteBuf buf = pingToSend.toPacketByteBuf();
-                multicastPingIncludeSelf(serverPlayer, PING_PACKET, buf);
-                LOGGER.info("Created auto-ping for ore break: " + state.getBlock().getName().getString() + " (blocked until ping removed)");
-            } catch (Exception e) {
-                LOGGER.error("Failed to create ping for block break", e);
-                // If ping creation fails, allow the break to proceed
-                blockedBlockBreaks.remove(pingId);
-                activePings.remove(pingId);
-                return true; // Allow break to proceed
-            }
-            
-            return false; // Block the break (false = cancel)
+        if (world.isClient() || !(player instanceof ServerPlayerEntity serverPlayer)) {
+            return true;
         }
-        return true; // Allow break to proceed
+        Block block = state.getBlock();
+        // Only trigger for ore blocks
+        if (!isOreBlock(block)) {
+            return true; // Allow break to proceed for non-ore blocks
+        }
+        // detect if there is already a ping for this block, do not break/ping it again
+        if (blockingBlockPosToPingId.containsKey(pos)) {
+            return false;
+        }
+        
+        // Create ping, and multicast it
+        Vec3d pingPos = Vec3d.ofCenter(pos);
+        PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), BLOCK_BREAK_PING_COLOR, BLOCK_BREAK_PING_SOUND_INDEX);
+        try {
+            PacketByteBuf buf = pingToSend.toPacketByteBuf();
+            multicastPingIncludeSelf(serverPlayer, PING_PACKET, buf);
+            LOGGER.info("Created auto-ping for ore break: " + state.getBlock().getName().getString() + " (blocked until ping removed)");
+        } catch (Exception e) {
+            LOGGER.error("Failed to create ping for block break", e);
+            return true; // Allow break to proceed
+        }
+        // Store stuff
+        BlockedBlockBreakEvent blockedEvent = new BlockedBlockBreakEvent(world, player, pos, state, blockEntity);
+        blockedBlockBreaks.put(pingToSend.id, blockedEvent);
+        activePings.put(pingToSend.id, pingToSend);
+        blockingBlockPosToPingId.put(pos, pingToSend.id);
+        return false; // Block the break (false = cancel)
     }
     
     // Clean up blocked events that have expired (timeout after 30 seconds)
