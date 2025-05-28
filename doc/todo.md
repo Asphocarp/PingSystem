@@ -1,6 +1,5 @@
-- fix: do not forget to remove ping
-- [ ] select book (and other global server-side config, like highlight color)
 - [ ] many ping coexist (at most 1 for each entity) (and match the nearest to the screen center as the active one)
+- [ ] select book (and other global server-side config, like highlight color)
 
 - [ ] 0 add channel for ping (default channel string is "default") (only forward pings to this channel (teammates subscript to this channel))
 - [ ] 0 碎甲声音

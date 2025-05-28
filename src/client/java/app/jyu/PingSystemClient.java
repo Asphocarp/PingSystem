@@ -132,8 +132,6 @@ public class PingSystemClient implements ClientModInitializer {
                 handleAnswerKey(currentPing, 3, player.getGameProfile().getName());
             }
         }
-
-        // TODO: while holding z, render the quiz larger on screen (hold z to zoom in the quiz, x to hide/show the quiz)
     }
 
     private static void handleAnswerKey(PingPoint ping, int answerIndex, String playerName) {
@@ -226,6 +224,7 @@ public class PingSystemClient implements ClientModInitializer {
         }
     }
 
+    @Deprecated
     private static void sendRemovePingToServer(PingPoint p) {
         try {
             PacketByteBuf buf = p.toPacketByteBuf();

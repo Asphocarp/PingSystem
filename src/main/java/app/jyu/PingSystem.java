@@ -514,6 +514,7 @@ public class PingSystem implements ModInitializer {
                     } finally {
                         IS_APPLYING_BLOCKED_DAMAGE.set(false);
                     }
+                    // TODO: add shield broken sound here
                     
                     // Give player Strength I for 6 seconds (120 ticks)
                     if (aEvent.player instanceof ServerPlayerEntity serverPlayer) {
