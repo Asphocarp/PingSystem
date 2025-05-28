@@ -51,7 +51,7 @@ QuizCraft 现在支持服务器端全局配置，允许OP管理员方便地修�
 ### 保存配置
 - 点击"Save"按钮保存配置到服务器
 - 配置会立即生效并同步到所有在线玩家
-- 配置文件保存在服务器的`config/quiz_craft_server.properties`
+- 配置文件保存在服务器的`config/quiz_craft.server.properties`
 
 ## 权限要求
 - 只有OP（权限等级2或以上）才能修改服务器配置
@@ -61,7 +61,7 @@ QuizCraft 现在支持服务器端全局配置，允许OP管理员方便地修�
 ## 配置文件
 服务器配置自动保存在：
 ```
-<服务器目录>/config/quiz_craft_server.properties
+<服务器目录>/config/quiz_craft.server.properties
 ```
 
 示例配置文件内容：

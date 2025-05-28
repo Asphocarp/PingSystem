@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public class ServerConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger("ServerConfig");
-    private static final String CONFIG_FILENAME = "quiz_craft_server.properties";
+    private static final String CONFIG_FILENAME = "quiz_craft.server.properties";
     
     // Default values
     public static final int DEFAULT_CURRENT_BOOK_ID = 1;
