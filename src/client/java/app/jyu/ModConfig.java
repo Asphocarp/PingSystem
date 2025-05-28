@@ -23,7 +23,8 @@ public class ModConfig implements ModMenuApi, ConfigScreenFactory<Screen> {
             FabricLoader.getInstance().getConfigDir().toFile(),
             MOD_ID + ".properties");
     // The num of pings save for each player (work only in client side)
-    public static final int DEFAULT_pingNumEach = 1;
+    // TODO: only to avoid memory leak, maybe do not allow config for this
+    public static final int DEFAULT_pingNumEach = 100; 
     public static int pingNumEach = DEFAULT_pingNumEach;
     // Whether you can ping on the fluid
     public static final boolean DEFAULT_includeFluids = false;
