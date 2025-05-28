@@ -45,7 +45,7 @@ public class ServerConfigScreen extends Screen {
     
     // State for scrollable book list
     private int bookScrollOffset = 0;
-    private final int maxDisplayBooksInPopup = 20; // Max items to show at once
+    private final int maxDisplayBooksInPopup = 15; // Max items to show at once
     
     public ServerConfigScreen(Screen parent) {
         super(Text.literal("PingSystem Server Configuration"));
@@ -136,37 +136,39 @@ public class ServerConfigScreen extends Screen {
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Always render the background
         this.renderBackground(context);
         
-        // Title
+        // Always render the main screen title and warning message
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 20, 0xFFFFFF);
-        
-        // Permission warning for non-OPs
         context.drawCenteredTextWithShadow(this.textRenderer, 
             Text.literal("Only OPs can modify server configuration").formatted(Formatting.YELLOW), 
             this.width / 2, 40, 0xFFFF55);
         
-        super.render(context, mouseX, mouseY, delta);
-        
-        // Book selection popup
         if (showBookSelection && availableBooks != null) {
+            // When dropdown is active, only render the book button (needed as reference point)
+            if (bookSelectionButton != null) {
+                bookSelectionButton.render(context, mouseX, mouseY, delta);
+            }
+            
+            // Render the dropdown on top of everything
             renderBookSelectionPopup(context, mouseX, mouseY);
-        }
-        
-        // Labels for text fields - properly aligned with their input fields
-        int centerX = this.width / 2;
-        int labelX = centerX - (250/2); // Align labels to the left of input fields, same as button start
-        
-        // Color field label
-        if (colorField != null) {
-            context.drawTextWithShadow(this.textRenderer, "Highlight Color (0xAARRGGBB):", 
-                labelX, colorField.getY() - 12, 0xFFFFFF);
-        }
-        
-        // Timeout field label  
-        if (timeoutField != null) {
-            context.drawTextWithShadow(this.textRenderer, "Quiz Timeout (seconds):", 
-                labelX, timeoutField.getY() - 12, 0xFFFFFF);
+        } else {
+            // When dropdown is not active, render everything normally
+            super.render(context, mouseX, mouseY, delta); // Renders all addDrawableChild items
+            
+            // Add custom labels for text fields
+            int centerX = this.width / 2;
+            int labelX = centerX - (250/2); 
+            
+            if (colorField != null) {
+                context.drawTextWithShadow(this.textRenderer, "Highlight Color (0xAARRGGBB):", 
+                    labelX, colorField.getY() - 12, 0xFFFFFF);
+            }
+            if (timeoutField != null) {
+                context.drawTextWithShadow(this.textRenderer, "Quiz Timeout (seconds):", 
+                    labelX, timeoutField.getY() - 12, 0xFFFFFF);
+            }
         }
     }
     
@@ -191,7 +193,7 @@ public class ServerConfigScreen extends Screen {
         int itemHeight = textHeight + 5; 
 
         int listRenderHeight = Math.min(maxDisplayBooksInPopup, sortedBooks.size()) * itemHeight;
-        if (sortedBooks.size() == 0) listRenderHeight = itemHeight; // Min height for empty list message
+        if (sortedBooks.size() == 0) listRenderHeight = itemHeight; 
 
         boolean needsScrolling = availableBooks.size() > maxDisplayBooksInPopup;
         int scrollButtonsAreaHeight = needsScrolling ? (textHeight + 4 + 2) : 0; 
@@ -199,8 +201,9 @@ public class ServerConfigScreen extends Screen {
         int popupInternalContentHeight = listRenderHeight + scrollButtonsAreaHeight;
         int popupDrawnHeight = popupInternalContentHeight + 10; 
 
-        context.fill(popupX - 1, popupY - 1, popupX + popupWidth + 1, popupY + popupDrawnHeight + 1, 0xFF000000); 
-        context.fill(popupX, popupY, popupX + popupWidth, popupY + popupDrawnHeight, 0xDD333333); 
+        // Solid background for better readability
+        context.fill(popupX - 1, popupY - 1, popupX + popupWidth + 1, popupY + popupDrawnHeight + 1, 0xFF000000); // Border
+        context.fill(popupX, popupY, popupX + popupWidth, popupY + popupDrawnHeight, 0xFF2A2A2A); // Solid dark gray background (opaque)
 
         int itemRenderY = popupY + 5;
         if (booksToDisplay.isEmpty() && sortedBooks.isEmpty()){
@@ -218,7 +221,7 @@ public class ServerConfigScreen extends Screen {
         }
 
         if (needsScrolling) {
-            int scrollIndicatorRenderY = popupY + listRenderHeight + 5 + 2; // Below the list, before bottom padding
+            int scrollIndicatorRenderY = popupY + listRenderHeight + 5 + 2; 
             
             boolean canScrollUp = bookScrollOffset > 0;
             String upArrow = "^";
