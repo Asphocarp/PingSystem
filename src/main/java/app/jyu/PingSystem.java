@@ -496,6 +496,7 @@ public class PingSystem implements ModInitializer {
             boolean expired = currentTime - event.timestamp > BLOCKED_EVENT_TIMEOUT_MS;
             if (expired) {
                 LOGGER.warn("Cleaned up expired blocked block break for player: " + event.player.getEntityName() + " (ping ID: " + entry.getKey() + ")");
+                blockingBlockPosToPingId.remove(event.pos);
                 activePings.remove(entry.getKey());
             }
             return expired;
@@ -604,6 +605,7 @@ public class PingSystem implements ModInitializer {
                 }
                 LOGGER.info("Applied block break penalty for ping ID: " + ping.id + " (player: " + bEvent.player.getEntityName() + ")");
             }
+            blockingBlockPosToPingId.remove(bEvent.pos);
         }
 
         // Clean up active ping
