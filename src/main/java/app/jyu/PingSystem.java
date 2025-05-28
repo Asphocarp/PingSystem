@@ -676,6 +676,7 @@ public class PingSystem implements ModInitializer {
             serverPlayer, self.getWorld(), Hand.MAIN_HAND, self, null, amount, source);
         blockedEntityAttacks.put(pingToSend.id, blockedEvent);
         LOGGER.info("<< redirectBlockedByShield: Blocked damage and created ping for entity: " + self.getName().getString() + " (damage blocked until ping removed)");
+        // TODO: fix: not even knockback due to MC-267775
         self.takeKnockback(CURRENT_STRENGTH, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
         return true; // Pretend it was blocked by shield
     }
