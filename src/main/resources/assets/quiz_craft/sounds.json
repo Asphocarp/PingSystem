@@ -1,0 +1,26 @@
+{
+  "ping_location": {
+    "subtitle": "subtitles.quiz_craft.ping_location",
+    "sounds": [
+      "quiz_craft:ping_location"
+    ]
+  },
+  "ping_item": {
+    "subtitle": "subtitles.quiz_craft.ping_item",
+    "sounds": [
+      "quiz_craft:ping_item"
+    ]
+  },
+  "ping_enemy": {
+    "subtitle": "subtitles.quiz_craft.ping_enemy",
+    "sounds": [
+      "quiz_craft:ping_enemy"
+    ]
+  },
+  "mozambique_lifeline": {
+    "subtitle": "subtitles.quiz_craft.mozambique_lifeline",
+    "sounds": [
+      "quiz_craft:mozambique_lifeline"
+    ]
+  }
+}

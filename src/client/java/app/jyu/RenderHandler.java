@@ -17,8 +17,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.UUID;
 
-import static app.jyu.PingSystem.LOGGER;
-import static app.jyu.PingSystemClient.pingKeyBinding;
+import static app.jyu.QuizCraft.LOGGER;
+import static app.jyu.QuizCraftClient.pingKeyBinding;
 
 import java.lang.Math;
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class RenderHandler {
     // Store calculated clip-space coordinates (x,y,z,w) for pings from the world render phase
     private final Map<UUID, Vector4f> pingClipCoordinates = new HashMap<>();
 
-    private static final Identifier PING_BASIC = new Identifier(PingSystem.MOD_ID, "textures/ping/ping_basic.png");
+    private static final Identifier PING_BASIC = new Identifier(QuizCraft.MOD_ID, "textures/ping/ping_basic.png");
 
     public RenderHandler() {
         this.mc = MinecraftClient.getInstance();
@@ -94,7 +94,7 @@ public class RenderHandler {
         float horizontalRotation = (float) ((x - width / 2f) * anglePerPixel);
         float verticalRotation = (float) ((y - height / 2f) * anglePerPixel);
 
-        final Vector3f temp2 = PingSystem.Vec3dToV3f(cameraDir);
+        final Vector3f temp2 = QuizCraft.Vec3dToV3f(cameraDir);
         Quaternionfc rot1 = getDegreesQuaternion(verticalRotationAxis, verticalRotation);
         Quaternionfc rot2 = getDegreesQuaternion(horizontalRotationAxis, horizontalRotation);
         temp2.rotate(rot1);
@@ -197,13 +197,13 @@ public class RenderHandler {
         double fov = client.options.getFov().getValue();
         double angleSize = fov / height;
 
-        Vector3f verticalRotationAxis = PingSystem.Vec3dToV3f(cameraDirection);
+        Vector3f verticalRotationAxis = QuizCraft.Vec3dToV3f(cameraDirection);
         verticalRotationAxis.cross(new Vector3f(0, 1, 0));
         verticalRotationAxis.normalize();
-        Vector3f horizontalRotationAxis = PingSystem.Vec3dToV3f(cameraDirection);
+        Vector3f horizontalRotationAxis = QuizCraft.Vec3dToV3f(cameraDirection);
         horizontalRotationAxis.cross(verticalRotationAxis);
         horizontalRotationAxis.normalize();
-        verticalRotationAxis = PingSystem.Vec3dToV3f(cameraDirection);
+        verticalRotationAxis = QuizCraft.Vec3dToV3f(cameraDirection);
         verticalRotationAxis.cross(horizontalRotationAxis);
         cameraDirection.normalize();
 

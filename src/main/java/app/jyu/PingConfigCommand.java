@@ -21,7 +21,7 @@ public class PingConfigCommand {
     }
     
     private static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment environment) {
-        dispatcher.register(CommandManager.literal("pingconfig")
+        dispatcher.register(CommandManager.literal("quizconfig")
             .requires(source -> source.hasPermissionLevel(2)) // OP level 2 or higher
             .executes(PingConfigCommand::openConfigGui));
     }
@@ -43,16 +43,16 @@ public class PingConfigCommand {
             // Send packet to client to open GUI
             ServerPlayNetworking.send(player, OPEN_CONFIG_GUI_PACKET, PacketByteBufs.create());
             
-            source.sendFeedback(() -> Text.literal("Opening PingSystem configuration GUI...")
+            source.sendFeedback(() -> Text.literal("Opening QuizCraft configuration GUI...")
                 .formatted(Formatting.GREEN), false);
             
-            PingSystem.LOGGER.info("[PingSystem] Player {} opened config GUI via command", player.getEntityName());
+            QuizCraft.LOGGER.info("[QuizCraft] Player {} opened config GUI via command", player.getEntityName());
             return 1;
             
         } catch (Exception e) {
             source.sendError(Text.literal("Failed to open configuration GUI: " + e.getMessage())
                 .formatted(Formatting.RED));
-            PingSystem.LOGGER.error("[PingSystem] Failed to open config GUI via command", e);
+            QuizCraft.LOGGER.error("[QuizCraft] Failed to open config GUI via command", e);
             return 0;
         }
     }

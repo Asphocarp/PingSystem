@@ -91,7 +91,7 @@ public class Book implements Serializable {
     }
     
     public static CopyOnWriteArrayList<Book> loadBooks() {
-        PingSystem.LOGGER.info("Loading books");
+        QuizCraft.LOGGER.info("Loading books");
         // Double-Checked Locking for thread-safe lazy initialization
         if (BOOKS == null) {
             synchronized (Book.class) {
@@ -100,24 +100,24 @@ public class Book implements Serializable {
                     Gson gson = new Gson();
                     
                     for (String fileName : BOOK_FILES) {
-                        String resourcePath = "assets/ping_system/books/" + fileName;
+                        String resourcePath = "assets/quiz_craft/books/" + fileName;
                         
                         try (InputStream inputStream = Book.class.getClassLoader().getResourceAsStream(resourcePath);
                              Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
                             
                             if (inputStream == null) {
-                                PingSystem.LOGGER.warn("Cannot find book file: {}", resourcePath);
+                                QuizCraft.LOGGER.warn("Cannot find book file: {}", resourcePath);
                                 continue;
                             }
                             
                             Book book = gson.fromJson(reader, Book.class);
                             if (book != null) {
                                 books.add(book);
-                                PingSystem.LOGGER.info("Loaded book: bID={}, words={}", book.bID, book.words.size());
+                                QuizCraft.LOGGER.info("Loaded book: bID={}, words={}", book.bID, book.words.size());
                             }
                             
                         } catch (Exception e) {
-                            PingSystem.LOGGER.error("Error loading book file: {}", resourcePath, e);
+                            QuizCraft.LOGGER.error("Error loading book file: {}", resourcePath, e);
                         }
                     }
                     
@@ -129,9 +129,9 @@ public class Book implements Serializable {
         // Log summary
         if (BOOKS != null && !BOOKS.isEmpty()) {
             int totalWords = BOOKS.stream().mapToInt(book -> book.words.size()).sum();
-            PingSystem.LOGGER.info("Books loaded. Total books: {}, Total words: {}", BOOKS.size(), totalWords);
+            QuizCraft.LOGGER.info("Books loaded. Total books: {}, Total words: {}", BOOKS.size(), totalWords);
         } else {
-            PingSystem.LOGGER.info("Books loaded but list is empty.");
+            QuizCraft.LOGGER.info("Books loaded but list is empty.");
         }
         
         return BOOKS;
@@ -139,7 +139,7 @@ public class Book implements Serializable {
     
     public static Book getBookById(int bID) {
         if (BOOKS == null || BOOKS.isEmpty()) {
-            PingSystem.LOGGER.error("Books not loaded or empty");
+            QuizCraft.LOGGER.error("Books not loaded or empty");
             return null;
         }
         
@@ -152,7 +152,7 @@ public class Book implements Serializable {
     public static Word getRandomWordFromBook(int bID) {
         Book book = getBookById(bID);
         if (book == null || book.words.isEmpty()) {
-            PingSystem.LOGGER.warn("Book {} not found or has no words", bID);
+            QuizCraft.LOGGER.warn("Book {} not found or has no words", bID);
             return null;
         }
         
@@ -162,7 +162,7 @@ public class Book implements Serializable {
     public static Quiz getRandomQuiz(int bID) {
         Book book = getBookById(bID);
         if (book == null || book.words.isEmpty()) {
-            PingSystem.LOGGER.warn("Book {} not found or has no words", bID);
+            QuizCraft.LOGGER.warn("Book {} not found or has no words", bID);
             return null;
         }
         int ans_idx = rg.nextInt(4);

@@ -66,10 +66,10 @@ public class PingPoint implements Serializable {
 
         // // log quiz content here
         // if (this.quiz != null) {
-        //     PingSystem.LOGGER.debug("PingPoint created with quiz: question='{}', options={}, answer={}, uuid={}",
+        //     QuizCraft.LOGGER.debug("PingPoint created with quiz: question='{}', options={}, answer={}, uuid={}",
         //         this.quiz.question, java.util.Arrays.toString(this.quiz.options), this.quiz.answer, this.quiz.uuid);
         // } else { // should not happen
-        //     PingSystem.LOGGER.error("PingPoint created without quiz");
+        //     QuizCraft.LOGGER.error("PingPoint created without quiz");
         // }
     }
 

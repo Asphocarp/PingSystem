@@ -16,7 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import static app.jyu.PingSystem.MOD_ID;
+import static app.jyu.QuizCraft.MOD_ID;
 
 public class ModConfig implements ModMenuApi, ConfigScreenFactory<Screen> {
     public static final File CFG_FILE = new File(
@@ -115,7 +115,7 @@ public class ModConfig implements ModMenuApi, ConfigScreenFactory<Screen> {
     }
 
     public static void setSoundIndex(int input) {
-        if (input < 0 || input > PingSystem.soundEventsForPing.size()) {
+        if (input < 0 || input > QuizCraft.soundEventsForPing.size()) {
             input = 0;
         }
         ModConfig.soundIndex = (byte) input;

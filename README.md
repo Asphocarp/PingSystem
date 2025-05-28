@@ -1,8 +1,8 @@
 <p align="center">
-    <img src="./src/main/resources/assets/ping_system/icon.png" alt="PingSystem" width="200"/> 
+    <img src="./src/main/resources/assets/quiz_craft/icon.png" alt="QuizCraft" width="200"/> 
 </p>
 
-<h1 align="center">PingSystem</h1>
+<h1 align="center">QuizCraft</h1>
 
 Ping System for Minecraft. Make MC Apex Again!
 
@@ -57,7 +57,7 @@ Differentiation:
 - [ ] 1. Compatible with various styles from games like Apex Legends, Valorant, League of Legends, and Overwatch. (icon, sound, etc.)
 - [ ] 2. Team system (channel), confirm, say no
 
-# PingSystem
+# QuizCraft
 
 A Minecraft Fabric mod that adds an Apex Legends-style ping system to the game.
 
@@ -96,7 +96,7 @@ The mod now automatically creates pings and **blocks the original action** until
 
 1. Install [Fabric Loader](https://fabricmc.net/use/)
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Download and place the PingSystem mod jar in your `mods` folder
+3. Download and place the QuizCraft mod jar in your `mods` folder
 
 ## Controls
 

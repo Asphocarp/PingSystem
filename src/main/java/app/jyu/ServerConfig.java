@@ -16,12 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 /**
- * Server-side global configuration for PingSystem
+ * Server-side global configuration for QuizCraft
  * This config is shared across all players and can only be modified by OPs
  */
 public class ServerConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger("ServerConfig");
-    private static final String CONFIG_FILENAME = "ping_system_server.properties";
+    private static final String CONFIG_FILENAME = "quiz_craft_server.properties";
     
     // Default values
     public static final int DEFAULT_CURRENT_BOOK_ID = 1;
@@ -110,7 +110,7 @@ public class ServerConfig {
             props.setProperty("quizEnabled", String.valueOf(quizEnabled));
             props.setProperty("quizTimeoutSeconds", String.valueOf(quizTimeoutSeconds));
             
-            props.store(Files.newOutputStream(configPath), "PingSystem Server Configuration");
+            props.store(Files.newOutputStream(configPath), "QuizCraft Server Configuration");
             LOGGER.info("Saved server config to: {}", configPath);
             
         } catch (IOException e) {

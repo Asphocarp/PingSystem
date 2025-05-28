@@ -48,7 +48,7 @@ public class ServerConfigScreen extends Screen {
     private final int maxDisplayBooksInPopup = 15; // Max items to show at once
     
     public ServerConfigScreen(Screen parent) {
-        super(Text.literal("PingSystem Server Configuration"));
+        super(Text.literal("QuizCraft Server Configuration"));
         this.parent = parent;
         this.selectedBookId = currentBookId;
     }

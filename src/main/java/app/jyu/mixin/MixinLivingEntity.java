@@ -1,6 +1,6 @@
 package app.jyu.mixin;
 
-import app.jyu.PingSystem;
+import app.jyu.QuizCraft;
 import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityStatuses;
@@ -30,7 +30,7 @@ public class MixinLivingEntity {
     )
     public void onDamageStart(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity self = (LivingEntity)(Object)this;
-        PingSystem.onDamageStart(self, source, amount, cir);
+        QuizCraft.onDamageStart(self, source, amount, cir);
     }
     
     @Redirect(
@@ -41,6 +41,6 @@ public class MixinLivingEntity {
       )
     )
     public boolean redirectBlockedByShield(LivingEntity self, DamageSource source) {
-        return PingSystem.redirectBlockedByShield(self, source);
+        return QuizCraft.redirectBlockedByShield(self, source);
     }
 } 

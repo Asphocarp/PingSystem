@@ -1,8 +1,8 @@
-# PingSystem 服务器配置指南
+# QuizCraft 服务器配置指南
 
 ## 概述
 
-PingSystem 现在支持服务器端全局配置，允许OP管理员方便地修改服务器的词典书、quiz设置等全局参数。
+QuizCraft 现在支持服务器端全局配置，允许OP管理员方便地修改服务器的词典书、quiz设置等全局参数。
 
 ## 功能特性
 
@@ -39,7 +39,7 @@ PingSystem 现在支持服务器端全局配置，允许OP管理员方便地修�
 
 使用命令打开配置界面：
 ```
-/pingconfig
+/quizconfig
 ```
 
 ### 配置界面说明
@@ -51,7 +51,7 @@ PingSystem 现在支持服务器端全局配置，允许OP管理员方便地修�
 ### 保存配置
 - 点击"Save"按钮保存配置到服务器
 - 配置会立即生效并同步到所有在线玩家
-- 配置文件保存在服务器的`config/ping_system_server.properties`
+- 配置文件保存在服务器的`config/quiz_craft_server.properties`
 
 ## 权限要求
 - 只有OP（权限等级2或以上）才能修改服务器配置
@@ -61,7 +61,7 @@ PingSystem 现在支持服务器端全局配置，允许OP管理员方便地修�
 ## 配置文件
 服务器配置自动保存在：
 ```
-<服务器目录>/config/ping_system_server.properties
+<服务器目录>/config/quiz_craft_server.properties
 ```
 
 示例配置文件内容：

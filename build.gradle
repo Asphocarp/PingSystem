@@ -27,13 +27,11 @@ loom {
     splitEnvironmentSourceSets()
 
     mods {
-        "ping_system" {
+        "quiz_craft" {
             sourceSet sourceSets.main
             sourceSet sourceSets.client
         }
     }
-
-    accessWidenerPath = file("src/main/resources/ping_system.accesswidener")
 }
 
 project.ext.jomlVersion = "1.10.5"

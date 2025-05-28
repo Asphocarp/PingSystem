@@ -28,12 +28,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.lwjgl.glfw.GLFW;
 
-import app.jyu.PingSystemClient;
+import app.jyu.QuizCraftClient;
 import java.awt.*;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Predicate;
-import static app.jyu.PingSystem.LOGGER;
+import static app.jyu.QuizCraft.LOGGER;
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
 import static app.jyu.NetworkingConstants.ANSWER_PACKET;
@@ -46,7 +46,7 @@ import net.minecraft.entity.projectile.ProjectileUtil;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PingSystemClient implements ClientModInitializer {
+public class QuizCraftClient implements ClientModInitializer {
     public static final double MAX_REACH = 512.0D;
     public static KeyBinding pingKeyBinding;
     public static KeyBinding answerKey1;
@@ -61,41 +61,41 @@ public class PingSystemClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         pingKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.ping_system.ping",
+                "key.quiz_craft.ping",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_C,
-                "category.ping_system.ping_system"
+                "category.quiz_craft.quiz_craft"
         ));
 
         answerKey1 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.ping_system.answer1",
+                "key.quiz_craft.answer1",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_1,
-                "category.ping_system.ping_system"
+                "category.quiz_craft.quiz_craft"
         ));
 
         answerKey2 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.ping_system.answer2",
+                "key.quiz_craft.answer2",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_2,
-                "category.ping_system.ping_system"
+                "category.quiz_craft.quiz_craft"
         ));
 
         answerKey3 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.ping_system.answer3",
+                "key.quiz_craft.answer3",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_3,
-                "category.ping_system.ping_system"
+                "category.quiz_craft.quiz_craft"
         ));
 
         answerKey4 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.ping_system.answer4",
+                "key.quiz_craft.answer4",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_4,
-                "category.ping_system.ping_system"
+                "category.quiz_craft.quiz_craft"
         ));
 
-        ClientTickEvents.END_CLIENT_TICK.register(PingSystemClient::checkKeyPress);
+        ClientTickEvents.END_CLIENT_TICK.register(QuizCraftClient::checkKeyPress);
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler.getInstance()::onClientTick);
 
         WorldRenderEvents.LAST.register(RenderHandler.getInstance()::onRenderWorldLast);
@@ -114,7 +114,7 @@ public class PingSystemClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(OPEN_CONFIG_GUI_PACKET, (client, handler, buf, responseSender) -> {
             if (client.player != null) {
-                LOGGER.info("[PingSystem Client] Received OPEN_CONFIG_GUI_PACKET. Requesting fresh config from server.");
+                LOGGER.info("[QuizCraft Client] Received OPEN_CONFIG_GUI_PACKET. Requesting fresh config from server.");
                 pendingOpenConfigGui = true;
                 ClientPlayNetworking.send(REQUEST_CONFIG_PACKET, PacketByteBufs.create());
             }
@@ -255,7 +255,7 @@ public class PingSystemClient implements ClientModInitializer {
             }
             
             lastReceivedConfig = new ConfigData(bookId, highlightColor, quizEnabled, quizTimeout, availableBooks);
-            PingSystem.LOGGER.info("[PingSystem Client] Received and stored server config: bookId={}, highlightColor=0x{}, quizEnabled={}", 
+            QuizCraft.LOGGER.info("[QuizCraft Client] Received and stored server config: bookId={}, highlightColor=0x{}, quizEnabled={}", 
                 bookId, Integer.toHexString(highlightColor), quizEnabled);
 
             if (pendingOpenConfigGui) {
@@ -272,7 +272,7 @@ public class PingSystemClient implements ClientModInitializer {
                         lastReceivedConfig.availableBooks
                     );
                     MinecraftClient.getInstance().setScreen(configScreen);
-                    LOGGER.info("[PingSystem Client] ServerConfigScreen opened after pending config sync.");
+                    LOGGER.info("[QuizCraft Client] ServerConfigScreen opened after pending config sync.");
                 });
             } else if (configScreen != null && configScreen == MinecraftClient.getInstance().currentScreen) {
                 MinecraftClient.getInstance().execute(() -> {
@@ -283,12 +283,12 @@ public class PingSystemClient implements ClientModInitializer {
                         lastReceivedConfig.quizTimeout,
                         lastReceivedConfig.availableBooks
                     );
-                    LOGGER.info("[PingSystem Client] Updated open ServerConfigScreen with fresh config.");
+                    LOGGER.info("[QuizCraft Client] Updated open ServerConfigScreen with fresh config.");
                  });
             }
                 
         } catch (Exception e) {
-            PingSystem.LOGGER.error("[PingSystem Client] Failed to handle server config sync", e);
+            QuizCraft.LOGGER.error("[QuizCraft Client] Failed to handle server config sync", e);
             if (pendingOpenConfigGui) {
                 pendingOpenConfigGui = false;
                 MinecraftClient.getInstance().execute(() -> {

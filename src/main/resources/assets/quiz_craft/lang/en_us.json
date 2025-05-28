@@ -1,0 +1,20 @@
+{
+  "category.quiz_craft.quiz_craft": "QuizCraft",
+  "key.quiz_craft.ping": "Ping",
+  "title.quiz_craft.config": "QuizCraft",
+  "config.quiz_craft.general": "General",
+  "config.quiz_craft.pingNumEach": "Ping Num Each Player",
+  "config.quiz_craft.pingNumEach.description": "The num of pings save for each player (work only in client side)",
+  "config.quiz_craft.includeFluids": "Include Fluids",
+  "config.quiz_craft.includeFluids.description": "Whether you can ping on the fluid",
+  "config.quiz_craft.iconSize": "Icon Size",
+  "config.quiz_craft.iconSize.description": "Resize the icon hud",
+  "config.quiz_craft.infoColor": "Info Color",
+  "config.quiz_craft.infoColor.description": "Info shown when looking at the ping point, format: 0xAARRGGBB",
+  "config.quiz_craft.secondsToVanish": "Seconds to Vanish",
+  "config.quiz_craft.secondsToVanish.description": "How long does it take for the ping point to disappear.\n0 means never, only work at your client side",
+  "config.quiz_craft.highlightColor": "Highlight Color",
+  "config.quiz_craft.highlightColor.description": "Color of the highlight block, format: 0xAARRGGBB",
+  "config.quiz_craft.soundIndex": "Sound Index",
+  "config.quiz_craft.soundIndex.description": "The index of the ping sound:\n0: ping location\n1: ping enemy\n2: ping item\n3: mozambique lifeline\n4: block anvil break"
+}

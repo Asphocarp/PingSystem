@@ -100,13 +100,13 @@ class BlockedBlockBreakEvent {
     }
 }
 
-public class PingSystem implements ModInitializer {
+public class QuizCraft implements ModInitializer {
     // This logger is used to write text to the console and the log file.
     // It is considered best practice to use your mod id as the logger's name.
     // That way, it's clear which mod wrote info, warnings, and errors.
-    public static final String MOD_ID = "ping_system";
+    public static final String MOD_ID = "quiz_craft";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static ArrayList<PingSystemTeam> teams = new ArrayList<>();
+    public static ArrayList<QuizCraftTeam> teams = new ArrayList<>();
     public static boolean ENABLE_TEAMS = false;
     public static final long GLOW_DURATION_MS = 5000; // 5 seconds in milliseconds
     // Map to store UUIDs of glowing entities and their glow end time (System.currentTimeMillis())
@@ -138,10 +138,10 @@ public class PingSystem implements ModInitializer {
     private static final Map<UUID, PingPoint> activePings = new ConcurrentHashMap<>();
 
     public static String[] newSounds = {
-            "ping_system:ping_location",
-            "ping_system:ping_item",
-            "ping_system:ping_enemy",
-            "ping_system:mozambique_lifeline",
+            "quiz_craft:ping_location",
+            "quiz_craft:ping_item",
+            "quiz_craft:ping_enemy",
+            "quiz_craft:mozambique_lifeline",
     };
     // currently include newSounds and SoundEvents.BLOCK_ANVIL_BREAK
     public static ArrayList<SoundEvent> soundEventsForPing;
@@ -168,21 +168,21 @@ public class PingSystem implements ModInitializer {
         soundEventsForPing.add(SoundEvents.BLOCK_ANVIL_BREAK);
 
         // register all event handlers
-        ServerPlayNetworking.registerGlobalReceiver(PING_PACKET, PingSystem::onReceivingPingPacket);
-        ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, PingSystem::onReceivingRemovePingPacket);
-        ServerPlayNetworking.registerGlobalReceiver(ANSWER_PACKET, PingSystem::onReceivingAnswerPacket);
+        ServerPlayNetworking.registerGlobalReceiver(PING_PACKET, QuizCraft::onReceivingPingPacket);
+        ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, QuizCraft::onReceivingRemovePingPacket);
+        ServerPlayNetworking.registerGlobalReceiver(ANSWER_PACKET, QuizCraft::onReceivingAnswerPacket);
         
         // register server config event handlers
-        ServerPlayNetworking.registerGlobalReceiver(REQUEST_CONFIG_PACKET, PingSystem::onReceivingRequestConfigPacket);
-        ServerPlayNetworking.registerGlobalReceiver(UPDATE_CONFIG_PACKET, PingSystem::onReceivingUpdateConfigPacket);
-        ServerPlayNetworking.registerGlobalReceiver(OPEN_CONFIG_GUI_PACKET, PingSystem::onReceivingOpenConfigGuiPacket);
+        ServerPlayNetworking.registerGlobalReceiver(REQUEST_CONFIG_PACKET, QuizCraft::onReceivingRequestConfigPacket);
+        ServerPlayNetworking.registerGlobalReceiver(UPDATE_CONFIG_PACKET, QuizCraft::onReceivingUpdateConfigPacket);
+        ServerPlayNetworking.registerGlobalReceiver(OPEN_CONFIG_GUI_PACKET, QuizCraft::onReceivingOpenConfigGuiPacket);
         
-        PlayerBlockBreakEvents.BEFORE.register(PingSystem::onBlockBreak);
-        ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
+        PlayerBlockBreakEvents.BEFORE.register(QuizCraft::onBlockBreak);
+        ServerTickEvents.END_SERVER_TICK.register(QuizCraft::onEndServerTick);
         
         // Initialize server config when server starts
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            LOGGER.info("Loading PingSystem server configuration...");
+            LOGGER.info("Loading QuizCraft server configuration...");
             ServerConfig.loadConfig(server);
         });
         
@@ -199,12 +199,12 @@ public class PingSystem implements ModInitializer {
         try {
             pingToRemove = PingPoint.fromPacketByteBuf(bufCopy);
         } catch (Exception e) {
-            LOGGER.error("[PingSystem Server] Failed to deserialize PingPoint on REMOVE_PING_PACKET receive for event execution.", e);
+            LOGGER.error("[QuizCraft Server] Failed to deserialize PingPoint on REMOVE_PING_PACKET receive for event execution.", e);
             return;
         }
         bufCopy.release();
         if (pingToRemove == null) {
-            LOGGER.warn("[PingSystem Server] Could not find ping for remove ping packet from player {}", player.getEntityName());
+            LOGGER.warn("[QuizCraft Server] Could not find ping for remove ping packet from player {}", player.getEntityName());
             return;
         }
 
@@ -215,17 +215,17 @@ public class PingSystem implements ModInitializer {
     public static void onReceivingAnswerPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
         try {
             AnswerPacket answerPacket = AnswerPacket.fromPacketByteBuf(buf);
-            LOGGER.info("[PingSystem Server] Received answer from player {}: ping UUID {}, answer index {}", 
+            LOGGER.info("[QuizCraft Server] Received answer from player {}: ping UUID {}, answer index {}", 
                 answerPacket.playerName, answerPacket.pingUUID, answerPacket.answerIndex);
             
             // get the ping
             PingPoint ping = activePings.get(answerPacket.pingUUID);
             if (ping == null) {
-                LOGGER.warn("[PingSystem Server] Could not find ping for answer packet from player {}", answerPacket.playerName);
+                LOGGER.warn("[QuizCraft Server] Could not find ping for answer packet from player {}", answerPacket.playerName);
                 return;
             }
             if (ping.quiz == null) {
-                LOGGER.warn("[PingSystem Server] Could not find quiz for ping UUID {}", answerPacket.pingUUID);
+                LOGGER.warn("[QuizCraft Server] Could not find quiz for ping UUID {}", answerPacket.pingUUID);
                 return;
             }
             
@@ -234,7 +234,7 @@ public class PingSystem implements ModInitializer {
             executeBlockedEventsForPing(ping, isCorrect);
             removePingAndMulticast(player, ping);
         } catch (Exception e) {
-            LOGGER.error("[PingSystem Server] Failed to process answer packet from player {}", player.getEntityName(), e);
+            LOGGER.error("[QuizCraft Server] Failed to process answer packet from player {}", player.getEntityName(), e);
         }
     }
 
@@ -247,7 +247,7 @@ public class PingSystem implements ModInitializer {
         try {
             pingPoint = PingPoint.fromPacketByteBuf(bufCopy);
         } catch (Exception e) {
-            LOGGER.error("[PingSystem Server] Failed to deserialize PingPoint on PING_PACKET receive for glow check.", e);
+            LOGGER.error("[QuizCraft Server] Failed to deserialize PingPoint on PING_PACKET receive for glow check.", e);
         }
         bufCopy.release(); // Release the copied buffer
 
@@ -266,11 +266,11 @@ public class PingSystem implements ModInitializer {
                 }
 
                 if (entity != null) {
-                    LOGGER.info("[PingSystem Server] PING_PACKET: Received highlight request for {}. Setting glowing until {}.", entity.getName().getString(), glowEndTime);
+                    LOGGER.info("[QuizCraft Server] PING_PACKET: Received highlight request for {}. Setting glowing until {}.", entity.getName().getString(), glowEndTime);
                     entity.setGlowing(true);
                     glowingEntities.put(entityUUID, glowEndTime); 
                 } else {
-                    LOGGER.warn("[PingSystem Server] PING_PACKET: Received highlight request for UUID {}, but entity not found.", entityUUID);
+                    LOGGER.warn("[QuizCraft Server] PING_PACKET: Received highlight request for UUID {}, but entity not found.", entityUUID);
                 }
             });
         }
@@ -397,7 +397,7 @@ public class PingSystem implements ModInitializer {
                     for (ServerWorld world : server.getWorlds()) {
                         Entity entity = world.getEntity(entityUUID);
                         if (entity != null && entity.isGlowing()) { // Check if it's still glowing (might have been turned off otherwise)
-                            LOGGER.info("[PingSystem Server] Turning off glow for expired entity: {}", entity.getName().getString());
+                            LOGGER.info("[QuizCraft Server] Turning off glow for expired entity: {}", entity.getName().getString());
                             entity.setGlowing(false);
                         }
                     }
@@ -685,7 +685,7 @@ public class PingSystem implements ModInitializer {
      * Handle request for server configuration from client
      */
     public static void onReceivingRequestConfigPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        LOGGER.info("[PingSystem Server] Player {} requested server config", player.getEntityName());
+        LOGGER.info("[QuizCraft Server] Player {} requested server config", player.getEntityName());
         
         // Create and send config sync packet
         try {
@@ -700,10 +700,10 @@ public class PingSystem implements ModInitializer {
             }
             
             ServerPlayNetworking.send(player, SYNC_CONFIG_PACKET, configBuf);
-            LOGGER.info("[PingSystem Server] Sent config to player {}", player.getEntityName());
+            LOGGER.info("[QuizCraft Server] Sent config to player {}", player.getEntityName());
             
         } catch (Exception e) {
-            LOGGER.error("[PingSystem Server] Failed to send config to player {}", player.getEntityName(), e);
+            LOGGER.error("[QuizCraft Server] Failed to send config to player {}", player.getEntityName(), e);
         }
     }
     
@@ -711,18 +711,18 @@ public class PingSystem implements ModInitializer {
      * Handle config update from client (OP only)
      */
     public static void onReceivingUpdateConfigPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        LOGGER.info("[PingSystem Server] Player {} attempting to update server config", player.getEntityName());
+        LOGGER.info("[QuizCraft Server] Player {} attempting to update server config", player.getEntityName());
         
         // Check permissions
         if (!ServerConfig.hasConfigPermission(player)) {
-            LOGGER.warn("[PingSystem Server] Player {} does not have permission to update server config", player.getEntityName());
+            LOGGER.warn("[QuizCraft Server] Player {} does not have permission to update server config", player.getEntityName());
             return;
         }
         
         try {
             // Update config from packet
             ServerConfig.updateFromPacket(buf, server);
-            LOGGER.info("[PingSystem Server] Server config updated by player {}", player.getEntityName());
+            LOGGER.info("[QuizCraft Server] Server config updated by player {}", player.getEntityName());
             
             // Broadcast config update to all players
             PacketByteBuf broadcastBuf = ServerConfig.createConfigPacket();
@@ -739,12 +739,12 @@ public class PingSystem implements ModInitializer {
                     playerBuf.writeBytes(broadcastBuf.copy());
                     ServerPlayNetworking.send(allPlayer, SYNC_CONFIG_PACKET, playerBuf);
                 } catch (Exception e) {
-                    LOGGER.error("[PingSystem Server] Failed to broadcast config update to player {}", allPlayer.getEntityName(), e);
+                    LOGGER.error("[QuizCraft Server] Failed to broadcast config update to player {}", allPlayer.getEntityName(), e);
                 }
             }
             
         } catch (Exception e) {
-            LOGGER.error("[PingSystem Server] Failed to update server config from player {}", player.getEntityName(), e);
+            LOGGER.error("[QuizCraft Server] Failed to update server config from player {}", player.getEntityName(), e);
         }
     }
     
@@ -752,11 +752,11 @@ public class PingSystem implements ModInitializer {
      * Handle request to open config GUI (OP only)
      */
     public static void onReceivingOpenConfigGuiPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        LOGGER.info("[PingSystem Server] Player {} requesting to open config GUI", player.getEntityName());
+        LOGGER.info("[QuizCraft Server] Player {} requesting to open config GUI", player.getEntityName());
         
         // Check permissions
         if (!ServerConfig.hasConfigPermission(player)) {
-            LOGGER.warn("[PingSystem Server] Player {} does not have permission to open config GUI", player.getEntityName());
+            LOGGER.warn("[QuizCraft Server] Player {} does not have permission to open config GUI", player.getEntityName());
             return;
         }
         
