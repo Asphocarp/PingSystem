@@ -52,6 +52,7 @@ import java.util.Map;
 
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
+import static app.jyu.NetworkingConstants.ANSWER_PACKET;
 
 // Data classes for storing blocked events
 class BlockedEntityAttackEvent {
@@ -123,6 +124,8 @@ public class PingSystem implements ModInitializer {
     public static final Map<UUID, UUID> blockingEntityToPingId = new ConcurrentHashMap<>();
     // Ping ID -> BlockedBlockBreakEvent
     private static final Map<UUID, BlockedBlockBreakEvent> blockedBlockBreaks = new ConcurrentHashMap<>();
+    // Active pings for answer processing
+    private static final Map<UUID, PingPoint> activePings = new ConcurrentHashMap<>();
 
     public static String[] newSounds = {
             "ping_system:ping_location",
@@ -159,6 +162,7 @@ public class PingSystem implements ModInitializer {
         // register all event handlers
         ServerPlayNetworking.registerGlobalReceiver(PING_PACKET, PingSystem::onReceivingPingPacket);
         ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, PingSystem::onReceivingRemovePingPacket);
+        ServerPlayNetworking.registerGlobalReceiver(ANSWER_PACKET, PingSystem::onReceivingAnswerPacket);
         PlayerBlockBreakEvents.BEFORE.register(PingSystem::onBlockBreak);
         ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
     }
@@ -178,8 +182,57 @@ public class PingSystem implements ModInitializer {
         multicastRemovePingIncludeSelf(player, REMOVE_PING_PACKET, buf);
         // Execute only the blocked events associated with this specific ping
         if (removedPingId != null) {
-            executeBlockedEventsForPing(removedPingId);
+            executeBlockedEventsForPing(removedPingId, true);
+            // Note: activePings is already cleaned up in executeBlockedEventsForPing
         }
+    }
+
+    public static void onReceivingAnswerPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
+        try {
+            AnswerPacket answerPacket = AnswerPacket.fromPacketByteBuf(buf);
+            LOGGER.info("[PingSystem Server] Received answer from player {}: ping UUID {}, answer index {}", 
+                answerPacket.playerName, answerPacket.pingUUID, answerPacket.answerIndex);
+            
+            // First, we need to find the quiz UUID from the ping to check the answer
+            // Since we don't store the ping directly, we need to get it from blocked events
+            UUID quizUUID = getQuizUUIDFromPing(answerPacket.pingUUID);
+            
+            if (quizUUID == null) {
+                LOGGER.warn("[PingSystem Server] Could not find quiz for ping UUID {}", answerPacket.pingUUID);
+                return;
+            }
+            
+            // Check if the answer is correct
+            boolean isCorrect = Quiz.isCorrectAns(quizUUID, answerPacket.answerIndex);
+            
+            if (isCorrect) {
+                LOGGER.info("[PingSystem Server] Correct answer from {}, executing blocked events for ping {}", 
+                    answerPacket.playerName, answerPacket.pingUUID);
+                executeBlockedEventsForPing(answerPacket.pingUUID, true);
+            } else {
+                LOGGER.info("[PingSystem Server] Incorrect answer from {}, no action taken", answerPacket.playerName);
+                executeBlockedEventsForPing(answerPacket.pingUUID, false);
+                // TODO: Handle incorrect answers (e.g., penalty, feedback, statistics, etc.)
+                // Potential actions:
+                // - Send feedback message to player
+                // - Apply penalty (damage, effect, etc.)
+                // - Track incorrect answer statistics
+                // - Increase difficulty for next quiz
+                // - Lock player out temporarily
+            }
+            
+        } catch (Exception e) {
+            LOGGER.error("[PingSystem Server] Failed to process answer packet from player {}", player.getEntityName(), e);
+        }
+    }
+
+    // Helper method to get quiz UUID from ping UUID
+    private static UUID getQuizUUIDFromPing(UUID pingUUID) {
+        PingPoint ping = activePings.get(pingUUID);
+        if (ping != null && ping.quiz != null) {
+            return ping.quiz.uuid;
+        }
+        return null;
     }
 
     public static void onReceivingPingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){
@@ -424,6 +477,9 @@ public class PingSystem implements ModInitializer {
             PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), BLOCK_BREAK_PING_COLOR, BLOCK_BREAK_PING_SOUND_INDEX, PingPoint.PingType.LOCATION, null);
             pingToSend.id = pingId; // Associate ping with blocked event
             
+            // Store ping for answer processing
+            activePings.put(pingId, pingToSend);
+            
             // Create and send ping packet to all players
             try {
                 PacketByteBuf buf = pingToSend.toPacketByteBuf();
@@ -433,6 +489,7 @@ public class PingSystem implements ModInitializer {
                 LOGGER.error("Failed to create ping for block break", e);
                 // If ping creation fails, allow the break to proceed
                 blockedBlockBreaks.remove(pingId);
+                activePings.remove(pingId);
                 return true; // Allow break to proceed
             }
             
@@ -452,6 +509,7 @@ public class PingSystem implements ModInitializer {
             if (expired) {
                 LOGGER.warn("Cleaned up expired blocked entity damage for player: " + event.player.getEntityName() + " (ping ID: " + entry.getKey() + ")");
                 blockingEntityToPingId.remove(event.entity.getUuid());
+                activePings.remove(entry.getKey());
             }
             return expired;
         });
@@ -462,13 +520,14 @@ public class PingSystem implements ModInitializer {
             boolean expired = currentTime - event.timestamp > BLOCKED_EVENT_TIMEOUT_MS;
             if (expired) {
                 LOGGER.warn("Cleaned up expired blocked block break for player: " + event.player.getEntityName() + " (ping ID: " + entry.getKey() + ")");
+                activePings.remove(entry.getKey());
             }
             return expired;
         });
     }
     
     // Execute blocked events associated with a specific ping ID
-    private static void executeBlockedEventsForPing(UUID pingId) {
+    private static void executeBlockedEventsForPing(UUID pingId, boolean isCorrect) {
         // Execute blocked entity damage if it matches this ping ID
         BlockedEntityAttackEvent aEvent = blockedEntityAttacks.remove(pingId);
         if (aEvent != null) {
@@ -503,6 +562,9 @@ public class PingSystem implements ModInitializer {
             }
             LOGGER.info("Executed blocked block break for ping ID: " + pingId + " (player: " + bEvent.player.getEntityName() + ")");
         }
+        
+        // Clean up active ping
+        activePings.remove(pingId);
     }
 
     public static void beforeInvokingBlockedByShieldInDamage(LivingEntity self, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
@@ -527,12 +589,17 @@ public class PingSystem implements ModInitializer {
         // gen ping
         Vec3d pingPos = self.getBoundingBox().getCenter();
         PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), ENTITY_DAMAGE_PING_COLOR, ENTITY_DAMAGE_PING_SOUND_INDEX, PingPoint.PingType.ENTITY, self.getUuid());
+        
+        // Store ping for answer processing
+        activePings.put(pingToSend.id, pingToSend);
+        
         try {
             PacketByteBuf buf = pingToSend.toPacketByteBuf();
             multicastPingIncludeSelf(serverPlayer, PING_PACKET, buf);
             LOGGER.info("Created auto-ping for attacked entity: " + self.getName().getString() + " (damage blocked until ping removed)");
         } catch (Exception e) {
             LOGGER.error("<< beforeInvokingBlockedByShieldInDamage: Failed to create ping for attacked entity", e);
+            activePings.remove(pingToSend.id);
             return;
         }
         // Store the mapping between the blocking self and the ping ID

@@ -32,12 +32,17 @@ import java.util.function.Predicate;
 import static app.jyu.PingSystem.LOGGER;
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
+import static app.jyu.NetworkingConstants.ANSWER_PACKET;
 
 import net.minecraft.entity.projectile.ProjectileUtil;
 
 public class PingSystemClient implements ClientModInitializer {
     public static final double MAX_REACH = 512.0D;
     public static KeyBinding pingKeyBinding;
+    public static KeyBinding answerKey1;
+    public static KeyBinding answerKey2;
+    public static KeyBinding answerKey3;
+    public static KeyBinding answerKey4;
 
     @Override
     public void onInitializeClient() {
@@ -47,6 +52,35 @@ public class PingSystemClient implements ClientModInitializer {
                 InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
                 GLFW.GLFW_KEY_C, // The keycode of the key
                 "category.ping_system.ping_system" // The translation key of the keybinding's category.
+        ));
+
+        // Register answer key bindings for 1/2/3/4
+        answerKey1 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.ping_system.answer1",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_1,
+                "category.ping_system.ping_system"
+        ));
+
+        answerKey2 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.ping_system.answer2",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_2,
+                "category.ping_system.ping_system"
+        ));
+
+        answerKey3 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.ping_system.answer3",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_3,
+                "category.ping_system.ping_system"
+        ));
+
+        answerKey4 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.ping_system.answer4",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_4,
+                "category.ping_system.ping_system"
         ));
 
         // Register Fabric events
@@ -77,7 +111,42 @@ public class PingSystemClient implements ClientModInitializer {
             assert client.cameraEntity != null;
             handlePingAction(client, player, ModConfig.includeFluids);
         }
+
+        // Check answer keys 1/2/3/4
+        RenderHandler renderer = RenderHandler.getInstance();
+        if (renderer.isOnPing()) {
+            assert client.player != null;
+            var player = client.player;
+            PingPoint currentPing = renderer.getOnPing();
+
+            while (answerKey1.wasPressed()) {
+                handleAnswerKey(currentPing, 0, player.getGameProfile().getName());
+            }
+            while (answerKey2.wasPressed()) {
+                handleAnswerKey(currentPing, 1, player.getGameProfile().getName());
+            }
+            while (answerKey3.wasPressed()) {
+                handleAnswerKey(currentPing, 2, player.getGameProfile().getName());
+            }
+            while (answerKey4.wasPressed()) {
+                handleAnswerKey(currentPing, 3, player.getGameProfile().getName());
+            }
+        }
+
         // TODO: while holding z, render the quiz larger on screen (hold z to zoom in the quiz, x to hide/show the quiz)
+    }
+
+    private static void handleAnswerKey(PingPoint ping, int answerIndex, String playerName) {
+        if (ping != null && ping.quiz != null) {
+            try {
+                AnswerPacket answerPacket = new AnswerPacket(ping.id, answerIndex, playerName);
+                PacketByteBuf buf = answerPacket.toPacketByteBuf();
+                ClientPlayNetworking.send(ANSWER_PACKET, buf);
+                LOGGER.info("Sent answer {} for ping {}", answerIndex, ping.id);
+            } catch (IOException e) {
+                LOGGER.error("Failed to send answer packet", e);
+            }
+        }
     }
 
     // Renamed from pingDirection to handlePingAction
@@ -185,4 +254,4 @@ public class PingSystemClient implements ClientModInitializer {
             LOGGER.error("Fail to deserialize the remove ping packet received", e);
         }
     }
-}
+} 
