@@ -142,6 +142,10 @@ public class PingSystem implements ModInitializer {
 
         // TODO (later) add team command, save state to file
 
+        // load all quizzes
+        Quiz.loadQuizMap();
+        Book.loadBooks();
+
         // register all new sound events
         soundEventsForPing = new ArrayList<>();
         Arrays.stream(newSounds).forEach((soundStr) -> {
@@ -157,9 +161,6 @@ public class PingSystem implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, PingSystem::onReceivingRemovePingPacket);
         PlayerBlockBreakEvents.BEFORE.register(PingSystem::onBlockBreak);
         ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
-
-        // load all quizzes
-        Quiz.loadQuizMap();
     }
 
     public static void onReceivingRemovePingPacket(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender){

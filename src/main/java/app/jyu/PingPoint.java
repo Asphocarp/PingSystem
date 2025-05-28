@@ -62,7 +62,7 @@ public class PingPoint implements Serializable {
         this.type = type;
         // Ensure entityUUID is only set for ENTITY type
         this.entityUUID = (type == PingType.ENTITY) ? entityUUID : null; 
-        this.quiz = Quiz.randNoAnswer();
+        this.quiz = Book.getRandomQuiz(1); // TODO: add global config (per user?) for book id (and change the bid to simple string) // TODO: later consider do not send the answer to client side (though no one cheat)
 
         // // log quiz content here
         // if (this.quiz != null) {

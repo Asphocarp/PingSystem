@@ -34,7 +34,15 @@ public class Quiz implements Serializable {
     public UUID uuid;
 
     private static volatile ConcurrentHashMap<UUID, Quiz> QUIZ_MAP;
+    // private static volatile CopyOnWriteArrayList<Book> BOOKS;
     private static final Random rg = new Random();
+
+    public Quiz(String question, String[] options, int answer) {
+        this.question = question;
+        this.options = options;
+        this.answer = answer;
+        this.uuid = UUID.randomUUID();
+    }
 
     // Temporary class to match JSON structure for GSON deserialization
     private static class QuizJsonItem {
@@ -69,11 +77,7 @@ public class Quiz implements Serializable {
                         }
                         List<QuizJsonItem> quizItems = gson.fromJson(reader, listType);
                         for (QuizJsonItem item : quizItems) {
-                            Quiz quiz = new Quiz();
-                            quiz.question = item.questionText;
-                            quiz.options = item.optionList;
-                            quiz.answer = item.answerIndex; // Assuming JSON answer is now 0-based as per your changes
-                            quiz.uuid = UUID.fromString(item.uuidString);
+                            Quiz quiz = new Quiz(item.questionText, item.optionList, item.answerIndex);
                             quizMap.put(quiz.uuid, quiz);
                         }
                         QUIZ_MAP = quizMap;

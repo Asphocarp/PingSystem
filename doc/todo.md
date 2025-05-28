@@ -7,6 +7,8 @@
 - [ ] 0 碎甲声音
 - [ ] 1 阻挡声音
 
+- naming: QuizCraft
+
 - [ ] 1 current MVP .damage() needs some fix. it use current weapon and can be blocked by current shield.
 - [ ] 1 wrong answer, the mob become huge (for dramatic effect)
 - [ ] stats for memo words (like anki?)
