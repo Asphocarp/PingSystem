@@ -155,7 +155,7 @@ public class ModConfig implements ModMenuApi, ConfigScreenFactory<Screen> {
             pingNumEach = Integer.parseInt(cfg.getProperty("pingNumEach", String.valueOf(DEFAULT_pingNumEach)));
             includeFluids = Boolean.parseBoolean(cfg.getProperty("includeFluids", String.valueOf(DEFAULT_includeFluids)));
             iconSize = Float.parseFloat(cfg.getProperty("iconSize", String.valueOf(DEFAULT_iconSize)));
-            // TODO (not important) better format for colors in config file
+            // TODO: (not important) better format for colors in config file
             infoColor = Integer.parseInt(cfg.getProperty("infoColor", String.valueOf(DEFAULT_infoColor)));
             secondsToVanish = Long.parseLong(cfg.getProperty("secondsToVanish", String.valueOf(DEFAULT_secondsToVanish)));
             highlightColor = Integer.parseInt(cfg.getProperty("highlightColor", String.valueOf(DEFAULT_highlightColor)));

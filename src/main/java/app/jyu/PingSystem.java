@@ -106,6 +106,13 @@ public class PingSystem implements ModInitializer {
     // Map to store UUIDs of glowing entities and their glow end time (System.currentTimeMillis())
     private static final Map<UUID, Long> glowingEntities = new ConcurrentHashMap<>();
     
+    // Constants for block break pings
+    public static final java.awt.Color BLOCK_BREAK_PING_COLOR = new java.awt.Color(0xEB9D39);
+    public static final byte BLOCK_BREAK_PING_SOUND_INDEX = 0;
+    // Constants for entity damage pings
+    public static final java.awt.Color ENTITY_DAMAGE_PING_COLOR = new java.awt.Color(0xEB9D39);
+    public static final byte ENTITY_DAMAGE_PING_SOUND_INDEX = 2;
+    
     // ThreadLocal flag to prevent re-entrancy in damage logic
     public static final ThreadLocal<Boolean> IS_APPLYING_BLOCKED_DAMAGE = ThreadLocal.withInitial(() -> false);
     
@@ -413,7 +420,7 @@ public class PingSystem implements ModInitializer {
             
             // Create ping for the ore block being broken
             Vec3d pingPos = Vec3d.ofCenter(pos);
-            PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), new java.awt.Color(0x00FF00), (byte)0, PingPoint.PingType.LOCATION, null);
+            PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), BLOCK_BREAK_PING_COLOR, BLOCK_BREAK_PING_SOUND_INDEX, PingPoint.PingType.LOCATION, null);
             pingToSend.id = pingId; // Associate ping with blocked event
             
             // Create and send ping packet to all players
@@ -518,7 +525,7 @@ public class PingSystem implements ModInitializer {
         }
         // gen ping
         Vec3d pingPos = self.getBoundingBox().getCenter();
-        PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), new java.awt.Color(0xFF0000), (byte)2, PingPoint.PingType.ENTITY, self.getUuid());
+        PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), ENTITY_DAMAGE_PING_COLOR, ENTITY_DAMAGE_PING_SOUND_INDEX, PingPoint.PingType.ENTITY, self.getUuid());
         try {
             PacketByteBuf buf = pingToSend.toPacketByteBuf();
             multicastPingIncludeSelf(serverPlayer, PING_PACKET, buf);
