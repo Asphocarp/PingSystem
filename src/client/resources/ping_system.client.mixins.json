@@ -3,7 +3,6 @@
 	"package": "app.jyu.mixin.client",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
-		"PingSystemClientMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
