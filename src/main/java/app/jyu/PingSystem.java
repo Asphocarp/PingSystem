@@ -524,7 +524,7 @@ public class PingSystem implements ModInitializer {
                         serverPlayer.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                             net.minecraft.entity.effect.StatusEffects.STRENGTH, 120, 0));
                         serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a✓ Correct! You gained Strength for 6 seconds!"), false);
-                        serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a  Your answer was: §e" + correctPair), false);
+                        serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a   Your answer was: §e" + correctPair), false);
                     }
                 }
                 LOGGER.info("Executed blocked entity damage with reward for ping ID: " + ping.id + " (player: " + aEvent.player.getEntityName() + ", damage: " + aEvent.damageAmount + ")");
@@ -533,7 +533,7 @@ public class PingSystem implements ModInitializer {
                 if (aEvent.player instanceof ServerPlayerEntity serverPlayer) {
                     serverPlayer.damage(serverPlayer.getDamageSources().generic(), 5.0f);
                     serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c✗ Wrong answer! You took 5 damage."), false);
-                    serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c  Correct answer was: §e" + correctPair), false);
+                    serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c   Correct answer was: §e" + correctPair), false);
                 }
                 LOGGER.info("Applied entity damage penalty for ping ID: " + ping.id + " (player: " + aEvent.player.getEntityName() + ")");
             }
@@ -557,12 +557,12 @@ public class PingSystem implements ModInitializer {
                         }
                         if (bEvent.player instanceof ServerPlayerEntity serverPlayer) {
                             serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a✓ Correct! Lucky! You got double drops!"), false);
-                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a  Your answer was: §e" + correctPair), false);
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a   Your answer was: §e" + correctPair), false);
                         }
                     } else {
                         if (bEvent.player instanceof ServerPlayerEntity serverPlayer) {
                             serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a✓ Correct! Block broken successfully!"), false);
-                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a  Your answer was: §e" + correctPair), false);
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§a   Your answer was: §e" + correctPair), false);
                         }
                     }
                 }
@@ -579,10 +579,10 @@ public class PingSystem implements ModInitializer {
                         if (isPickaxeIronOrLower(mainHand)) {
                             mainHand.setCount(0); // Destroy the tool
                             serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c✗ Wrong answer! Your pickaxe broke and no drops!"), false);
-                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c  Correct answer was: §e" + correctPair), false);
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c   Correct answer was: §e" + correctPair), false);
                         } else {
                             serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c✗ Wrong answer! No drops!"), false);
-                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c  Correct answer was: §e" + correctPair), false);
+                            serverPlayer.sendMessage(net.minecraft.text.Text.literal("§c   Correct answer was: §e" + correctPair), false);
                         }
                     }
                 }

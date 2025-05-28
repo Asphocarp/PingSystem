@@ -1,14 +1,13 @@
-- [ ] many ping coexist (at most 1 for each entity) (and match the nearest to the screen center as the active one)
 - [ ] select book (and other global server-side config, like highlight color)
+- [ ] 0 re-naming: QuizCraft
 
-- [ ] 0 add channel for ping (default channel string is "default") (only forward pings to this channel (teammates subscript to this channel))
 - [ ] 0 碎甲声音
-- [ ] 1 阻挡声音
 
-- naming: QuizCraft
+- [ ] 1 阻挡声音
+- [ ] 1 add channel for ping (default channel string is "default") (only forward pings to this channel (teammates subscript to this channel))
+
 
 - [ ] 1 screen border indicator, with margin?
-- [ ] 1 current MVP .damage() needs some fix. it use current weapon and can be blocked by current shield.
 - [ ] 1 wrong answer, the mob become huge (for dramatic effect)
 - [ ] stats for memo words (like anki?)
 
@@ -29,6 +28,8 @@ key diff:
 - better algo?
 
 done:
+- [x] 1 current MVP .damage() needs some fix. it use current weapon and can be blocked by current shield.
+- [x] many ping coexist (at most 1 for each entity) (and match the nearest to the screen center as the active one)
 - [x] correct/wrong, send the answer, feedback (good/bad)
 - [x] 0 no more cancel / ping func (of PingSystem) - cancel is only for debug
 - [x] fix render block ping as same size and normal color
