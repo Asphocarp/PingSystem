@@ -103,12 +103,17 @@ public class RenderHandler {
     }
 
     public void onRenderGameOverlayPost(DrawContext drawContext, float tickDelta) {
-        boolean setOnPing = false;
         MinecraftClient client = MinecraftClient.getInstance();
         int width = client.getWindow().getScaledWidth();
         int height = client.getWindow().getScaledHeight();
         double halfWidth = width / 2.0;
         double halfHeight = height / 2.0;
+        double threshold = Math.min(width, height) / 5.0; // used to be 25, TODO: add config for this
+        double thresholdSquared = threshold * threshold;
+        
+        // Track the nearest ping to screen center
+        PingPoint nearestPing = null;
+        double nearestDistanceSquared = Double.MAX_VALUE;
 
         for (var entry : this.pings.entrySet()) {
             for (var ping : entry.getValue()) {
@@ -155,30 +160,28 @@ public class RenderHandler {
                    screenX = MathHelper.clamp(screenX, margin, width - margin);
                    screenY = MathHelper.clamp(screenY, margin, height - margin);
                 }
-                // TODO: Render an arrow if isClamped?
-                // ---------------------------------------------------
+                // TODO: Render an arrow indicator if isClamped?
+                // ------------------------------------------------------------
 
                 // Render the icon at the calculated screen position
                 renderIconHUD(drawContext, screenX, screenY, ping);
-                // TODO: render current quiz (hold z to zoom in the quiz, x to hide/show the quiz)
 
-                // Update onPing status based on proximity to screen center
-                if (!setOnPing) {
-                    var midVec = new Vector2d(halfWidth, halfHeight);
-                    var iconVec = new Vector2d(screenX, screenY);
-                    var fromMid = iconVec.sub(midVec);
-                    // Use a threshold based on screen size (e.g., 1/5th of width or height)
-                    double threshold = Math.min(width, height) / 5.0; // used to be 25, TODO: add config for this
-                    if (fromMid.lengthSquared() <= threshold * threshold) { // Use squared length for efficiency
-                        renderInfoHUD(drawContext, (int) (halfWidth), (int) (halfHeight), ping);
-                        onPing = ping;
-                        setOnPing = true;
-                    }
+                // Check if this ping is the nearest to screen center
+                double deltaX = screenX - halfWidth;
+                double deltaY = screenY - halfHeight;
+                double distanceSquared = deltaX * deltaX + deltaY * deltaY;
+                if (distanceSquared <= thresholdSquared && distanceSquared < nearestDistanceSquared) {
+                    nearestPing = ping;
+                    nearestDistanceSquared = distanceSquared;
                 }
             }
         }
 
-        if (!setOnPing) {
+        // Set onPing to the nearest ping and render its info
+        if (nearestPing != null) {
+            renderInfoHUD(drawContext, (int) halfWidth, (int) halfHeight, nearestPing);
+            onPing = nearestPing;
+        } else {
             onPing = null;
         }
     }
