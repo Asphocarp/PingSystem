@@ -13,7 +13,7 @@
 
 - [ ] 2 render a hang sword ? (beside the ping)
 - [ ] 2 maybe - 紫甲,蓝甲,白甲 - 每次碎甲直到没甲
-- [ ] 2 cool: tas版本，PvP时比谁回答的快
+- [ ] 2 cool&hard: tas版本，PvP时比谁回答的快
 
 - [ ] 2 可以允许暂停(单人), config里设置(就通过弹出GUI?)
 - [ ] 2 可能只hook on death比较合理，甚至可以让他复活得更强
