@@ -200,52 +200,62 @@ public class ServerConfigScreen extends Screen {
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && showBookSelection && availableBooks != null) {
-            int popupX = bookSelectionButton.getX();
-            int popupY = bookSelectionButton.getY() + bookSelectionButton.getHeight() + 2;
-            int popupWidth = bookSelectionButton.getWidth();
+        // If the book selection popup is visible, handle its interactions first.
+        if (this.showBookSelection && button == 0 && this.availableBooks != null) {
+            int popupX = this.bookSelectionButton.getX();
+            int popupY = this.bookSelectionButton.getY() + this.bookSelectionButton.getHeight() + 2;
+            int popupWidth = this.bookSelectionButton.getWidth();
 
-            List<Map.Entry<Integer, String>> sortedBooks = new ArrayList<>(availableBooks.entrySet());
+            List<Map.Entry<Integer, String>> sortedBooks = new ArrayList<>(this.availableBooks.entrySet());
             sortedBooks.sort(Map.Entry.comparingByKey());
             
-            int itemY = popupY + 5;
-            for (Map.Entry<Integer, String> entry : sortedBooks) {
-                if (mouseX >= popupX && mouseX <= popupX + popupWidth && 
-                    mouseY >= itemY && mouseY <= itemY + this.textRenderer.fontHeight + 2) {
-                    
-                    selectedBookId = entry.getKey();
-                    showBookSelection = false;
-                    updateButtonTexts();
-                    return true;
-                }
-                itemY += this.textRenderer.fontHeight + 5;
+            int displayItemCount = 0;
+            int textHeight = this.textRenderer.fontHeight;
+            int itemHeightWithPadding = textHeight + 5;
+            
+            // Calculate actual number of items that would be rendered up to maxDisplayItems (10)
+            for (int i = 0; i < sortedBooks.size() && i < 10; i++) {
+                displayItemCount++;
             }
-            // If clicked outside the book list area but popup was shown, close it
-            showBookSelection = false;
-            return true; 
-        }
-        
-        // Handle clicks on other elements like the book selection button itself
-        if (bookSelectionButton.mouseClicked(mouseX, mouseY, button)) {
-            return true;
-        }
-        if (saveButton.mouseClicked(mouseX, mouseY, button)) {
-             return true;
-        }
-        if (cancelButton.mouseClicked(mouseX, mouseY, button)) {
-             return true;
-        }
-        if(quizEnabledCheckbox.mouseClicked(mouseX, mouseY, button)){
-            return true;
-        }
-        // Let text fields handle their clicks
-        if (colorField.mouseClicked(mouseX, mouseY, button)) {
-            return true;
-        }
-        if (timeoutField.mouseClicked(mouseX, mouseY, button)) {
-            return true;
+            
+            int popupContentHeight = displayItemCount * itemHeightWithPadding;
+            int totalPopupHeight = popupContentHeight + 10; // 5px top/bottom padding for the list box
+
+            // Check if the click is within the bounds of the rendered popup list
+            boolean clickInsidePopupRenderedArea = mouseX >= popupX && mouseX < (popupX + popupWidth) &&
+                                                  mouseY >= popupY && mouseY < (popupY + totalPopupHeight);
+
+            if (clickInsidePopupRenderedArea) {
+                // Click is inside the popup's visual area. Check if it's on an item.
+                int currentItemY = popupY + 5; // Start Y for the first item content
+                int itemsProcessed = 0;
+                for (Map.Entry<Integer, String> entry : sortedBooks) {
+                    if (itemsProcessed >= displayItemCount) break; // Only check visible items
+
+                    // Check if the click is within the Y bounds of the current item
+                    if (mouseY >= currentItemY && mouseY < (currentItemY + textHeight + 2)) { // +2 for a bit of leeway
+                        // Click is on this book item
+                        this.selectedBookId = entry.getKey();
+                        this.showBookSelection = false; // Close popup after selection
+                        this.updateButtonTexts();
+                        return true; // Event handled by selecting a book
+                    }
+                    currentItemY += itemHeightWithPadding;
+                    itemsProcessed++;
+                }
+                // Click was inside the popup's rendered area but not on any specific item (e.g., on padding).
+                // Consume the click to prevent interaction with elements underneath the popup and keep it open.
+                return true; 
+            } else {
+                // Click was outside the rendered popup area. Close the popup.
+                this.showBookSelection = false;
+                // The click was not handled by the popup list itself, so it might be for another widget.
+                // Let super.mouseClicked handle it by falling through.
+            }
         }
 
+        // If the click was not handled by the popup logic above, or if the popup was not shown,
+        // delegate to the default screen click handling which includes all child widgets like TextFields and Buttons.
         return super.mouseClicked(mouseX, mouseY, button);
     }
     

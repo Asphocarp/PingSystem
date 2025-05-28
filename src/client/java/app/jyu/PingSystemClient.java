@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -17,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -37,6 +39,7 @@ import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
 import static app.jyu.NetworkingConstants.ANSWER_PACKET;
 import static app.jyu.NetworkingConstants.SYNC_CONFIG_PACKET;
 import static app.jyu.NetworkingConstants.OPEN_CONFIG_GUI_PACKET;
+import static app.jyu.NetworkingConstants.REQUEST_CONFIG_PACKET;
 
 import net.minecraft.entity.projectile.ProjectileUtil;
 
@@ -51,17 +54,19 @@ public class PingSystemClient implements ClientModInitializer {
     public static KeyBinding answerKey3;
     public static KeyBinding answerKey4;
 
+    private static ServerConfigScreen configScreen = null;
+    private static ConfigData lastReceivedConfig = null;
+    private static boolean pendingOpenConfigGui = false;
+
     @Override
     public void onInitializeClient() {
-        // This entrypoint is suitable for setting up client-specific logic, such as rendering.
         pingKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.ping_system.ping", // The translation key of the keybinding's name
-                InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
-                GLFW.GLFW_KEY_C, // The keycode of the key
-                "category.ping_system.ping_system" // The translation key of the keybinding's category.
+                "key.ping_system.ping",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_C,
+                "category.ping_system.ping_system"
         ));
 
-        // Register answer key bindings for 1/2/3/4
         answerKey1 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.ping_system.answer1",
                 InputUtil.Type.KEYSYM,
@@ -90,33 +95,29 @@ public class PingSystemClient implements ClientModInitializer {
                 "category.ping_system.ping_system"
         ));
 
-        // Register Fabric events
-        // Tick handler for key presses
         ClientTickEvents.END_CLIENT_TICK.register(PingSystemClient::checkKeyPress);
-        // Tick handler for updating RenderHandler data (previously in ClientTickHandler)
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler.getInstance()::onClientTick);
 
-        // Rendering handlers
         WorldRenderEvents.LAST.register(RenderHandler.getInstance()::onRenderWorldLast);
         HudRenderCallback.EVENT.register(RenderHandler.getInstance()::onRenderGameOverlayPost);
 
         ClientPlayNetworking.registerGlobalReceiver(PING_PACKET, (client, handler, buf, responseSender) -> {
-            // Everything in this lambda is run on the render thread
             pingReceiver(buf);
         });
         ClientPlayNetworking.registerGlobalReceiver(REMOVE_PING_PACKET, (client, handler, buf, responseSender) -> {
             removePingReceiver(buf);
         });
 
-        // Register server config sync receiver
         ClientPlayNetworking.registerGlobalReceiver(SYNC_CONFIG_PACKET, (client, handler, buf, responseSender) -> {
             syncConfigReceiver(buf);
         });
 
-        // Register config GUI open receiver
         ClientPlayNetworking.registerGlobalReceiver(OPEN_CONFIG_GUI_PACKET, (client, handler, buf, responseSender) -> {
-            // Open the GUI on client side
-            client.execute(() -> openServerConfigGui());
+            if (client.player != null) {
+                LOGGER.info("[PingSystem Client] Received OPEN_CONFIG_GUI_PACKET. Requesting fresh config from server.");
+                pendingOpenConfigGui = true;
+                ClientPlayNetworking.send(REQUEST_CONFIG_PACKET, PacketByteBufs.create());
+            }
         });
 
         ModConfig.loadConfig(ModConfig.CFG_FILE);
@@ -130,25 +131,16 @@ public class PingSystemClient implements ClientModInitializer {
             handlePingAction(client, player, ModConfig.includeFluids);
         }
 
-        // Check answer keys 1/2/3/4
         RenderHandler renderer = RenderHandler.getInstance();
         if (renderer.isOnPing()) {
             assert client.player != null;
             var player = client.player;
             PingPoint currentPing = renderer.getOnPing();
 
-            while (answerKey1.wasPressed()) {
-                handleAnswerKey(currentPing, 0, player.getGameProfile().getName());
-            }
-            while (answerKey2.wasPressed()) {
-                handleAnswerKey(currentPing, 1, player.getGameProfile().getName());
-            }
-            while (answerKey3.wasPressed()) {
-                handleAnswerKey(currentPing, 2, player.getGameProfile().getName());
-            }
-            while (answerKey4.wasPressed()) {
-                handleAnswerKey(currentPing, 3, player.getGameProfile().getName());
-            }
+            if (answerKey1.wasPressed()) handleAnswerKey(currentPing, 0, player.getGameProfile().getName());
+            if (answerKey2.wasPressed()) handleAnswerKey(currentPing, 1, player.getGameProfile().getName());
+            if (answerKey3.wasPressed()) handleAnswerKey(currentPing, 2, player.getGameProfile().getName());
+            if (answerKey4.wasPressed()) handleAnswerKey(currentPing, 3, player.getGameProfile().getName());
         }
     }
 
@@ -165,9 +157,7 @@ public class PingSystemClient implements ClientModInitializer {
         }
     }
 
-    // Renamed from pingDirection to handlePingAction
-    private static void handlePingAction(MinecraftClient client, ClientPlayerEntity player,
-                                         boolean includeFluids) {
+    private static void handlePingAction(MinecraftClient client, ClientPlayerEntity player, boolean includeFluids) {
         RenderHandler renderer = RenderHandler.getInstance();
         if (renderer.isOnPing()) {
             renderer.removeOnPing();
@@ -189,46 +179,24 @@ public class PingSystemClient implements ClientModInitializer {
         Vec3d rotationVec = cameraEntity.getRotationVec(tickDelta);
         Vec3d endVec = cameraPos.add(rotationVec.multiply(maxDistance));
         Box searchBox = cameraEntity.getBoundingBox().stretch(rotationVec.multiply(maxDistance)).expand(1.0D, 1.0D, 1.0D);
-
-        // 1. Raycast for Blocks
         BlockHitResult blockHitResult = cameraEntity.getWorld().raycast(new RaycastContext(
-                cameraPos,
-                endVec,
-                RaycastContext.ShapeType.OUTLINE,
+                cameraPos, endVec, RaycastContext.ShapeType.OUTLINE,
                 includeFluids ? RaycastContext.FluidHandling.ANY : RaycastContext.FluidHandling.NONE,
-                cameraEntity
-        ));
-
-        // 2. Raycast for Entities
+                cameraEntity));
         double currentMaxDistSq = endVec.squaredDistanceTo(cameraPos);
         if (blockHitResult.getType() != HitResult.Type.MISS) {
             currentMaxDistSq = blockHitResult.getPos().squaredDistanceTo(cameraPos);
         }
-        
-        // Predicate to filter which entities can be targeted
         Predicate<Entity> entityPredicate = entity -> !entity.isSpectator() && entity.canHit();
-
-        // Use ProjectileUtil.raycast which is commonly used for this purpose
         EntityHitResult entityHitResult = ProjectileUtil.raycast(
-                cameraEntity, 
-                cameraPos, 
-                endVec, 
-                searchBox, 
-                entityPredicate, 
-                currentMaxDistSq
-        );
-
-        // 3. Compare Results
+                cameraEntity, cameraPos, endVec, searchBox, entityPredicate, currentMaxDistSq);
         if (entityHitResult != null) {
             double entityDistSq = entityHitResult.getPos().squaredDistanceTo(cameraPos);
-            // If entity is closer than block (or if block was a miss), return entity hit
             if (entityDistSq < currentMaxDistSq || blockHitResult.getType() == HitResult.Type.MISS) {
-                 LOGGER.debug("Raycast hit entity: " + entityHitResult.getEntity().getName().getString());
+                LOGGER.debug("Raycast hit entity: " + entityHitResult.getEntity().getName().getString());
                 return entityHitResult;
             }
         }
-        
-        // Otherwise, return the block hit (or miss if both missed)
         LOGGER.debug("Raycast hit block: " + (blockHitResult.getType() != HitResult.Type.MISS ? blockHitResult.getBlockPos().toString() : "MISS"));
         return blockHitResult;
     }
@@ -270,22 +238,14 @@ public class PingSystemClient implements ClientModInitializer {
             LOGGER.error("Fail to deserialize the remove ping packet received", e);
         }
     }
-
-    // Static reference to config screen for reuse
-    private static ServerConfigScreen configScreen = null;
     
-    /**
-     * Handle server config sync packet
-     */
     private static void syncConfigReceiver(PacketByteBuf buf) {
         try {
-            // Read config values
             int bookId = buf.readInt();
             int highlightColor = buf.readInt();
             boolean quizEnabled = buf.readBoolean();
             int quizTimeout = buf.readInt();
             
-            // Read available books
             int bookCount = buf.readInt();
             Map<Integer, String> availableBooks = new HashMap<>();
             for (int i = 0; i < bookCount; i++) {
@@ -294,24 +254,51 @@ public class PingSystemClient implements ClientModInitializer {
                 availableBooks.put(id, name);
             }
             
-            // Update config screen if it exists
-            if (configScreen != null) {
-                configScreen.updateConfig(bookId, highlightColor, quizEnabled, quizTimeout, availableBooks);
-            } else {
-                // Store for later use when opening config screen
-                lastReceivedConfig = new ConfigData(bookId, highlightColor, quizEnabled, quizTimeout, availableBooks);
-            }
-            
-            PingSystem.LOGGER.info("[PingSystem Client] Received server config: bookId={}, highlightColor=0x{}, quizEnabled={}", 
+            lastReceivedConfig = new ConfigData(bookId, highlightColor, quizEnabled, quizTimeout, availableBooks);
+            PingSystem.LOGGER.info("[PingSystem Client] Received and stored server config: bookId={}, highlightColor=0x{}, quizEnabled={}", 
                 bookId, Integer.toHexString(highlightColor), quizEnabled);
+
+            if (pendingOpenConfigGui) {
+                pendingOpenConfigGui = false;
+                MinecraftClient.getInstance().execute(() -> {
+                    if (MinecraftClient.getInstance().player == null) return;
+                    
+                    configScreen = new ServerConfigScreen(MinecraftClient.getInstance().currentScreen);
+                    configScreen.updateConfig(
+                        lastReceivedConfig.bookId,
+                        lastReceivedConfig.highlightColor,
+                        lastReceivedConfig.quizEnabled,
+                        lastReceivedConfig.quizTimeout,
+                        lastReceivedConfig.availableBooks
+                    );
+                    MinecraftClient.getInstance().setScreen(configScreen);
+                    LOGGER.info("[PingSystem Client] ServerConfigScreen opened after pending config sync.");
+                });
+            } else if (configScreen != null && configScreen == MinecraftClient.getInstance().currentScreen) {
+                MinecraftClient.getInstance().execute(() -> {
+                    configScreen.updateConfig(
+                        lastReceivedConfig.bookId,
+                        lastReceivedConfig.highlightColor,
+                        lastReceivedConfig.quizEnabled,
+                        lastReceivedConfig.quizTimeout,
+                        lastReceivedConfig.availableBooks
+                    );
+                    LOGGER.info("[PingSystem Client] Updated open ServerConfigScreen with fresh config.");
+                 });
+            }
                 
         } catch (Exception e) {
             PingSystem.LOGGER.error("[PingSystem Client] Failed to handle server config sync", e);
+            if (pendingOpenConfigGui) {
+                pendingOpenConfigGui = false;
+                MinecraftClient.getInstance().execute(() -> {
+                    if (MinecraftClient.getInstance().player != null) {
+                        MinecraftClient.getInstance().player.sendMessage(Text.literal("Failed to retrieve server config for GUI. Please try again.").formatted(Formatting.RED), false);
+                    }
+                });
+            }
         }
     }
-    
-    // Store last received config for when GUI is opened
-    private static ConfigData lastReceivedConfig = null;
     
     private static class ConfigData {
         final int bookId;
@@ -329,17 +316,13 @@ public class PingSystemClient implements ClientModInitializer {
         }
     }
     
-    /**
-     * Open server config GUI (OP only)
-     */
-    public static void openServerConfigGui() {
+    public static void openServerConfigGui_Internal() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
         
-        // Open the GUI directly
         client.execute(() -> {
             configScreen = new ServerConfigScreen(client.currentScreen);
-            if (lastReceivedConfig != null) {
+            if (lastReceivedConfig != null) { 
                 configScreen.updateConfig(
                     lastReceivedConfig.bookId,
                     lastReceivedConfig.highlightColor,
