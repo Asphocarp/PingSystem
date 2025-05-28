@@ -117,6 +117,9 @@ public class PingSystem implements ModInitializer {
     // ThreadLocal flag to prevent re-entrancy in damage logic
     public static final ThreadLocal<Boolean> IS_APPLYING_BLOCKED_DAMAGE = ThreadLocal.withInitial(() -> false);
     
+    // ThreadLocal to store damage amount for redirect method access
+    public static final ThreadLocal<Float> CURRENT_DAMAGE_AMOUNT = ThreadLocal.withInitial(() -> 0.0f);
+    
     // Storage for blocked events waiting for ping cancellation
     // Ping ID -> ArrayList of BlockedEntityAttackEvent
     private static final Map<UUID, BlockedEntityAttackEvent> blockedEntityAttacks = new ConcurrentHashMap<>();
@@ -602,50 +605,60 @@ public class PingSystem implements ModInitializer {
                item == net.minecraft.item.Items.GOLDEN_PICKAXE;
     }
 
-    public static void beforeInvokingBlockedByShieldInDamage(LivingEntity self, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        LOGGER.info(">> beforeInvokingBlockedByShieldInDamage");
+    // Called at the start of damage method to store the amount (for redirectBlockedByShield)
+    public static void onDamageStart(LivingEntity self, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        CURRENT_DAMAGE_AMOUNT.set(amount);
+    }
+
+    public static boolean redirectBlockedByShield(LivingEntity self, DamageSource source) {
+        float amount = CURRENT_DAMAGE_AMOUNT.get();
+        LOGGER.info(">> redirectBlockedByShield with amount: {}", amount);
         var CURRENT_STRENGTH = 0.25; // TODO: add config for this
-        if (IS_APPLYING_BLOCKED_DAMAGE.get()) {
-            LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Skipping mixin logic for blocked damage because it's from executeBlockedEventsForPing");
-            return; // Skip mixin logic if this damage application is from executeBlockedEventsForPing
-        }
         if (self.isDead() || self.getWorld().isClient() || !(source.getSource() instanceof ServerPlayerEntity serverPlayer)) { 
-            return; 
+            return self.blockedByShield(source); // Call original method
+        }
+        if (IS_APPLYING_BLOCKED_DAMAGE.get()) {
+            LOGGER.info("<< redirectBlockedByShield: Skipping mixin logic for blocked damage because it's from executeBlockedEventsForPing");
+            return false; // Don't block by shield when applying blocked damage
+        }
+
+        // Check if should block by shield normally first
+        boolean originallyBlocked = self.blockedByShield(source);
+        if (originallyBlocked) {
+            // if actually blocked by shield, do not add ping
+            LOGGER.info("<< redirectBlockedByShield: Skipping mixin logic for blocked damage because the entity is blocking via shield");
+            return true; // Return the original blocked result
         }
 
         // only one ping each entity
         if (blockingEntityToPingId.get(self.getUuid()) != null) {
-            LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Blocking damage and only one ping each entity is allowed");
-            // TODO: why setReturnValue to true but still not excuting takeShieldHit;
+            LOGGER.info("<< redirectBlockedByShield: Blocking damage and only one ping each entity is allowed");
             self.takeKnockback(CURRENT_STRENGTH, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
-            cir.setReturnValue(true);
-            return;
+            return true; // Pretend it was blocked
         }
+        
         // gen ping
         Vec3d pingPos = self.getBoundingBox().getCenter();
         PingPoint pingToSend = new PingPoint(pingPos, serverPlayer.getEntityName(), ENTITY_DAMAGE_PING_COLOR, ENTITY_DAMAGE_PING_SOUND_INDEX, PingPoint.PingType.ENTITY, self.getUuid());
         
-        // Store ping for answer processing
-        activePings.put(pingToSend.id, pingToSend);
-        
         try {
             PacketByteBuf buf = pingToSend.toPacketByteBuf();
             multicastPingIncludeSelf(serverPlayer, PING_PACKET, buf);
+            activePings.put(pingToSend.id, pingToSend);
             LOGGER.info("Created auto-ping for attacked entity: " + self.getName().getString() + " (damage blocked until ping removed)");
         } catch (Exception e) {
-            LOGGER.error("<< beforeInvokingBlockedByShieldInDamage: Failed to create ping for attacked entity", e);
-            activePings.remove(pingToSend.id);
-            return;
+            LOGGER.error("<< redirectBlockedByShield: Failed to create ping for attacked entity", e);
+            return originallyBlocked;
         }
+        
         // Store the mapping between the blocking self and the ping ID
         blockingEntityToPingId.put(self.getUuid(), pingToSend.id);
-        // Store the blocked event
+        // Store the blocked event with actual damage amount from ThreadLocal
         BlockedEntityAttackEvent blockedEvent = new BlockedEntityAttackEvent(
             serverPlayer, self.getWorld(), Hand.MAIN_HAND, self, null, amount, source);
         blockedEntityAttacks.put(pingToSend.id, blockedEvent);
-        LOGGER.info("<< beforeInvokingBlockedByShieldInDamage: Blocked damage and created ping for entity: " + self.getName().getString() + " (damage blocked until ping removed)");
-        // TODO: why setReturnValue to true but still not excuting takeShieldHit; and why the dir is reversed
+        LOGGER.info("<< redirectBlockedByShield: Blocked damage and created ping for entity: " + self.getName().getString() + " (damage blocked until ping removed)");
         self.takeKnockback(CURRENT_STRENGTH, serverPlayer.getX() - self.getX(), serverPlayer.getZ() - self.getZ());
-        cir.setReturnValue(true);
+        return true; // Pretend it was blocked by shield
     }
 }

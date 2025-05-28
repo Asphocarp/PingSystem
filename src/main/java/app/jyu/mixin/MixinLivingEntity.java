@@ -18,6 +18,7 @@ import net.minecraft.stat.Stats;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -25,15 +26,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinLivingEntity {
     @Inject(
       method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z",
+      at = @At("HEAD")
+    )
+    public void onDamageStart(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        LivingEntity self = (LivingEntity)(Object)this;
+        PingSystem.onDamageStart(self, source, amount, cir);
+    }
+    
+    @Redirect(
+      method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z",
       at = @At(
         value  = "INVOKE",
         target = "Lnet/minecraft/entity/LivingEntity;blockedByShield(Lnet/minecraft/entity/damage/DamageSource;)Z"
-        // shift  = At.Shift.BEFORE
-      ),
-      cancellable = true
+      )
     )
-    public void beforeInvokingBlockedByShieldInDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        LivingEntity self = (LivingEntity)(Object)this;
-        PingSystem.beforeInvokingBlockedByShieldInDamage(self, source, amount, cir);
+    public boolean redirectBlockedByShield(LivingEntity self, DamageSource source) {
+        return PingSystem.redirectBlockedByShield(self, source);
     }
 } 
