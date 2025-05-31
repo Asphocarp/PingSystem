@@ -1,4 +1,4 @@
-package com.asilvorcarp;
+package com.asphocarp;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -23,14 +23,16 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.lwjgl.glfw.GLFW;
 
+import com.asphocarp.PingPoint;
+
+import static com.asphocarp.NetworkingConstants.PING_PACKET;
+import static com.asphocarp.NetworkingConstants.REMOVE_PING_PACKET;
+import static com.asphocarp.PingSystem.LOGGER;
+
 import java.io.IOException;
 import java.util.Objects;
 
-import static com.asilvorcarp.ApexMC.LOGGER;
-import static com.asilvorcarp.NetworkingConstants.PING_PACKET;
-import static com.asilvorcarp.NetworkingConstants.REMOVE_PING_PACKET;
-
-public class ApexMCClient implements ClientModInitializer {
+public class PingSystemClient implements ClientModInitializer {
     public static final double MAX_REACH = 512.0D;
     public static KeyBinding pingKeyBinding;
 
@@ -38,15 +40,15 @@ public class ApexMCClient implements ClientModInitializer {
     public void onInitializeClient() {
         // This entrypoint is suitable for setting up client-specific logic, such as rendering.
         pingKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.apex_mc.ping", // The translation key of the keybinding's name
+                "key.ping_system.ping", // The translation key of the keybinding's name
                 InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
                 GLFW.GLFW_KEY_C, // The keycode of the key
-                "category.apex_mc.apex_mc" // The translation key of the keybinding's category.
+                "category.ping_system.ping_system" // The translation key of the keybinding's category.
         ));
 
         // Register Fabric events
         // Tick handler for key presses
-        ClientTickEvents.END_CLIENT_TICK.register(ApexMCClient::checkKeyPress);
+        ClientTickEvents.END_CLIENT_TICK.register(PingSystemClient::checkKeyPress);
         // Tick handler for updating RenderHandler data (previously in ClientTickHandler)
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler.getInstance()::onClientTick);
 

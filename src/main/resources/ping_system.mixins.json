@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "com.asilvorcarp.mixin",
+	"package": "com.asphocarp.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
 		"ExampleMixin"

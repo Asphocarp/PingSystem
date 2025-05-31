@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./src/main/resources/assets/apex_mc/icon.png" alt="ApexMC" width="200"/> 
+    <img src="./src/main/resources/assets/ping_system/icon.png" alt="PingSystem" width="200"/> 
 </p>
 
 <h1 align="center">PingSystem</h1>

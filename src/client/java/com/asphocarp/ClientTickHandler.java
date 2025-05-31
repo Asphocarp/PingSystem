@@ -1,4 +1,4 @@
-package com.asilvorcarp;
+package com.asphocarp;
 
 import net.minecraft.client.MinecraftClient;
 

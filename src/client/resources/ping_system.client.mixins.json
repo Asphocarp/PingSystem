@@ -1,9 +1,9 @@
 {
 	"required": true,
-	"package": "com.asilvorcarp.mixin.client",
+	"package": "com.asphocarp.mixin.client",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
-		"ApexMCClientMixin"
+		"PingSystemClientMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

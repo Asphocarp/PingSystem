@@ -1,5 +1,6 @@
-package com.asilvorcarp;
+package com.asphocarp;
 
+import com.asphocarp.PingSystem;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -9,14 +10,14 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
+import static com.asphocarp.PingSystem.MOD_ID;
+
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
-
-import static com.asilvorcarp.ApexMC.MOD_ID;
 
 public class ModConfig implements ModMenuApi, ConfigScreenFactory<Screen> {
     public static final File CFG_FILE = new File(
@@ -114,7 +115,7 @@ public class ModConfig implements ModMenuApi, ConfigScreenFactory<Screen> {
     }
 
     public static void setSoundIndex(int input) {
-        if (input < 0 || input > ApexMC.soundEventsForPing.size()) {
+        if (input < 0 || input > PingSystem.soundEventsForPing.size()) {
             input = 0;
         }
         ModConfig.soundIndex = (byte) input;

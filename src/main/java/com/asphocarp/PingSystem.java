@@ -1,4 +1,4 @@
-package com.asilvorcarp;
+package com.asphocarp;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -19,27 +19,27 @@ import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.asphocarp.NetworkingConstants.PING_PACKET;
+import static com.asphocarp.NetworkingConstants.REMOVE_PING_PACKET;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static com.asilvorcarp.NetworkingConstants.PING_PACKET;
-import static com.asilvorcarp.NetworkingConstants.REMOVE_PING_PACKET;
-
-public class ApexMC implements ModInitializer {
+public class PingSystem implements ModInitializer {
     // This logger is used to write text to the console and the log file.
     // It is considered best practice to use your mod id as the logger's name.
     // That way, it's clear which mod wrote info, warnings, and errors.
-    public static final String MOD_ID = "apex_mc";
+    public static final String MOD_ID = "ping_system";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static ArrayList<ApexTeam> teams = new ArrayList<>();
     public static boolean ENABLE_TEAMS = false;
 
     public static String[] newSounds = {
-            "apex_mc:ping_location",
-            "apex_mc:ping_item",
-            "apex_mc:ping_enemy",
-            "apex_mc:mozambique_lifeline",
+            "ping_system:ping_location",
+            "ping_system:ping_item",
+            "ping_system:ping_enemy",
+            "ping_system:mozambique_lifeline",
     };
     // currently include newSounds and SoundEvents.BLOCK_ANVIL_BREAK
     public static ArrayList<SoundEvent> soundEventsForPing;

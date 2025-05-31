@@ -1,4 +1,4 @@
-package com.asilvorcarp;
+package com.asphocarp;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.PacketByteBuf;

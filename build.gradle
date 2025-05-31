@@ -31,7 +31,7 @@ loom {
     splitEnvironmentSourceSets()
 
     mods {
-        "apex_mc" {
+        "ping_system" {
             sourceSet sourceSets.main
             sourceSet sourceSets.client
         }
