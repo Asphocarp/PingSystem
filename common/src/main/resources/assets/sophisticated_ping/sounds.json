@@ -1,26 +1,8 @@
 {
-  "ping_location": {
-    "subtitle": "subtitles.sophisticated_ping.ping_location",
-    "sounds": [
-      "sophisticated_ping:ping_location"
-    ]
-  },
-  "ping_item": {
-    "subtitle": "subtitles.sophisticated_ping.ping_item",
-    "sounds": [
-      "sophisticated_ping:ping_item"
-    ]
-  },
-  "ping_enemy": {
-    "subtitle": "subtitles.sophisticated_ping.ping_enemy",
-    "sounds": [
-      "sophisticated_ping:ping_enemy"
-    ]
-  },
-  "mozambique_lifeline": {
-    "subtitle": "subtitles.sophisticated_ping.mozambique_lifeline",
-    "sounds": [
-      "sophisticated_ping:mozambique_lifeline"
-    ]
-  }
+	"ping": {
+		"subtitle": "subtitles.sophisticated_ping.ping",
+		"sounds": [
+			"sophisticated_ping:ping"
+		]
+	}
 }

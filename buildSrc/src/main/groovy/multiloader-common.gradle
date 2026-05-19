@@ -43,10 +43,17 @@ repositories {
         name = "ParchmentMC"
         url = "https://maven.parchmentmc.org"
     }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+    }
 }
 
 dependencies {
     implementation "org.jetbrains:annotations:24.1.0"
+    compileOnly "org.projectlombok:lombok:1.18.32"
+    annotationProcessor "org.projectlombok:lombok:1.18.32"
+    compileOnly "maven.modrinth:DistantHorizonsApi:${distanthorizons_api_version}"
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }

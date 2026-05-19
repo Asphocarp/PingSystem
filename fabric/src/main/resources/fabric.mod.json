@@ -30,11 +30,7 @@
     ]
   },
   "mixins": [
-    "sophisticated_ping.mixins.json",
-    {
-      "config": "sophisticated_ping.client.mixins.json",
-      "environment": "client"
-    }
+    "sophisticated_ping.fabric.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=${fabric_loader_min_version}",

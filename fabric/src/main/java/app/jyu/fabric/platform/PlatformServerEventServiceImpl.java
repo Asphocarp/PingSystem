@@ -1,14 +1,15 @@
 package app.jyu.fabric.platform;
 
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.server.level.ServerPlayer;
 import app.jyu.common.platform.IPlatformServerEventService;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.server.MinecraftServer;
 
 import java.util.function.Consumer;
 
-public final class PlatformServerEventServiceImpl implements IPlatformServerEventService {
-    @Override
-    public void registerEndServerTick(Consumer<MinecraftServer> callback) {
-        ServerTickEvents.END_SERVER_TICK.register(callback::accept);
-    }
+public class PlatformServerEventServiceImpl implements IPlatformServerEventService {
+
+	@Override
+	public void registerPlayerLogoutEvent(Consumer<ServerPlayer> callback) {
+		ServerPlayConnectionEvents.DISCONNECT.register((networkHandler, a) -> callback.accept(networkHandler.player));
+	}
 }

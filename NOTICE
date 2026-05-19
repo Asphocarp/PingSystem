@@ -1,0 +1,9 @@
+Sophisticated Ping includes code and assets adapted from Minecraft Ping Wheel.
+
+Minecraft Ping Wheel is licensed under the MIT License.
+Copyright (c) 2023 LukenSkyne and contributors.
+Source: https://github.com/LukenSkyne/Minecraft-Ping-Wheel
+
+The adapted portions include the ping projection/rendering pipeline, ping packet model,
+client/server channel handling, Distant Horizons raycast integration, and ping/arrow
+texture assets. See LICENSE information in the upstream repository for the full MIT terms.

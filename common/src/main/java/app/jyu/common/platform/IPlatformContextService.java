@@ -6,13 +6,14 @@ import java.nio.file.Path;
 import java.util.ServiceLoader;
 
 public interface IPlatformContextService {
-    IPlatformContextService INSTANCE = ServiceLoader.load(IPlatformContextService.class)
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("No IPlatformContextService implementation found"));
 
-    Path resolveConfigDir(String path);
+	IPlatformContextService INSTANCE = ServiceLoader.load(IPlatformContextService.class)
+		.findFirst()
+		.orElseThrow(() -> new IllegalStateException("No IPlatformContextService implementation found!"));
 
-    void registerKeyMapping(KeyMapping keyMapping);
-
-    boolean isModLoaded(String modId);
+	String getSelfModVersion();
+	Path resolveGameDir(String path);
+	Path resolveConfigDir(String path);
+	void registerKeyMapping(KeyMapping keyMapping);
+	boolean isModLoaded(String modId);
 }

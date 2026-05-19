@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.ServiceLoader;
 
 public interface IPlatformSoundService {
-    IPlatformSoundService INSTANCE = ServiceLoader.load(IPlatformSoundService.class)
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("No platform sound service found"));
+	IPlatformSoundService INSTANCE = ServiceLoader.load(IPlatformSoundService.class)
+		.findFirst()
+		.orElseThrow(() -> new IllegalStateException("No platform sound service found"));
 
-    void registerSounds(List<String> soundNames);
+	void registerSounds(List<String> soundNames);
 
-    SoundEvent sound(String soundName);
+	SoundEvent sound(String soundName);
 }
