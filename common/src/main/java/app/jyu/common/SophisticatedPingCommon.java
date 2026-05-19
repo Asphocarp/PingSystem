@@ -2,7 +2,7 @@ package app.jyu.common;
 
 import app.jyu.common.platform.IPlatformNetworkService;
 import app.jyu.common.platform.IPlatformServerEventService;
-import net.minecraft.core.Registry;
+import app.jyu.common.platform.IPlatformSoundService;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,7 +11,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,19 +27,17 @@ public final class SophisticatedPingCommon {
             "mozambique_lifeline"
     );
 
-    private static final List<SoundEvent> SOUND_EVENTS = new ArrayList<>();
-
     private SophisticatedPingCommon() {
     }
 
     public static void init() {
         Constants.LOGGER.info("Make MC Apex Again!");
-        registerSounds();
+        IPlatformSoundService.INSTANCE.registerSounds(CUSTOM_SOUNDS);
         IPlatformServerEventService.INSTANCE.registerEndServerTick(SophisticatedPingCommon::onEndServerTick);
     }
 
     public static int soundCount() {
-        return SOUND_EVENTS.size();
+        return CUSTOM_SOUNDS.size() + 1;
     }
 
     public static void onPingPacket(MinecraftServer server, ServerPlayer sender, PingPoint point) {
@@ -145,23 +142,9 @@ public final class SophisticatedPingCommon {
     }
 
     private static SoundEvent soundIdxToEvent(byte soundIdx) {
-        if (soundIdx < 0 || soundIdx >= SOUND_EVENTS.size()) {
-            return SOUND_EVENTS.get(0);
+        if (soundIdx >= 0 && soundIdx < CUSTOM_SOUNDS.size()) {
+            return IPlatformSoundService.INSTANCE.sound(CUSTOM_SOUNDS.get(soundIdx));
         }
-        return SOUND_EVENTS.get(soundIdx);
-    }
-
-    private static void registerSounds() {
-        if (!SOUND_EVENTS.isEmpty()) {
-            return;
-        }
-
-        for (String soundName : CUSTOM_SOUNDS) {
-            var soundId = Constants.id(soundName);
-            SoundEvent soundEvent = new SoundEvent(soundId);
-            Registry.register(Registry.SOUND_EVENT, soundId, soundEvent);
-            SOUND_EVENTS.add(soundEvent);
-        }
-        SOUND_EVENTS.add(SoundEvents.ANVIL_BREAK);
+        return SoundEvents.ANVIL_BREAK;
     }
 }
