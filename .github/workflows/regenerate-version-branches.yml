@@ -74,6 +74,9 @@ jobs:
             fi
 
             git checkout -B "${VERSION}" "${PREVIOUS_BRANCH}"
+            if [ -n "${START_AFTER}" ]; then
+              git checkout "origin/${BASELINE}" -- .github ci scripts
+            fi
             rm -rf branch-artifacts
             ./scripts/migrate-version.sh "${VERSION}"
 
