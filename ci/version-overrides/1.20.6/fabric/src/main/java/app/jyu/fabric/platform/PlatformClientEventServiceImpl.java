@@ -19,12 +19,11 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
     @Override
     public void registerRenderWorld(Consumer<WorldRenderContext> callback) {
         WorldRenderEvents.LAST.register(context ->
-                callback.accept(WorldRenderContext.of(context.matrixStack(), context.projectionMatrix(), context.tickCounter().getGameTimeDeltaPartialTick(true), context.camera())));
+                callback.accept(WorldRenderContext.of(context.matrixStack(), context.projectionMatrix(), context.tickDelta(), context.camera())));
     }
 
     @Override
     public void registerRenderGui(BiConsumer<GuiGraphics, Float> callback) {
-        HudRenderCallback.EVENT.register((guiGraphics, tickCounter) ->
-                callback.accept(guiGraphics, tickCounter.getGameTimeDeltaPartialTick(true)));
+        HudRenderCallback.EVENT.register(callback::accept);
     }
 }
