@@ -76,6 +76,11 @@ jobs:
             git add -A
             git commit -m ":alien: migrate v${MOD_VERSION} to ${VERSION}"
 
+            JAVA_VERSION="$(grep '^java_version=' gradle.properties | cut -d'=' -f2- | xargs)"
+            JAVA_HOME_VAR="JAVA_HOME_${JAVA_VERSION}_X64"
+            export JAVA_HOME="${!JAVA_HOME_VAR}"
+            export PATH="${JAVA_HOME}/bin:${PATH}"
+
             for LOADER in $(./scripts/migrate-version.sh --loaders "${VERSION}"); do
               ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"
               mkdir -p "branch-artifacts/${VERSION}/${LOADER}"
