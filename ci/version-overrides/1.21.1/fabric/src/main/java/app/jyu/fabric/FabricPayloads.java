@@ -24,7 +24,7 @@ public final class FabricPayloads {
     }
 
     public record PingC2S(PingPoint point) implements CustomPacketPayload {
-        public static final Type<PingC2S> TYPE = new Type<>(Constants.PING_PACKET);
+        public static final Type<PingC2S> TYPE = new Type<>(Constants.id("ping_c2s"));
 
         private void write(FriendlyByteBuf buf) {
             point.write(buf);
@@ -41,7 +41,7 @@ public final class FabricPayloads {
     }
 
     public record RemovePingC2S(PingPoint point) implements CustomPacketPayload {
-        public static final Type<RemovePingC2S> TYPE = new Type<>(Constants.REMOVE_PING_PACKET);
+        public static final Type<RemovePingC2S> TYPE = new Type<>(Constants.id("remove_ping_c2s"));
 
         private void write(FriendlyByteBuf buf) {
             point.write(buf);
@@ -58,7 +58,7 @@ public final class FabricPayloads {
     }
 
     public record PingS2C(PingPoint point) implements CustomPacketPayload {
-        public static final Type<PingS2C> TYPE = new Type<>(Constants.PING_PACKET);
+        public static final Type<PingS2C> TYPE = new Type<>(Constants.id("ping_s2c"));
 
         private void write(FriendlyByteBuf buf) {
             point.write(buf);
@@ -75,7 +75,7 @@ public final class FabricPayloads {
     }
 
     public record RemovePingS2C(PingPoint point) implements CustomPacketPayload {
-        public static final Type<RemovePingS2C> TYPE = new Type<>(Constants.REMOVE_PING_PACKET);
+        public static final Type<RemovePingS2C> TYPE = new Type<>(Constants.id("remove_ping_s2c"));
 
         private void write(FriendlyByteBuf buf) {
             point.write(buf);
