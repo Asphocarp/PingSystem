@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./src/main/resources/assets/sophisticated-ping/icon.png" alt="Sophisticated Ping" width="200"/>
+    <img src="./common/src/main/resources/assets/sophisticated_ping/icon.png" alt="Sophisticated Ping" width="200"/>
 </p>
 
 <h1 align="center">Sophisticated Ping</h1>

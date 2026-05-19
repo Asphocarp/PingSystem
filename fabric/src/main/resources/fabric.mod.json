@@ -16,7 +16,7 @@
     "issues": "${link_issues}"
   },
   "license": "${license}",
-  "icon": "assets/sophisticated-ping/icon.png",
+  "icon": "assets/sophisticated_ping/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
@@ -30,9 +30,9 @@
     ]
   },
   "mixins": [
-    "sophisticated-ping.mixins.json",
+    "sophisticated_ping.mixins.json",
     {
-      "config": "sophisticated-ping.client.mixins.json",
+      "config": "sophisticated_ping.client.mixins.json",
       "environment": "client"
     }
   ],

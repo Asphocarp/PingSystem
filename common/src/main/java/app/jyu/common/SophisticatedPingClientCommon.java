@@ -28,10 +28,10 @@ import java.util.function.Predicate;
 public final class SophisticatedPingClientCommon {
     public static final double MAX_REACH = 512.0D;
     public static final KeyMapping PING_KEY = new KeyMapping(
-            "key.sophisticated-ping.ping",
+            "key.sophisticated_ping.ping",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_C,
-            "category.sophisticated-ping.sophisticated-ping"
+            "category.sophisticated_ping.sophisticated_ping"
     );
 
     private SophisticatedPingClientCommon() {

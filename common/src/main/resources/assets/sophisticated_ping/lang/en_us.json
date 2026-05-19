@@ -1,0 +1,20 @@
+{
+  "category.sophisticated_ping.sophisticated_ping": "Sophisticated Ping",
+  "key.sophisticated_ping.ping": "Ping",
+  "title.sophisticated_ping.config": "Sophisticated Ping",
+  "config.sophisticated_ping.general": "General",
+  "config.sophisticated_ping.pingNumEach": "Ping Num Each Player",
+  "config.sophisticated_ping.pingNumEach.description": "The num of pings save for each player (work only in client side)",
+  "config.sophisticated_ping.includeFluids": "Include Fluids",
+  "config.sophisticated_ping.includeFluids.description": "Whether you can ping on the fluid",
+  "config.sophisticated_ping.iconSize": "Icon Size",
+  "config.sophisticated_ping.iconSize.description": "Resize the icon hud",
+  "config.sophisticated_ping.infoColor": "Info Color",
+  "config.sophisticated_ping.infoColor.description": "Info shown when looking at the ping point, format: 0xAARRGGBB",
+  "config.sophisticated_ping.secondsToVanish": "Seconds to Vanish",
+  "config.sophisticated_ping.secondsToVanish.description": "How long does it take for the ping point to disappear.\n0 means never, only work at your client side",
+  "config.sophisticated_ping.highlightColor": "Highlight Color",
+  "config.sophisticated_ping.highlightColor.description": "Color of the highlight block, format: 0xAARRGGBB",
+  "config.sophisticated_ping.soundIndex": "Sound Index",
+  "config.sophisticated_ping.soundIndex.description": "The index of the ping sound:\n0: ping location\n1: ping enemy\n2: ping item\n3: mozambique lifeline\n4: block anvil break"
+}
