@@ -27,11 +27,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Set up JDK 17
+      - name: Set up JDKs
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: |
+            17
+            21
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
@@ -72,12 +74,6 @@ jobs:
             MOD_VERSION="$(grep '^mod_version=' gradle.properties | cut -d'=' -f2- | xargs)"
             git add -A
             git commit -m ":alien: migrate v${MOD_VERSION} to ${VERSION}"
-
-            JAVA_VERSION="$(grep '^java_version=' gradle.properties | cut -d'=' -f2- | xargs)"
-            if [ "${JAVA_VERSION}" != "17" ]; then
-              echo "This workflow currently sets up Java 17 only; add setup-java handling before enabling ${VERSION}." >&2
-              exit 1
-            fi
 
             for LOADER in $(./scripts/migrate-version.sh --loaders "${VERSION}"); do
               ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"
