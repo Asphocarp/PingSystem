@@ -11,6 +11,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    implementation "net.fabricmc.fabric-api:fabric-key-mapping-api-v1:2.0.4+e2bdee784c"
 }
 
 loom {
