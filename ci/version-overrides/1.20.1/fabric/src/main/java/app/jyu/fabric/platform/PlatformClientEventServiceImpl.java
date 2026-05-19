@@ -2,10 +2,10 @@ package app.jyu.fabric.platform;
 
 import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -23,7 +23,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
     }
 
     @Override
-    public void registerRenderGui(BiConsumer<PoseStack, Float> callback) {
+    public void registerRenderGui(BiConsumer<GuiGraphics, Float> callback) {
         HudRenderCallback.EVENT.register(callback::accept);
     }
 }

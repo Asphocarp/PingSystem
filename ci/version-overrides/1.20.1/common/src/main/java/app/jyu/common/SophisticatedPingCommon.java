@@ -3,6 +3,7 @@ package app.jyu.common;
 import app.jyu.common.platform.IPlatformNetworkService;
 import app.jyu.common.platform.IPlatformServerEventService;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -59,7 +60,7 @@ public final class SophisticatedPingCommon {
             return;
         }
 
-        for (ServerPlayer teammate : sender.getLevel().players()) {
+        for (ServerPlayer teammate : sender.serverLevel().players()) {
             if (teammate.getUUID().equals(sender.getUUID())) {
                 continue;
             }
@@ -69,8 +70,8 @@ public final class SophisticatedPingCommon {
 
     private static void multicastPing(ServerPlayer sender, PingPoint point) {
         SoundEvent sound = soundIdxToEvent(point.sound());
-        for (ServerPlayer teammate : sender.getLevel().players()) {
-            teammate.getLevel().playSound(
+        for (ServerPlayer teammate : sender.serverLevel().players()) {
+            teammate.level().playSound(
                     null,
                     teammate.blockPosition(),
                     sound,
@@ -96,7 +97,7 @@ public final class SophisticatedPingCommon {
         UUID entityUuid = point.entityUuid();
         long glowEndTime = System.currentTimeMillis() + GLOW_DURATION_MS;
         server.execute(() -> {
-            Entity entity = findEntity(server, sender.getLevel(), entityUuid);
+            Entity entity = findEntity(server, sender.serverLevel(), entityUuid);
             if (entity == null) {
                 Constants.LOGGER.warn("Received highlight request for {}, but entity was not found", entityUuid);
                 return;
@@ -158,8 +159,8 @@ public final class SophisticatedPingCommon {
 
         for (String soundName : CUSTOM_SOUNDS) {
             var soundId = Constants.id(soundName);
-            SoundEvent soundEvent = new SoundEvent(soundId);
-            Registry.register(Registry.SOUND_EVENT, soundId, soundEvent);
+            SoundEvent soundEvent = SoundEvent.createVariableRangeEvent(soundId);
+            Registry.register(BuiltInRegistries.SOUND_EVENT, soundId, soundEvent);
             SOUND_EVENTS.add(soundEvent);
         }
         SOUND_EVENTS.add(SoundEvents.ANVIL_BREAK);

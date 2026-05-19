@@ -45,8 +45,8 @@ jobs:
       - name: Check configured branches contain base marker
         run: |
           set -euo pipefail
-          BASE_BRANCH="${BASE_BRANCH:-1.18.2}"
-          BRANCHES="${SUPPORTED_BRANCHES:-1.18.2 1.19.2 1.19.3 1.19.4 1.20.1 1.20.2 1.20.4 1.20.6 1.21.1}"
+          BASE_BRANCH="$(./scripts/migrate-version.sh --baseline)"
+          BRANCHES="$(./scripts/migrate-version.sh --versions | xargs)"
           if ! git rev-parse --verify "origin/${BASE_BRANCH}" >/dev/null 2>&1; then
             echo "Base branch ${BASE_BRANCH} is not available yet; skipping freshness check."
             exit 0

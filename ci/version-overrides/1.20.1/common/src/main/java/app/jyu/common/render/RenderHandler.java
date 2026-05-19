@@ -4,17 +4,14 @@ import app.jyu.common.Constants;
 import app.jyu.common.PingPoint;
 import app.jyu.common.SophisticatedPingClientCommon;
 import app.jyu.common.config.ModConfig;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector4f;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +78,7 @@ public final class RenderHandler {
         calculatePingScreenCoordinates(context);
     }
 
-    public void onRenderGui(PoseStack poseStack, float tickDelta) {
+    public void onRenderGui(GuiGraphics guiGraphics, float tickDelta) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null || client.options.hideGui) {
             return;
@@ -96,26 +93,26 @@ public final class RenderHandler {
         for (CopyOnWriteArrayList<PingPoint> pingList : pings.values()) {
             for (PingPoint ping : pingList) {
                 Vector4f clipPos = pingClipCoordinates.get(ping.id());
-                if (clipPos == null || clipPos.w() <= 0) {
+                if (clipPos == null || clipPos.w <= 0) {
                     continue;
                 }
 
-                float ndcX = clipPos.x() / clipPos.w();
-                float ndcY = clipPos.y() / clipPos.w();
+                float ndcX = clipPos.x / clipPos.w;
+                float ndcY = clipPos.y / clipPos.w;
                 double screenX = halfWidth + ndcX * halfWidth;
                 double screenY = halfHeight - ndcY * halfHeight;
                 double margin = Math.max(8.0, ModConfig.iconSize * 4.0);
                 screenX = Mth.clamp(screenX, margin, width - margin);
                 screenY = Mth.clamp(screenY, margin, height - margin);
 
-                renderIcon(poseStack, screenX, screenY);
+                renderIcon(guiGraphics, screenX, screenY);
 
                 if (!foundOnPing) {
                     double dx = screenX - halfWidth;
                     double dy = screenY - halfHeight;
                     double threshold = Math.min(width, height) / 25.0;
                     if (dx * dx + dy * dy <= threshold * threshold) {
-                        renderInfo(poseStack, (int) halfWidth + 5, (int) halfHeight + 5, ping);
+                        renderInfo(guiGraphics, (int) halfWidth + 5, (int) halfHeight + 5, ping);
                         onPing = ping;
                         foundOnPing = true;
                     }
@@ -156,10 +153,7 @@ public final class RenderHandler {
                 context.poseStack.pushPose();
                 context.poseStack.translate(targetPos.x - cameraPos.x, targetPos.y - cameraPos.y, targetPos.z - cameraPos.z);
                 Matrix4f modelView = context.poseStack.last().pose();
-                Matrix4f transform = projectionMatrix.copy();
-                transform.multiply(modelView);
-                Vector4f clipPos = new Vector4f(0, 0, 0, 1);
-                clipPos.transform(transform);
+                Vector4f clipPos = new Matrix4f(projectionMatrix).mul(modelView).transform(new Vector4f(0, 0, 0, 1));
                 pingClipCoordinates.put(ping.id(), clipPos);
                 context.poseStack.popPose();
             }
@@ -180,33 +174,29 @@ public final class RenderHandler {
         return ping.pos();
     }
 
-    private void renderIcon(PoseStack poseStack, double centerX, double centerY) {
+    private void renderIcon(GuiGraphics guiGraphics, double centerX, double centerY) {
         int size = Math.max(8, Math.round(8 * ModConfig.iconSize));
         int x = (int) Math.round(centerX - size / 2.0);
         int y = (int) Math.round(centerY - size / 2.0);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, PING_BASIC);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        GuiComponent.blit(poseStack, x, y, 0, 0, 0, size, size, size, size);
+        guiGraphics.blit(PING_BASIC, x, y, 0, 0, size, size, size, size);
     }
 
-    private void renderInfo(PoseStack poseStack, int x, int y, PingPoint ping) {
+    private void renderInfo(GuiGraphics guiGraphics, int x, int y, PingPoint ping) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) {
             return;
         }
 
         double distance = client.player.position().distanceTo(ping.pos());
-        client.font.drawShadow(poseStack, "%.0f m".formatted(distance), x, y, ModConfig.infoColor);
+        guiGraphics.drawString(client.font, "%.0f m".formatted(distance), x, y, ModConfig.infoColor, true);
         y += client.font.lineHeight + 2;
 
         if (!ping.owner().equals(client.player.getGameProfile().getName())) {
-            client.font.drawShadow(poseStack, ping.owner(), x, y, ModConfig.infoColor);
+            guiGraphics.drawString(client.font, ping.owner(), x, y, ModConfig.infoColor, true);
             y += client.font.lineHeight + 2;
         }
 
-        client.font.drawShadow(poseStack, "Cancel (" + humanReadableHotkey() + ")", x, y, 0xFFFFFFFF);
+        guiGraphics.drawString(client.font, "Cancel (" + humanReadableHotkey() + ")", x, y, 0xFFFFFFFF, true);
     }
 
     private static String humanReadableHotkey() {

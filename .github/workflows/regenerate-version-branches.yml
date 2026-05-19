@@ -1,0 +1,96 @@
+name: Regenerate Version Branches
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_after:
+        description: "Skip generated versions until after this Minecraft version"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 1.19.2
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Regenerate branches
+        run: |
+          set -euo pipefail
+
+          chmod +x ./gradlew ./scripts/migrate-version.sh
+
+          BASELINE="$(./scripts/migrate-version.sh --baseline)"
+          PREVIOUS_BRANCH="${BASELINE}"
+          START_AFTER="${{ inputs.start_after }}"
+          SHOULD_RUN="true"
+
+          if [ -n "${START_AFTER}" ]; then
+            SHOULD_RUN="false"
+          fi
+
+          mkdir -p branch-artifacts
+
+          for VERSION in $(./scripts/migrate-version.sh --versions); do
+            if [ "${VERSION}" = "${BASELINE}" ]; then
+              continue
+            fi
+
+            if [ "${SHOULD_RUN}" = "false" ]; then
+              if [ "${VERSION}" = "${START_AFTER}" ]; then
+                SHOULD_RUN="true"
+              fi
+              PREVIOUS_BRANCH="${VERSION}"
+              continue
+            fi
+
+            git checkout -B "${VERSION}" "${PREVIOUS_BRANCH}"
+            ./scripts/migrate-version.sh "${VERSION}"
+
+            MOD_VERSION="$(grep '^mod_version=' gradle.properties | cut -d'=' -f2- | xargs)"
+            git add -A
+            git commit -m ":alien: migrate v${MOD_VERSION} to ${VERSION}"
+
+            JAVA_VERSION="$(grep '^java_version=' gradle.properties | cut -d'=' -f2- | xargs)"
+            if [ "${JAVA_VERSION}" != "17" ]; then
+              echo "This workflow currently sets up Java 17 only; add setup-java handling before enabling ${VERSION}." >&2
+              exit 1
+            fi
+
+            for LOADER in $(./scripts/migrate-version.sh --loaders "${VERSION}"); do
+              ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"
+              mkdir -p "branch-artifacts/${VERSION}/${LOADER}"
+              cp "${LOADER}/build/libs/"*.jar "branch-artifacts/${VERSION}/${LOADER}/"
+            done
+
+            git push --force-with-lease origin "${VERSION}"
+            PREVIOUS_BRANCH="${VERSION}"
+          done
+
+      - name: Upload generated artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-version-branches
+          path: branch-artifacts
