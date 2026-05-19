@@ -132,7 +132,7 @@ public final class SophisticatedPingClientCommon {
         Vec3 endVec = cameraPos.add(rotationVec.scale(maxDistance));
         AABB searchBox = cameraEntity.getBoundingBox().expandTowards(rotationVec.scale(maxDistance)).inflate(1.0D);
 
-        BlockHitResult blockHitResult = cameraEntity.level.clip(new ClipContext(
+        BlockHitResult blockHitResult = cameraEntity.level().clip(new ClipContext(
                 cameraPos,
                 endVec,
                 ClipContext.Block.OUTLINE,

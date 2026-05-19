@@ -2,7 +2,7 @@ package app.jyu.forge.platform;
 
 import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -24,7 +24,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
     }
 
     @Override
-    public void registerRenderGui(BiConsumer<PoseStack, Float> callback) {
+    public void registerRenderGui(BiConsumer<GuiGraphics, Float> callback) {
         MinecraftForge.EVENT_BUS.register(new RenderGuiHandler(callback));
     }
 
@@ -46,10 +46,10 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
         }
     }
 
-    private record RenderGuiHandler(BiConsumer<PoseStack, Float> callback) {
+    private record RenderGuiHandler(BiConsumer<GuiGraphics, Float> callback) {
         @SubscribeEvent
         public void onRenderGui(RenderGuiOverlayEvent.Post event) {
-            callback.accept(event.getPoseStack(), event.getPartialTick());
+            callback.accept(event.getGuiGraphics(), event.getPartialTick());
         }
     }
 }
