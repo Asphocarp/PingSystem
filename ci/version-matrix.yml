@@ -220,7 +220,7 @@ versions:
 
   - minecraft_version: "26.1.2"
     java_version: "25"
-    loaders: "fabric,forge,neoforge"
+    loaders: "fabric,neoforge"
     neo_form_version: "26.1.2-1"
     mod_dev_gradle_version: "2.0.141"
     fabric_version: "0.145.4+26.1.2"
