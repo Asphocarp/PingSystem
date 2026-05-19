@@ -60,7 +60,7 @@ public class CommonClient {
 		PingWheelController.tick();
 
 		if (KEY_BINDING_SETTINGS.consumeClick()) {
-			PingWheelController.cancel();
+			PingWheelController.cancelForScreenOpen();
 			Game.setScreen(new SettingsScreen());
 		}
 	}

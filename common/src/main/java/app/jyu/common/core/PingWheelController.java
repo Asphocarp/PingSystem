@@ -3,6 +3,7 @@ package app.jyu.common.core;
 import app.jyu.common.config.ClientConfig;
 import app.jyu.common.util.InputUtils;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 
 import static app.jyu.common.CommonClient.Game;
 
@@ -15,7 +16,7 @@ public class PingWheelController {
 	@Getter
 	private static boolean open = false;
 	@Getter
-	private static PingType selectedType = PingType.LOCATION;
+	private static @Nullable PingType selectedType = null;
 
 	public static void tick() {
 		if (Game == null || Game.screen != null || Game.player == null || Game.level == null) {
@@ -30,20 +31,24 @@ public class PingWheelController {
 
 		if (isDown && !wasDown) {
 			pressStartedAt = now;
-			selectedType = PingType.LOCATION;
+			selectedType = null;
+			PingWheelMouseCapture.open();
 		}
 
-		if (isDown && !open && isHoldElapsed(now - pressStartedAt, config.getWheelHoldMillis())) {
-			open = true;
-		}
+		if (isDown) {
+			var mouseSelectedType = selectTypeFromMouse();
+			if (!open && shouldOpenWheel(now - pressStartedAt, config.getWheelHoldMillis(), mouseSelectedType != null)) {
+				open = true;
+			}
 
-		if (isDown && open) {
-			selectedType = selectTypeFromMouse(selectedType);
+			if (open) {
+				selectedType = mouseSelectedType;
+			}
 		}
 
 		if (!isDown && wasDown) {
-			var type = open ? selectedType : PingType.LOCATION;
-			cancel();
+			var type = open && selectedType != null ? selectedType : PingType.LOCATION;
+			cancel(true);
 			PingController.queuePingAction(type);
 		}
 
@@ -51,8 +56,17 @@ public class PingWheelController {
 	}
 
 	public static void cancel() {
+		cancel(true);
+	}
+
+	public static void cancelForScreenOpen() {
+		cancel(false);
+	}
+
+	private static void cancel(boolean allowRegrab) {
+		PingWheelMouseCapture.close(allowRegrab);
 		open = false;
-		selectedType = PingType.LOCATION;
+		selectedType = null;
 		pressStartedAt = 0L;
 	}
 
@@ -60,7 +74,11 @@ public class PingWheelController {
 		return heldMillis >= Math.max(0L, holdMillis);
 	}
 
-	public static PingType selectType(double mouseX, double mouseY, int width, int height, double deadZone, PingType current) {
+	public static boolean shouldOpenWheel(long heldMillis, long holdMillis, boolean outsideDeadZone) {
+		return outsideDeadZone || isHoldElapsed(heldMillis, holdMillis);
+	}
+
+	public static @Nullable PingType selectType(double mouseX, double mouseY, int width, int height, double deadZone) {
 		final var centerX = width * 0.5;
 		final var centerY = height * 0.5;
 		final var dx = mouseX - centerX;
@@ -68,7 +86,7 @@ public class PingWheelController {
 		final var distance = Math.sqrt(dx * dx + dy * dy);
 
 		if (distance < deadZone) {
-			return current;
+			return null;
 		}
 
 		final var angle = Math.atan2(dy, dx);
@@ -78,7 +96,7 @@ public class PingWheelController {
 		return PingType.fromRadialSlot(slot);
 	}
 
-	private static PingType selectTypeFromMouse(PingType current) {
+	private static @Nullable PingType selectTypeFromMouse() {
 		final var config = config();
 		final var window = Game.getWindow();
 		final var scale = window.getGuiScale();
@@ -90,8 +108,7 @@ public class PingWheelController {
 			mouseY,
 			window.getGuiScaledWidth(),
 			window.getGuiScaledHeight(),
-			config.getWheelDeadZone() / config.getWheelMouseSensitivity(),
-			current
+			config.getWheelDeadZone() / config.getWheelMouseSensitivity()
 		);
 	}
 

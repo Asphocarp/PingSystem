@@ -4,6 +4,7 @@ import app.jyu.common.network.PingLocationC2SPacket;
 import app.jyu.common.network.PingLocationS2CPacket;
 import app.jyu.common.network.UpdateChannelC2SPacket;
 import app.jyu.common.core.PingType;
+import app.jyu.common.core.PingWheelMouseCapture;
 import app.jyu.common.core.PingWheelController;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
@@ -95,20 +96,48 @@ class PingPacketTest {
 
 	@Test
 	void radialSelectionUsesEightSectors() {
-		assertEquals(PingType.LOCATION, PingWheelController.selectType(220, 100, 200, 200, 12, PingType.LOCATION));
-		assertEquals(PingType.DANGER, PingWheelController.selectType(100, 220, 200, 200, 12, PingType.LOCATION));
-		assertEquals(PingType.GATHER, PingWheelController.selectType(-20, 100, 200, 200, 12, PingType.LOCATION));
-		assertEquals(PingType.CONFIRM, PingWheelController.selectType(185, 15, 200, 200, 12, PingType.LOCATION));
+		assertEquals(PingType.LOCATION, PingWheelController.selectType(220, 100, 200, 200, 12));
+		assertEquals(PingType.DANGER, PingWheelController.selectType(100, 220, 200, 200, 12));
+		assertEquals(PingType.GATHER, PingWheelController.selectType(-20, 100, 200, 200, 12));
+		assertEquals(PingType.CONFIRM, PingWheelController.selectType(185, 15, 200, 200, 12));
 	}
 
 	@Test
-	void radialDeadZoneKeepsCurrentSelection() {
-		assertEquals(PingType.LOOT, PingWheelController.selectType(104, 103, 200, 200, 12, PingType.LOOT));
+	void radialDeadZoneClearsSelection() {
+		assertNull(PingWheelController.selectType(104, 103, 200, 200, 12));
 	}
 
 	@Test
 	void holdThresholdControlsWheelOpenTiming() {
 		assertFalse(PingWheelController.isHoldElapsed(179, 180));
 		assertTrue(PingWheelController.isHoldElapsed(180, 180));
+	}
+
+	@Test
+	void wheelOpensOnHoldOrOutsideDeadZone() {
+		assertFalse(PingWheelController.shouldOpenWheel(179, 180, false));
+		assertTrue(PingWheelController.shouldOpenWheel(180, 180, false));
+		assertTrue(PingWheelController.shouldOpenWheel(1, 180, true));
+	}
+
+	@Test
+	void wheelMouseRegrabRequiresWheelReleaseAndSafeClientState() {
+		assertFalse(PingWheelMouseCapture.shouldRegrabMouse(false, true, true, true));
+		assertFalse(PingWheelMouseCapture.shouldRegrabMouse(true, false, true, true));
+		assertFalse(PingWheelMouseCapture.shouldRegrabMouse(true, true, false, true));
+		assertFalse(PingWheelMouseCapture.shouldRegrabMouse(true, true, true, false));
+		assertTrue(PingWheelMouseCapture.shouldRegrabMouse(true, true, true, true));
+	}
+
+	@Test
+	void pingTypesUsePingSystemUnicodeIcons() {
+		assertEquals("◆", PingType.LOCATION.getIcon());
+		assertEquals("⚔", PingType.ATTACK.getIcon());
+		assertEquals("⚠", PingType.DANGER.getIcon());
+		assertEquals("♥", PingType.HELP.getIcon());
+		assertEquals("⚑", PingType.GATHER.getIcon());
+		assertEquals("■", PingType.DEFEND.getIcon());
+		assertEquals("★", PingType.LOOT.getIcon());
+		assertEquals("✓", PingType.CONFIRM.getIcon());
 	}
 }

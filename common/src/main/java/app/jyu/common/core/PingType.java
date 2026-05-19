@@ -17,12 +17,24 @@ public enum PingType {
 	private final int radialSlot;
 	private final int color;
 	private final String key;
+	private final String icon;
 
 	PingType(int wireId, int radialSlot, int color, String key) {
 		this.wireId = wireId;
 		this.radialSlot = radialSlot;
 		this.color = color;
 		this.key = key;
+		this.icon = switch (key) {
+			case "location" -> "◆";
+			case "attack" -> "⚔";
+			case "danger" -> "⚠";
+			case "help" -> "♥";
+			case "gather" -> "⚑";
+			case "defend" -> "■";
+			case "loot" -> "★";
+			case "confirm" -> "✓";
+			default -> "◆";
+		};
 	}
 
 	public int getWireId() {
@@ -39,6 +51,10 @@ public enum PingType {
 
 	public MutableComponent getLabel() {
 		return LanguageUtils.of("ping_type", key).get();
+	}
+
+	public String getIcon() {
+		return icon;
 	}
 
 	public static PingType fromWireId(int wireId) {

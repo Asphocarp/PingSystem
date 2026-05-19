@@ -1,24 +1,23 @@
 package app.jyu.common.render;
 
+import app.jyu.common.resource.LanguageUtils;
 import app.jyu.common.core.PingType;
 import app.jyu.common.core.PingWheelController;
-import app.jyu.common.resource.LanguageUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiComponent;
+import org.jetbrains.annotations.Nullable;
 
 import static app.jyu.common.CommonClient.Game;
 
 public class PingWheelRenderer {
 	private PingWheelRenderer() {}
 
-	private static final int OVERLAY_COLOR = 0xAA000000;
-	private static final int LINE_COLOR = 0xB0FFFFFF;
-	private static final int MUTED_LINE_COLOR = 0x70FFFFFF;
-	private static final int SELECTED_BACKDROP = 0x44FFFFFF;
 	private static final int CENTER_TEXT_COLOR = 0xFFD8D8D8;
-	private static final float RADIUS = 116f;
-	private static final float INNER_RADIUS = 34f;
+	private static final int ICON_SELECTION_COLOR = 0xCCFFFFFF;
+	private static final float ICON_RING_RADIUS = 92f;
+	private static final float ICON_SCALE = 2.2f;
+	private static final int CENTER_TEXT_Y_OFFSET = -22;
 
 	public static void draw(PoseStack matrices) {
 		if (!PingWheelController.isOpen()) {
@@ -33,52 +32,56 @@ public class PingWheelRenderer {
 		final var selected = PingWheelController.getSelectedType();
 
 		RenderSystem.enableBlend();
-		GuiComponent.fill(matrices, 0, 0, width, height, OVERLAY_COLOR);
-
-		drawLines(matrices, centerX, centerY);
 		drawTypes(matrices, centerX, centerY, selected);
-		drawCenteredText(matrices, LanguageUtils.of("ping_wheel", "center").get().getString(), centerX, centerY - 4, CENTER_TEXT_COLOR);
+		drawCenteredText(matrices, LanguageUtils.of("ping_wheel", "center").get().getString(), centerX, centerY + CENTER_TEXT_Y_OFFSET, CENTER_TEXT_COLOR);
 		RenderSystem.disableBlend();
 	}
 
-	private static void drawLines(PoseStack matrices, int centerX, int centerY) {
-		GuiComponent.fill(matrices, centerX - 1, centerY - (int)RADIUS, centerX + 1, centerY - (int)INNER_RADIUS, LINE_COLOR);
-		GuiComponent.fill(matrices, centerX - 1, centerY + (int)INNER_RADIUS, centerX + 1, centerY + (int)RADIUS, LINE_COLOR);
-		GuiComponent.fill(matrices, centerX - (int)RADIUS, centerY - 1, centerX - (int)INNER_RADIUS, centerY + 1, LINE_COLOR);
-		GuiComponent.fill(matrices, centerX + (int)INNER_RADIUS, centerY - 1, centerX + (int)RADIUS, centerY + 1, LINE_COLOR);
-
-		drawDiagonalLine(matrices, centerX, centerY, -1, -1);
-		drawDiagonalLine(matrices, centerX, centerY, 1, -1);
-		drawDiagonalLine(matrices, centerX, centerY, -1, 1);
-		drawDiagonalLine(matrices, centerX, centerY, 1, 1);
-	}
-
-	private static void drawDiagonalLine(PoseStack matrices, int centerX, int centerY, int xSign, int ySign) {
-		for (int i = (int)INNER_RADIUS; i < RADIUS; i += 2) {
-			final var x = centerX + xSign * i;
-			final var y = centerY + ySign * i;
-			GuiComponent.fill(matrices, x, y, x + 2, y + 2, MUTED_LINE_COLOR);
-		}
-	}
-
-	private static void drawTypes(PoseStack matrices, int centerX, int centerY, PingType selected) {
+	private static void drawTypes(PoseStack matrices, int centerX, int centerY, @Nullable PingType selected) {
 		for (var type : PingType.values()) {
 			final var angle = type.getRadialSlot() * (Math.PI / 4.0);
-			final var labelX = centerX + Math.cos(angle) * RADIUS;
-			final var labelY = centerY + Math.sin(angle) * RADIUS * 0.74;
-			final var markerX = centerX + Math.cos(angle) * (RADIUS - 36);
-			final var markerY = centerY + Math.sin(angle) * (RADIUS - 36) * 0.74;
+			final var iconX = centerX + Math.cos(angle) * ICON_RING_RADIUS;
+			final var iconY = centerY + Math.sin(angle) * ICON_RING_RADIUS;
 
-			if (type == selected) {
-				GuiComponent.fill(matrices, (int)labelX - 42, (int)labelY - 11, (int)labelX + 42, (int)labelY + 21, SELECTED_BACKDROP);
-			}
-
-			drawCenteredText(matrices, type.getLabel().getString(), (int)labelX, (int)labelY - 8, type.getColor());
-			GuiComponent.fill(matrices, (int)markerX - 3, (int)markerY - 3, (int)markerX + 3, (int)markerY + 3, type.getColor());
+			drawIcon(matrices, type, (int)iconX, (int)iconY, type == selected);
 		}
 	}
 
 	private static void drawCenteredText(PoseStack matrices, String text, int centerX, int y, int color) {
 		Game.font.drawShadow(matrices, text, centerX - Game.font.width(text) / 2f, y, color);
 	}
+
+	private static void drawIcon(PoseStack matrices, PingType type, int centerX, int centerY, boolean selected) {
+		if (selected) {
+			drawSelectionCorners(matrices, centerX, centerY);
+		}
+
+		drawScaledCenteredText(matrices, type.getIcon(), centerX, centerY, ICON_SCALE, type.getColor());
+	}
+
+	private static void drawScaledCenteredText(PoseStack matrices, String text, int centerX, int centerY, float scale, int color) {
+		final var width = Game.font.width(text);
+		matrices.pushPose();
+		matrices.translate(centerX, centerY, 0);
+		matrices.scale(scale, scale, 1f);
+		Game.font.drawShadow(matrices, text, -width / 2f, -4f, color);
+		matrices.popPose();
+	}
+
+	private static void drawSelectionCorners(PoseStack matrices, int centerX, int centerY) {
+		final var left = centerX - 12;
+		final var right = centerX + 12;
+		final var top = centerY - 12;
+		final var bottom = centerY + 12;
+
+		GuiComponent.fill(matrices, left, top, left + 7, top + 2, ICON_SELECTION_COLOR);
+		GuiComponent.fill(matrices, left, top, left + 2, top + 7, ICON_SELECTION_COLOR);
+		GuiComponent.fill(matrices, right - 7, top, right, top + 2, ICON_SELECTION_COLOR);
+		GuiComponent.fill(matrices, right - 2, top, right, top + 7, ICON_SELECTION_COLOR);
+		GuiComponent.fill(matrices, left, bottom - 2, left + 7, bottom, ICON_SELECTION_COLOR);
+		GuiComponent.fill(matrices, left, bottom - 7, left + 2, bottom, ICON_SELECTION_COLOR);
+		GuiComponent.fill(matrices, right - 7, bottom - 2, right, bottom, ICON_SELECTION_COLOR);
+		GuiComponent.fill(matrices, right - 2, bottom - 7, right, bottom, ICON_SELECTION_COLOR);
+	}
+
 }

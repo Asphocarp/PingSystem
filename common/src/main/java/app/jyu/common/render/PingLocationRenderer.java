@@ -6,6 +6,7 @@ import net.minecraft.world.scores.PlayerTeam;
 import app.jyu.common.compat.Component;
 import app.jyu.common.config.ClientConfig;
 import app.jyu.common.config.PlayerInfoMode;
+import app.jyu.common.core.PingType;
 import app.jyu.common.core.PingView;
 import app.jyu.common.resource.LanguageUtils;
 
@@ -40,15 +41,19 @@ public class PingLocationRenderer {
 
 		final var isPlayerListHeld = CLIENT_CONFIG.getPlayerInfoMode() == PlayerInfoMode.HOLD && Game.options.keyPlayerList.isDown();
 		final var showVerbosePlayerInfo = CLIENT_CONFIG.getPlayerInfoMode() == PlayerInfoMode.ALWAYS || isPlayerListHeld;
-		MutableComponent label = ping.type.getLabel();
+		MutableComponent label = ping.type == PingType.LOCATION ? Component.literal("") : ping.type.getLabel();
 
 		if (showVerbosePlayerInfo && author != null) {
 			var displayName = PlayerTeam.formatNameForTeam(author.getTeam(), Component.literal(author.getProfile().getName()));
 			displayName = displayName.withStyle(ChatFormatting.RESET);
-			label = Component.literal(label.getString() + " - ").append(displayName);
+			label = ping.type == PingType.LOCATION
+				? displayName
+				: Component.literal(label.getString() + " - ").append(displayName);
 		}
 
-		ctx.renderLabel(label, 1.75f, showVerbosePlayerInfo ? author : null, typeColor);
+		if (ping.type != PingType.LOCATION || showVerbosePlayerInfo) {
+			ctx.renderLabel(label, 1.75f, showVerbosePlayerInfo ? author : null, typeColor);
+		}
 
 		m.popPose();
 	}
