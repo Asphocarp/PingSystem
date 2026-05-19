@@ -135,7 +135,7 @@ jobs:
           LOADER="${{ matrix.loader }}"
           LOADER_UPPER=$(echo "$LOADER" | tr '[:lower:]' '[:upper:]')
           VERSION_RANGE=$(get_prop "${LOADER}_compatible_range")
-          VERSION_START=$(echo "$VERSION_RANGE" | grep -oE '[0-9]+\\.[0-9]+(\\.[0-9]+)?' | head -n 1)
+          VERSION_START=$(echo "$VERSION_RANGE" | grep -oE '[0-9]+\\.[0-9]+(\\.[0-9]+)?' | sed -n '1p')
           JAR_NAME="${ARCHIVE_NAME}-${MOD_VERSION}-${LOADER}-${MC_VERSION}"
           JAR_PATH="./build/libs/${JAR_NAME}.jar"
 
