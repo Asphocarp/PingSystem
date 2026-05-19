@@ -7,6 +7,7 @@ IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning for an
 - Always strive for concise, simple solutions.
 - If a problem can be solved in a simpler way, propose it.
 - If asked to do too much work at once, stop and state that clearly.
+- This project is a Minecraft game mod. Do not prioritize backward compatibility or avoid breaking changes; large refactors and breaking changes are acceptable when they make the codebase better.
 - After making requested code or repo changes, commit the completed work before the final response unless the user explicitly asks not to commit.
 
 - If you edited code, before the final response, run checking commands (`bun run typecheck` and `bun run lint` where applicable), and fix issues.
