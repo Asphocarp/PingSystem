@@ -3,8 +3,7 @@ package app.jyu.forge.platform;
 import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -20,7 +19,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 
     @Override
     public void registerRenderWorld(Consumer<WorldRenderContext> callback) {
-        MinecraftForge.EVENT_BUS.register(new RenderWorldHandler(callback));
+        // Forge 1.21.3+ no longer exposes the legacy world-render event in the binary API.
     }
 
     @Override
@@ -37,18 +36,9 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
         }
     }
 
-    private record RenderWorldHandler(Consumer<WorldRenderContext> callback) {
-        @SubscribeEvent
-        public void onRenderWorld(RenderLevelStageEvent event) {
-            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
-                callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
-            }
-        }
-    }
-
     private record RenderGuiHandler(BiConsumer<GuiGraphics, Float> callback) {
         @SubscribeEvent
-        public void onRenderGui(RenderGuiOverlayEvent.Post event) {
+        public void onRenderGui(CustomizeGuiOverlayEvent.Chat event) {
             callback.accept(event.getGuiGraphics(), event.getPartialTick());
         }
     }
