@@ -36,23 +36,23 @@ import java.util.Map;
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
 
-public class PingSystem implements ModInitializer {
+public class SophisticatedPing implements ModInitializer {
     // This logger is used to write text to the console and the log file.
     // It is considered best practice to use your mod id as the logger's name.
     // That way, it's clear which mod wrote info, warnings, and errors.
-    public static final String MOD_ID = "ping_system";
+    public static final String MOD_ID = "sophisticated-ping";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static ArrayList<PingSystemTeam> teams = new ArrayList<>();
+    public static ArrayList<SophisticatedPingTeam> teams = new ArrayList<>();
     public static boolean ENABLE_TEAMS = false;
     public static final long GLOW_DURATION_MS = 5000; // 5 seconds in milliseconds
     // Map to store UUIDs of glowing entities and their glow end time (System.currentTimeMillis())
     private static final Map<UUID, Long> glowingEntities = new ConcurrentHashMap<>();
 
     public static String[] newSounds = {
-            "ping_system:ping_location",
-            "ping_system:ping_item",
-            "ping_system:ping_enemy",
-            "ping_system:mozambique_lifeline",
+            "sophisticated-ping:ping_location",
+            "sophisticated-ping:ping_item",
+            "sophisticated-ping:ping_enemy",
+            "sophisticated-ping:mozambique_lifeline",
     };
     // currently include newSounds and SoundEvents.BLOCK_ANVIL_BREAK
     public static ArrayList<SoundEvent> soundEventsForPing;
@@ -76,7 +76,7 @@ public class PingSystem implements ModInitializer {
             try {
                 pingPoint = PingPoint.fromPacketByteBuf(bufCopy);
             } catch (Exception e) {
-                LOGGER.error("[PingSystem Server] Failed to deserialize PingPoint on PING_PACKET receive for glow check.", e);
+                LOGGER.error("[Sophisticated Ping Server] Failed to deserialize PingPoint on PING_PACKET receive for glow check.", e);
             }
             bufCopy.release(); // Release the copied buffer
 
@@ -95,11 +95,11 @@ public class PingSystem implements ModInitializer {
                     }
 
                     if (entity != null) {
-                        LOGGER.info("[PingSystem Server] PING_PACKET: Received highlight request for {}. Setting glowing until {}.", entity.getName().getString(), glowEndTime);
+                        LOGGER.info("[Sophisticated Ping Server] PING_PACKET: Received highlight request for {}. Setting glowing until {}.", entity.getName().getString(), glowEndTime);
                         entity.setGlowing(true);
                         glowingEntities.put(entityUUID, glowEndTime); 
                     } else {
-                        LOGGER.warn("[PingSystem Server] PING_PACKET: Received highlight request for UUID {}, but entity not found.", entityUUID);
+                        LOGGER.warn("[Sophisticated Ping Server] PING_PACKET: Received highlight request for UUID {}, but entity not found.", entityUUID);
                     }
                 });
             }
@@ -124,7 +124,7 @@ public class PingSystem implements ModInitializer {
         soundEventsForPing.add(SoundEvents.BLOCK_ANVIL_BREAK);
 
         // Register server tick event to handle glow duration
-        ServerTickEvents.END_SERVER_TICK.register(PingSystem::onEndServerTick);
+        ServerTickEvents.END_SERVER_TICK.register(SophisticatedPing::onEndServerTick);
     }
 
     public static void multicastPing(ServerPlayerEntity sender, Identifier channelName, PacketByteBuf buf) {
@@ -220,7 +220,7 @@ public class PingSystem implements ModInitializer {
                     for (ServerWorld world : server.getWorlds()) {
                         Entity entity = world.getEntity(entityUUID);
                         if (entity != null && entity.isGlowing()) { // Check if it's still glowing (might have been turned off otherwise)
-                            LOGGER.info("[PingSystem Server] Turning off glow for expired entity: {}", entity.getName().getString());
+                            LOGGER.info("[Sophisticated Ping Server] Turning off glow for expired entity: {}", entity.getName().getString());
                             entity.setGlowing(false);
                         }
                     }

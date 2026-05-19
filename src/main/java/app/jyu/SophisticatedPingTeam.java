@@ -4,18 +4,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class PingSystemTeam {
+public class SophisticatedPingTeam {
     private final Set<String> members;
 
-    PingSystemTeam(){
+    SophisticatedPingTeam(){
         this.members = new HashSet<>();
     }
 
-    PingSystemTeam(Set<String> members){
+    SophisticatedPingTeam(Set<String> members){
         this.members = members;
     }
 
-    PingSystemTeam(String... ids){
+    SophisticatedPingTeam(String... ids){
         this.members = new HashSet<>(List.of(ids));
     }
 

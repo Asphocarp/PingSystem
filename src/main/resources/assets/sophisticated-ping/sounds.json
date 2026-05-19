@@ -1,0 +1,26 @@
+{
+  "ping_location": {
+    "subtitle": "subtitles.sophisticated-ping.ping_location",
+    "sounds": [
+      "sophisticated-ping:ping_location"
+    ]
+  },
+  "ping_item": {
+    "subtitle": "subtitles.sophisticated-ping.ping_item",
+    "sounds": [
+      "sophisticated-ping:ping_item"
+    ]
+  },
+  "ping_enemy": {
+    "subtitle": "subtitles.sophisticated-ping.ping_enemy",
+    "sounds": [
+      "sophisticated-ping:ping_enemy"
+    ]
+  },
+  "mozambique_lifeline": {
+    "subtitle": "subtitles.sophisticated-ping.mozambique_lifeline",
+    "sounds": [
+      "sophisticated-ping:mozambique_lifeline"
+    ]
+  }
+}

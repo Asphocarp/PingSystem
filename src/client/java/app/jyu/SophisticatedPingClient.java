@@ -25,7 +25,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.lwjgl.glfw.GLFW;
 
-import app.jyu.PingSystemClient;
 import app.jyu.ClientTickHandler;
 import app.jyu.ModConfig;
 import app.jyu.PingPoint;
@@ -37,13 +36,13 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.UUID;
 
-import static app.jyu.PingSystem.LOGGER;
+import static app.jyu.SophisticatedPing.LOGGER;
 import static app.jyu.NetworkingConstants.PING_PACKET;
 import static app.jyu.NetworkingConstants.REMOVE_PING_PACKET;
 
 import net.minecraft.entity.projectile.ProjectileUtil;
 
-public class PingSystemClient implements ClientModInitializer {
+public class SophisticatedPingClient implements ClientModInitializer {
     public static final double MAX_REACH = 512.0D;
     public static KeyBinding pingKeyBinding;
 
@@ -51,15 +50,15 @@ public class PingSystemClient implements ClientModInitializer {
     public void onInitializeClient() {
         // This entrypoint is suitable for setting up client-specific logic, such as rendering.
         pingKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.ping_system.ping", // The translation key of the keybinding's name
+                "key.sophisticated-ping.ping", // The translation key of the keybinding's name
                 InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
                 GLFW.GLFW_KEY_C, // The keycode of the key
-                "category.ping_system.ping_system" // The translation key of the keybinding's category.
+                "category.sophisticated-ping.sophisticated-ping" // The translation key of the keybinding's category.
         ));
 
         // Register Fabric events
         // Tick handler for key presses
-        ClientTickEvents.END_CLIENT_TICK.register(PingSystemClient::checkKeyPress);
+        ClientTickEvents.END_CLIENT_TICK.register(SophisticatedPingClient::checkKeyPress);
         // Tick handler for updating RenderHandler data (previously in ClientTickHandler)
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler.getInstance()::onClientTick);
 

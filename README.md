@@ -1,12 +1,12 @@
 <p align="center">
-    <img src="./src/main/resources/assets/ping_system/icon.png" alt="PingSystem" width="200"/> 
+    <img src="./src/main/resources/assets/sophisticated-ping/icon.png" alt="Sophisticated Ping" width="200"/>
 </p>
 
-<h1 align="center">PingSystem</h1>
+<h1 align="center">Sophisticated Ping</h1>
 
-Ping System for Minecraft. Make MC Apex Again!
+Sophisticated Ping for Minecraft. Make MC Apex Again!
 
-## Ping System
+## Sophisticated Ping
 
 Default hotkey: `c`
 
