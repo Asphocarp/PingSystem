@@ -9,6 +9,7 @@ IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning for an
 - If asked to do too much work at once, stop and state that clearly.
 - This project is a Minecraft game mod. Do not prioritize backward compatibility or avoid breaking changes; large refactors and breaking changes are acceptable when they make the codebase better.
 - After making requested code or repo changes, commit the completed work before the final response unless the user explicitly asks not to commit.
+- Actively maintain `docs/` whenever changing features, architecture, loader support, version branches, CI/release workflows, build behavior, configuration, networking, rendering, or operational assumptions. Documentation updates are part of the definition of done for those changes.
 
 - If you edited code, before the final response, run checking commands (`bun run typecheck` and `bun run lint` where applicable), and fix issues.
 - Deep research best practice and/or related docs on internet before editing. If default web search/fetch tools are not available, fallback to (parallel_)search_web/read_url of jina mcp.
