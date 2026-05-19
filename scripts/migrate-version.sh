@@ -118,6 +118,23 @@ migrate() {
 
   if [ -d "${OVERRIDES_DIR}/${target}" ]; then
     cp -R "${OVERRIDES_DIR}/${target}/." "${ROOT_DIR}/"
+    if [ -f "${OVERRIDES_DIR}/${target}/.delete" ]; then
+      while IFS= read -r path_to_delete; do
+        case "${path_to_delete}" in
+          ""|\#*)
+            continue
+            ;;
+          /*|*..*)
+            echo "Unsafe delete path in ${OVERRIDES_DIR}/${target}/.delete: ${path_to_delete}" >&2
+            exit 1
+            ;;
+          *)
+            rm -rf "${ROOT_DIR}/${path_to_delete}"
+            ;;
+        esac
+      done < "${OVERRIDES_DIR}/${target}/.delete"
+      rm -f "${ROOT_DIR}/.delete"
+    fi
   fi
 }
 

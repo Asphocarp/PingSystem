@@ -39,7 +39,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
         @SubscribeEvent
         public void onRenderWorld(RenderLevelStageEvent event) {
             if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
-                callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
+                callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick().getGameTimeDeltaPartialTick(true), event.getCamera()));
             }
         }
     }
@@ -47,7 +47,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
     private record RenderGuiHandler(BiConsumer<GuiGraphics, Float> callback) {
         @SubscribeEvent
         public void onRenderGui(RenderGuiEvent.Post event) {
-            callback.accept(event.getGuiGraphics(), event.getPartialTick());
+            callback.accept(event.getGuiGraphics(), event.getPartialTick().getGameTimeDeltaPartialTick(true));
         }
     }
 }
