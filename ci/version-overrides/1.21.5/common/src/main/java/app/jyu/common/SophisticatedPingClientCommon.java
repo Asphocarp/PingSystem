@@ -78,7 +78,7 @@ public final class SophisticatedPingClientCommon {
             return;
         }
 
-        HitResult hit = raycast(cameraEntity, MAX_REACH, client.getTimer().getGameTimeDeltaPartialTick(true), includeFluids);
+        HitResult hit = raycast(cameraEntity, MAX_REACH, client.getDeltaTracker().getGameTimeDeltaPartialTick(true), includeFluids);
         if (hit == null) {
             return;
         }

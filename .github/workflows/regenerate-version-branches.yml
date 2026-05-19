@@ -56,7 +56,9 @@ jobs:
             SHOULD_RUN="false"
           fi
 
-          mkdir -p branch-artifacts
+          ARTIFACTS_DIR="${RUNNER_TEMP}/branch-artifacts"
+          rm -rf "${ARTIFACTS_DIR}"
+          mkdir -p "${ARTIFACTS_DIR}"
 
           for VERSION in $(./scripts/migrate-version.sh --versions); do
             if [ "${VERSION}" = "${BASELINE}" ]; then
@@ -72,6 +74,10 @@ jobs:
             fi
 
             git checkout -B "${VERSION}" "${PREVIOUS_BRANCH}"
+            if [ -n "${START_AFTER}" ]; then
+              git checkout "origin/${BASELINE}" -- .github ci scripts
+            fi
+            rm -rf branch-artifacts
             ./scripts/migrate-version.sh "${VERSION}"
 
             MOD_VERSION="$(grep '^mod_version=' gradle.properties | cut -d'=' -f2- | xargs)"
@@ -85,8 +91,8 @@ jobs:
 
             for LOADER in $(./scripts/migrate-version.sh --loaders "${VERSION}"); do
               ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"
-              mkdir -p "branch-artifacts/${VERSION}/${LOADER}"
-              cp "${LOADER}/build/libs/"*.jar "branch-artifacts/${VERSION}/${LOADER}/"
+              mkdir -p "${ARTIFACTS_DIR}/${VERSION}/${LOADER}"
+              cp "${LOADER}/build/libs/"*.jar "${ARTIFACTS_DIR}/${VERSION}/${LOADER}/"
             done
 
             git push --force-with-lease origin "${VERSION}"
@@ -97,4 +103,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: generated-version-branches
-          path: branch-artifacts
+          path: ${{ runner.temp }}/branch-artifacts
