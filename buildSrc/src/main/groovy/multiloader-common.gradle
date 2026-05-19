@@ -18,6 +18,10 @@ java {
 
 repositories {
     mavenCentral()
+    maven {
+        name = "Forge"
+        url = "https://maven.minecraftforge.net"
+    }
     exclusiveContent {
         forRepository {
             maven {
