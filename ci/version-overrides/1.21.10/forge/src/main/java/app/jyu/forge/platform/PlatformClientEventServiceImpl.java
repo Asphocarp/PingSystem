@@ -22,6 +22,6 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 
     @Override
     public void registerRenderGui(BiConsumer<GuiGraphics, Float> callback) {
-        CustomizeGuiOverlayEvent.Chat.BUS.addListener(event -> callback.accept(event.getGuiGraphics(), event.getPartialTick()));
+        CustomizeGuiOverlayEvent.Chat.BUS.addListener((java.util.function.Consumer<CustomizeGuiOverlayEvent.Chat>) event -> callback.accept(event.getGuiGraphics(), event.getPartialTick()));
     }
 }

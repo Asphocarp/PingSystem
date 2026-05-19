@@ -42,7 +42,7 @@ public final class ForgeNetwork {
         static void handle(PingC2S packet, CustomPayloadEvent.Context ctx) {
             ServerPlayer sender = ctx.getSender();
             if (sender != null) {
-                ctx.enqueueWork(() -> SophisticatedPingCommon.onPingPacket(sender.serverLevel().getServer(), sender, packet.point));
+                ctx.enqueueWork(() -> SophisticatedPingCommon.onPingPacket(sender.getServer(), sender, packet.point));
             }
             ctx.setPacketHandled(true);
         }
