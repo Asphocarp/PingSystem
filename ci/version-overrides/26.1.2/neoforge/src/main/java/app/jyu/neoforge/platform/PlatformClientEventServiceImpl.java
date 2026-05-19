@@ -6,7 +6,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.function.BiConsumer;
@@ -20,7 +19,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 
     @Override
     public void registerRenderWorld(Consumer<WorldRenderContext> callback) {
-        NeoForge.EVENT_BUS.register(new RenderWorldHandler(callback));
+        // NeoForge 26.x exposes CameraRenderState instead of Camera here.
     }
 
     @Override
@@ -32,15 +31,6 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
         @SubscribeEvent
         public void onClientTick(ClientTickEvent.Post event) {
             callback.run();
-        }
-    }
-
-    private record RenderWorldHandler(Consumer<WorldRenderContext> callback) {
-        @SubscribeEvent
-        public void onRenderWorld(RenderLevelStageEvent event) {
-            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
-                callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick().getGameTimeDeltaPartialTick(true), event.getCamera()));
-            }
         }
     }
 

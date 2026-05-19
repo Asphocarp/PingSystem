@@ -46,7 +46,7 @@ public final class SophisticatedPingCommon {
 
     public static void onPingPacket(MinecraftServer server, ServerPlayer sender, PingPoint point) {
         if (point == null || point.isCorrupt()) {
-            Constants.LOGGER.warn("Ignoring corrupt ping packet from {}", sender.getGameProfile().getName());
+            Constants.LOGGER.warn("Ignoring corrupt ping packet from {}", sender.getGameProfile().name());
             return;
         }
 
@@ -56,7 +56,7 @@ public final class SophisticatedPingCommon {
 
     public static void onRemovePingPacket(ServerPlayer sender, PingPoint point) {
         if (point == null || point.isCorrupt()) {
-            Constants.LOGGER.warn("Ignoring corrupt remove ping packet from {}", sender.getGameProfile().getName());
+            Constants.LOGGER.warn("Ignoring corrupt remove ping packet from {}", sender.getGameProfile().name());
             return;
         }
 
@@ -85,7 +85,7 @@ public final class SophisticatedPingCommon {
             }
 
             IPlatformNetworkService.INSTANCE.sendPingToClient(teammate, point);
-            Constants.LOGGER.debug("{} sent ping to {}", sender.getGameProfile().getName(), teammate.getGameProfile().getName());
+            Constants.LOGGER.debug("{} sent ping to {}", sender.getGameProfile().name(), teammate.getGameProfile().name());
         }
     }
 

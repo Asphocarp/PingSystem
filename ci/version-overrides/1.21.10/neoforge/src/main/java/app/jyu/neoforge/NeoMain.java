@@ -25,7 +25,7 @@ public final class NeoMain {
         PlatformContextServiceImpl.modBus = modBus;
         SophisticatedPingCommon.init();
         modBus.addListener(this::registerPayloads);
-        if (FMLEnvironment.dist.isClient()) {
+        if (FMLEnvironment.getDist().isClient()) {
             new NeoClient(modBus);
         }
     }
@@ -33,7 +33,7 @@ public final class NeoMain {
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(Constants.MOD_ID).optional();
         registrar.playToServer(PingC2S.TYPE, PING_C2S_CODEC, (payload, context) ->
-                context.enqueueWork(() -> SophisticatedPingCommon.onPingPacket(context.player().getServer(), (ServerPlayer) context.player(), payload.point())));
+                context.enqueueWork(() -> SophisticatedPingCommon.onPingPacket(((net.minecraft.server.level.ServerLevel) context.player().level()).getServer(), (ServerPlayer) context.player(), payload.point())));
         registrar.playToServer(RemovePingC2S.TYPE, REMOVE_PING_C2S_CODEC, (payload, context) ->
                 context.enqueueWork(() -> SophisticatedPingCommon.onRemovePingPacket((ServerPlayer) context.player(), payload.point())));
         registrar.playToClient(PingS2C.TYPE, PING_S2C_CODEC, (payload, context) ->
