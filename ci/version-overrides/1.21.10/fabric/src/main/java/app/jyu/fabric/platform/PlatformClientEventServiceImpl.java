@@ -4,7 +4,6 @@ import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.function.BiConsumer;
@@ -18,8 +17,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 
     @Override
     public void registerRenderWorld(Consumer<WorldRenderContext> callback) {
-        WorldRenderEvents.LAST.register(context ->
-                callback.accept(WorldRenderContext.of(context.matrixStack(), context.projectionMatrix(), context.tickCounter().getGameTimeDeltaPartialTick(true), context.camera())));
+        // Fabric API 1.21.10 removed the world-render callback used by older branches.
     }
 
     @Override
