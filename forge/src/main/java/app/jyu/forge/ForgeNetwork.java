@@ -6,31 +6,28 @@ import app.jyu.common.SophisticatedPingClientCommon;
 import app.jyu.common.SophisticatedPingCommon;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
-
-import java.util.function.Supplier;
+import net.minecraftforge.event.network.CustomPayloadEvent;
+import net.minecraftforge.network.Channel;
+import net.minecraftforge.network.ChannelBuilder;
+import net.minecraftforge.network.SimpleChannel;
 
 public final class ForgeNetwork {
-    private static final String PROTOCOL_VERSION = "1";
-    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(Constants.MOD_ID, "main"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
-    );
+    private static final int PROTOCOL_VERSION = 1;
+    public static final SimpleChannel CHANNEL = ChannelBuilder
+            .named(Constants.id("main"))
+            .networkProtocolVersion(PROTOCOL_VERSION)
+            .acceptedVersions(Channel.VersionTest.exact(PROTOCOL_VERSION))
+            .simpleChannel();
 
     private ForgeNetwork() {
     }
 
     public static void register() {
         int id = 0;
-        CHANNEL.registerMessage(id++, PingC2S.class, PingC2S::encode, PingC2S::decode, PingC2S::handle);
-        CHANNEL.registerMessage(id++, RemovePingC2S.class, RemovePingC2S::encode, RemovePingC2S::decode, RemovePingC2S::handle);
-        CHANNEL.registerMessage(id++, PingS2C.class, PingS2C::encode, PingS2C::decode, PingS2C::handle);
-        CHANNEL.registerMessage(id, RemovePingS2C.class, RemovePingS2C::encode, RemovePingS2C::decode, RemovePingS2C::handle);
+        CHANNEL.messageBuilder(PingC2S.class, id++).encoder(PingC2S::encode).decoder(PingC2S::decode).consumerMainThread(PingC2S::handle).add();
+        CHANNEL.messageBuilder(RemovePingC2S.class, id++).encoder(RemovePingC2S::encode).decoder(RemovePingC2S::decode).consumerMainThread(RemovePingC2S::handle).add();
+        CHANNEL.messageBuilder(PingS2C.class, id++).encoder(PingS2C::encode).decoder(PingS2C::decode).consumerMainThread(PingS2C::handle).add();
+        CHANNEL.messageBuilder(RemovePingS2C.class, id).encoder(RemovePingS2C::encode).decoder(RemovePingS2C::decode).consumerMainThread(RemovePingS2C::handle).add();
     }
 
     public record PingC2S(PingPoint point) {
@@ -42,8 +39,7 @@ public final class ForgeNetwork {
             return new PingC2S(PingPoint.read(buf));
         }
 
-        static void handle(PingC2S packet, Supplier<NetworkEvent.Context> ctxSupplier) {
-            NetworkEvent.Context ctx = ctxSupplier.get();
+        static void handle(PingC2S packet, CustomPayloadEvent.Context ctx) {
             ServerPlayer sender = ctx.getSender();
             if (sender != null) {
                 ctx.enqueueWork(() -> SophisticatedPingCommon.onPingPacket(sender.server, sender, packet.point));
@@ -61,8 +57,7 @@ public final class ForgeNetwork {
             return new RemovePingC2S(PingPoint.read(buf));
         }
 
-        static void handle(RemovePingC2S packet, Supplier<NetworkEvent.Context> ctxSupplier) {
-            NetworkEvent.Context ctx = ctxSupplier.get();
+        static void handle(RemovePingC2S packet, CustomPayloadEvent.Context ctx) {
             ServerPlayer sender = ctx.getSender();
             if (sender != null) {
                 ctx.enqueueWork(() -> SophisticatedPingCommon.onRemovePingPacket(sender, packet.point));
@@ -80,8 +75,7 @@ public final class ForgeNetwork {
             return new PingS2C(PingPoint.read(buf));
         }
 
-        static void handle(PingS2C packet, Supplier<NetworkEvent.Context> ctxSupplier) {
-            NetworkEvent.Context ctx = ctxSupplier.get();
+        static void handle(PingS2C packet, CustomPayloadEvent.Context ctx) {
             ctx.enqueueWork(() -> SophisticatedPingClientCommon.receivePing(packet.point));
             ctx.setPacketHandled(true);
         }
@@ -96,8 +90,7 @@ public final class ForgeNetwork {
             return new RemovePingS2C(PingPoint.read(buf));
         }
 
-        static void handle(RemovePingS2C packet, Supplier<NetworkEvent.Context> ctxSupplier) {
-            NetworkEvent.Context ctx = ctxSupplier.get();
+        static void handle(RemovePingS2C packet, CustomPayloadEvent.Context ctx) {
             ctx.enqueueWork(() -> SophisticatedPingClientCommon.receiveRemovePing(packet.point));
             ctx.setPacketHandled(true);
         }

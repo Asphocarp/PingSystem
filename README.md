@@ -1,3 +1,3 @@
-This directory stores files or patches that are applied when generating the 1.20.1 branch.
+This directory stores source files applied when generating the 1.20.2 branch.
 
-The current 1.20.1 branch does not need extra overrides beyond the dependency matrix.
+The current overrides use the 1.20.x GUI, registry, and render API shape.
