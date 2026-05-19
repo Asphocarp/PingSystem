@@ -150,8 +150,14 @@ jobs:
             echo "MC_VERSION=$MC_VERSION"
             echo "${LOADER_UPPER}_VERSION_START=$VERSION_START"
             echo "${LOADER_UPPER}_JAR_PATH=$JAR_PATH"
+            echo "RELEASE_TAG=v${MOD_VERSION}-${LOADER}-${MC_VERSION}"
             echo "REF_NAME=${{ matrix.version }}"
           } >> "$GITHUB_ENV"
+
+      - name: Remove existing GitHub release for reruns
+        run: gh release delete "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to platforms
         run: |
@@ -160,6 +166,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           MODRINTH_PROJECT: RECCOz9u
-          CURSEFORGE_PROJECT: "884820"
