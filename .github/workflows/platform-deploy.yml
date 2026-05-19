@@ -1,0 +1,147 @@
+name: Deploy to Platforms
+
+on:
+  workflow_dispatch:
+    inputs:
+      loaders:
+        description: "Loaders"
+        required: true
+        type: string
+        default: "forge, fabric"
+      versions:
+        description: "Versions"
+        required: true
+        type: string
+        default: "1.20.1"
+
+jobs:
+  prepare:
+    name: Prepare Matrix
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Set matrix
+        id: set-matrix
+        run: |
+          VERSIONS="${{ github.event.inputs.versions }}"
+          LOADERS="${{ github.event.inputs.loaders }}"
+          MATRIX_JSON='{"include":['
+          for VERSION in $(echo "$VERSIONS" | sed "s/,/ /g"); do
+            for LOADER in $(echo "$LOADERS" | sed "s/,/ /g"); do
+              MINOR=$(echo "$VERSION" | cut -d'.' -f2)
+              if [ "$LOADER" = "neoforge" ] && [ "$MINOR" -lt 21 ]; then
+                continue
+              fi
+              MATRIX_JSON+="{\"version\":\"$VERSION\",\"loader\":\"$LOADER\"},"
+            done
+          done
+          MATRIX_JSON="${MATRIX_JSON%,}]}"
+          echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build
+    needs: prepare
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.version }}
+
+      - name: Extract Java version
+        run: echo "JAVA_VERSION=$(grep '^java_version=' gradle.properties | cut -d'=' -f2- | xargs)" >> "$GITHUB_ENV"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Build loader
+        run: chmod +x ./gradlew && ./gradlew -Dnet.minecraftforge.gradle.check.certs=false :${{ matrix.loader }}:build
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.loader }}-${{ matrix.version }}
+          path: |
+            ./${{ matrix.loader }}/build/libs
+            CHANGELOG.md
+            gradle.properties
+
+  publish:
+    name: Publish
+    needs:
+      - prepare
+      - build
+    runs-on: ubuntu-22.04
+    strategy:
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            publish.gradle
+          sparse-checkout-cone-mode: false
+          ref: ${{ matrix.version }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10"
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ matrix.loader }}-${{ matrix.version }}
+
+      - name: Prepare publish environment
+        run: |
+          get_prop() {
+            grep "^$1=" gradle.properties | cut -d'=' -f2- | xargs
+          }
+
+          ARCHIVE_NAME=$(get_prop "archive_name")
+          MOD_VERSION=$(get_prop "mod_version")
+          MC_VERSION=$(get_prop "minecraft_version")
+          LOADER="${{ matrix.loader }}"
+          LOADER_UPPER=$(echo "$LOADER" | tr '[:lower:]' '[:upper:]')
+          VERSION_RANGE=$(get_prop "${LOADER}_compatible_range")
+          VERSION_START=$(echo "$VERSION_RANGE" | grep -oE '[0-9]+\\.[0-9]+(\\.[0-9]+)?' | head -n 1)
+          JAR_NAME="${ARCHIVE_NAME}-${MOD_VERSION}-${LOADER}-${MC_VERSION}"
+          JAR_PATH="./build/libs/${JAR_NAME}.jar"
+
+          mkdir -p ./build/libs
+          mv "./${LOADER}/build/libs/${JAR_NAME}.jar" "$JAR_PATH"
+
+          {
+            echo "ARCHIVE_NAME=$ARCHIVE_NAME"
+            echo "MOD_VERSION=$MOD_VERSION"
+            echo "MC_VERSION=$MC_VERSION"
+            echo "${LOADER_UPPER}_VERSION_START=$VERSION_START"
+            echo "${LOADER_UPPER}_JAR_PATH=$JAR_PATH"
+            echo "REF_NAME=${{ matrix.version }}"
+          } >> "$GITHUB_ENV"
+
+      - name: Publish to platforms
+        run: |
+          echo "rootProject.buildFileName = 'publish.gradle'" > settings.gradle
+          gradle publishMods
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          MODRINTH_PROJECT: RECCOz9u
+          CURSEFORGE_PROJECT: "884820"

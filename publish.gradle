@@ -1,0 +1,92 @@
+plugins {
+    id "me.modmuss50.mod-publish-plugin" version "1.1.0"
+}
+
+publishMods {
+    def githubToken = providers.environmentVariable("GITHUB_TOKEN").getOrElse("")
+    def modrinthToken = providers.environmentVariable("MODRINTH_TOKEN").getOrElse("")
+    def curseforgeToken = providers.environmentVariable("CURSEFORGE_TOKEN").getOrElse("")
+
+    def githubRepository = providers.environmentVariable("GITHUB_REPOSITORY").getOrElse("")
+    def modrinthProject = providers.environmentVariable("MODRINTH_PROJECT").getOrElse("")
+    def curseforgeProject = providers.environmentVariable("CURSEFORGE_PROJECT").getOrElse("")
+
+    dryRun = githubToken == ""
+
+    def modVersion = providers.environmentVariable("MOD_VERSION").getOrElse("0.0.0")
+    def mcVersion = providers.environmentVariable("MC_VERSION").getOrElse("0.0.0")
+    def refName = providers.environmentVariable("REF_NAME").getOrElse("main")
+
+    version = modVersion
+    changelog = file("CHANGELOG.md").exists() ? file("CHANGELOG.md").text : ""
+    type = STABLE
+
+    def ghOptions = githubOptions {
+        repository = githubRepository
+        accessToken = githubToken
+        commitish = refName
+    }
+
+    def mrOptions = modrinthOptions {
+        accessToken = modrinthToken
+        projectId = modrinthProject
+    }
+
+    def cfOptions = curseforgeOptions {
+        accessToken = curseforgeToken
+        projectId = curseforgeProject
+        clientRequired = true
+        serverRequired = true
+    }
+
+    ["Forge", "NeoForge", "Fabric"].each { loader ->
+        def loaderSlug = loader.toLowerCase()
+        def loaderUpper = loader.toUpperCase()
+        def jarPath = providers.environmentVariable("${loaderUpper}_JAR_PATH")
+        if (!jarPath.isPresent()) {
+            return
+        }
+
+        def isFabric = loaderSlug == "fabric"
+        def startVersion = providers.environmentVariable("${loaderUpper}_VERSION_START").getOrElse(mcVersion)
+        def artifact = file(jarPath.get())
+        def display = "v${modVersion} for ${loader} ${mcVersion}"
+
+        github("${loader}-GH") {
+            from ghOptions
+            tagName = "v${modVersion}-${loaderSlug}-${mcVersion}"
+            file = artifact
+            displayName = display
+        }
+
+        modrinth("${loader}-MR") {
+            from mrOptions
+            type = isFabric ? STABLE : BETA
+            file = artifact
+            displayName = display
+            modLoaders.add(loaderSlug)
+            minecraftVersionRange {
+                start = startVersion
+                end = mcVersion
+            }
+            if (isFabric) {
+                requires("fabric-api")
+            }
+        }
+
+        curseforge("${loader}-CF") {
+            from cfOptions
+            type = isFabric ? STABLE : BETA
+            file = artifact
+            displayName = display
+            modLoaders.add(loaderSlug)
+            minecraftVersionRange {
+                start = startVersion
+                end = mcVersion
+            }
+            if (isFabric) {
+                requires("fabric-api")
+            }
+        }
+    }
+}

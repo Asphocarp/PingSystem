@@ -1,0 +1,65 @@
+name: Incompatibility Report
+description: Report an incompatibility with Sophisticated Ping
+title: "[Incompatibility]: "
+labels: "incompatibility"
+body:
+  - type: checkboxes
+    attributes:
+      label: Preflight Checklist
+      options:
+        - label: After testing with only Sophisticated Ping installed, the issue no longer remains.
+          required: true
+        - label: I am using the latest Sophisticated Ping build for the corresponding Minecraft version and loader.
+          required: true
+        - label: The server I am playing on has Sophisticated Ping installed.
+          required: true
+        - label: I have searched existing issues for a matching report.
+          required: true
+  - type: dropdown
+    attributes:
+      label: Mod loader
+      multiple: true
+      options:
+        - Fabric
+        - NeoForge
+        - Forge
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Minecraft version
+      multiple: true
+      options:
+        - 1.21+
+        - 1.20.5-1.20.6
+        - 1.20.3-1.20.4
+        - 1.20.2
+        - 1.20-1.20.1
+        - 1.19.4
+        - 1.19.3
+        - 1.19-1.19.2
+        - 1.18-1.18.2
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual Behavior
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Logs URL
+      description: Upload latest.log to mclo.gs and paste the URL.
+      placeholder: https://mclo.gs/...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Mod or Modpack Details
+    validations:
+      required: true

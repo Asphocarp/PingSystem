@@ -1,0 +1,12 @@
+package app.jyu.forge;
+
+import app.jyu.common.SophisticatedPingClientCommon;
+import app.jyu.forge.platform.PlatformContextServiceImpl;
+import net.minecraftforge.eventbus.api.IEventBus;
+
+public final class ForgeClient {
+    public ForgeClient(IEventBus modBus) {
+        PlatformContextServiceImpl.modBus = modBus;
+        SophisticatedPingClientCommon.init();
+    }
+}

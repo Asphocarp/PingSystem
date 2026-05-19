@@ -1,0 +1,28 @@
+modLoader = "javafml"
+loaderVersion = "[${forge_loader_version},)"
+license = "${license}"
+issueTrackerURL = "${link_issues}"
+
+[[mods]]
+modId = "${forge_mod_id}"
+version = "${version}"
+displayName = "${mod_name}"
+displayURL = "${link_src}"
+logoFile = "assets/sophisticated-ping/icon.png"
+authors = "${mod_author}, ${contributors}"
+description = '''${description}'''
+displayTest = "IGNORE_SERVER_VERSION"
+
+[[dependencies.${forge_mod_id}]]
+modId = "forge"
+mandatory = true
+versionRange = "[${forge_loader_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${forge_mod_id}]]
+modId = "minecraft"
+mandatory = true
+versionRange = "${forge_compatible_range}"
+ordering = "NONE"
+side = "BOTH"

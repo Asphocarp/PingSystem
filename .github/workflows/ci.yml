@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        loader:
+          - fabric
+          - forge
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract Java version
+        run: echo "JAVA_VERSION=$(grep '^java_version=' gradle.properties | cut -d'=' -f2- | xargs)" >> "$GITHUB_ENV"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Build loader
+        run: chmod +x ./gradlew && ./gradlew -Dnet.minecraftforge.gradle.check.certs=false :${{ matrix.loader }}:build
+
+  branch-freshness:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check configured branches contain base marker
+        run: |
+          set -euo pipefail
+          BASE_BRANCH="${BASE_BRANCH:-1.18.2}"
+          BRANCHES="${SUPPORTED_BRANCHES:-1.18.2 1.19.2 1.19.3 1.19.4 1.20.1 1.20.2 1.20.4 1.20.6 1.21.1}"
+          if ! git rev-parse --verify "origin/${BASE_BRANCH}" >/dev/null 2>&1; then
+            echo "Base branch ${BASE_BRANCH} is not available yet; skipping freshness check."
+            exit 0
+          fi
+          MARKER="$(git rev-parse "origin/${BASE_BRANCH}")"
+          for branch in $BRANCHES; do
+            if ! git rev-parse --verify "origin/${branch}" >/dev/null 2>&1; then
+              echo "Branch ${branch} is not available yet; skipping."
+              continue
+            fi
+            if ! git merge-base --is-ancestor "$MARKER" "origin/${branch}"; then
+              echo "::warning::${branch} does not contain base marker ${MARKER}."
+            fi
+          done
