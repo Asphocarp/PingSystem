@@ -1,0 +1,73 @@
+name: All Branches CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Check out baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 1.19.2
+
+      - name: Set matrix
+        id: set-matrix
+        run: |
+          set -euo pipefail
+          MATRIX_JSON='{"include":['
+          for VERSION in $(./scripts/migrate-version.sh --versions); do
+            JAVA_VERSION="$(awk -v target="$VERSION" '
+              /^[[:space:]]*-[[:space:]]+minecraft_version:/ {
+                value=$0
+                sub(/^.*minecraft_version:[[:space:]]*/, "", value)
+                gsub(/"/, "", value)
+                in_entry=(value == target)
+                next
+              }
+              in_entry && /^[[:space:]]+java_version:/ {
+                value=$0
+                sub(/^.*java_version:[[:space:]]*/, "", value)
+                gsub(/"/, "", value)
+                print value
+                exit
+              }
+            ' ci/version-matrix.yml)"
+            for LOADER in $(./scripts/migrate-version.sh --loaders "$VERSION"); do
+              MATRIX_JSON+="{\"version\":\"$VERSION\",\"loader\":\"$LOADER\",\"java\":\"$JAVA_VERSION\"},"
+            done
+          done
+          MATRIX_JSON="${MATRIX_JSON%,}]}"
+          echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.version }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Build loader
+        run: chmod +x ./gradlew && ./gradlew -Dnet.minecraftforge.gradle.check.certs=false :${{ matrix.loader }}:build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.loader }}-${{ matrix.version }}
+          path: ./${{ matrix.loader }}/build/libs/*.jar

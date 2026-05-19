@@ -9,12 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        loader:
-          - fabric
-          - forge
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -31,8 +25,14 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
 
-      - name: Build loader
-        run: chmod +x ./gradlew && ./gradlew -Dnet.minecraftforge.gradle.check.certs=false :${{ matrix.loader }}:build
+      - name: Build declared loaders
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew ./scripts/migrate-version.sh
+          MC_VERSION="$(grep '^minecraft_version=' gradle.properties | cut -d'=' -f2- | xargs)"
+          for LOADER in $(./scripts/migrate-version.sh --loaders "${MC_VERSION}"); do
+            ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"
+          done
 
   branch-freshness:
     runs-on: ubuntu-22.04

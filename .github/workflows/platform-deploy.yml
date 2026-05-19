@@ -7,12 +7,12 @@ on:
         description: "Loaders"
         required: true
         type: string
-        default: "forge, fabric"
+        default: "forge, neoforge, fabric"
       versions:
         description: "Versions"
         required: true
         type: string
-        default: "1.19.2, 1.19.3, 1.19.4, 1.20.1, 1.20.2, 1.20.4, 1.20.6"
+        default: "1.19.2, 1.19.3, 1.19.4, 1.20.1, 1.20.2, 1.20.4, 1.20.6, 1.21.1, 1.21.3, 1.21.4, 1.21.5, 1.21.8, 1.21.10, 1.21.11, 26.1.2"
 
 jobs:
   prepare:
@@ -21,6 +21,11 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
+      - name: Check out baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 1.19.2
+
       - name: Set matrix
         id: set-matrix
         run: |
@@ -28,9 +33,9 @@ jobs:
           LOADERS="${{ github.event.inputs.loaders }}"
           MATRIX_JSON='{"include":['
           for VERSION in $(echo "$VERSIONS" | sed "s/,/ /g"); do
+            DECLARED_LOADERS="$(./scripts/migrate-version.sh --loaders "$VERSION")"
             for LOADER in $(echo "$LOADERS" | sed "s/,/ /g"); do
-              MINOR=$(echo "$VERSION" | cut -d'.' -f2)
-              if [ "$LOADER" = "neoforge" ] && [ "$MINOR" -lt 21 ]; then
+              if ! echo " $DECLARED_LOADERS " | grep -q " $LOADER "; then
                 continue
               fi
               MATRIX_JSON+="{\"version\":\"$VERSION\",\"loader\":\"$LOADER\"},"
