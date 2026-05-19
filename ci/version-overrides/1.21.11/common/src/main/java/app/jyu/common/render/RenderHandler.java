@@ -6,7 +6,8 @@ import app.jyu.common.SophisticatedPingClientCommon;
 import app.jyu.common.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
@@ -20,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class RenderHandler {
     private static final RenderHandler INSTANCE = new RenderHandler();
-    private static final ResourceLocation PING_BASIC = Constants.id("textures/ping/ping_basic.png");
+    private static final Identifier PING_BASIC = Constants.id("textures/ping/ping_basic.png");
 
     private final Map<String, CopyOnWriteArrayList<PingPoint>> pings = new HashMap<>();
     private final Map<UUID, Vector4f> pingClipCoordinates = new HashMap<>();
@@ -178,7 +179,7 @@ public final class RenderHandler {
         int size = Math.max(8, Math.round(8 * ModConfig.iconSize));
         int x = (int) Math.round(centerX - size / 2.0);
         int y = (int) Math.round(centerY - size / 2.0);
-        guiGraphics.blit(PING_BASIC, x, y, 0, 0, size, size, size, size);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, PING_BASIC, x, y, 0, 0, size, size, size, size);
     }
 
     private void renderInfo(GuiGraphics guiGraphics, int x, int y, PingPoint ping) {
@@ -191,7 +192,7 @@ public final class RenderHandler {
         guiGraphics.drawString(client.font, "%.0f m".formatted(distance), x, y, ModConfig.infoColor, true);
         y += client.font.lineHeight + 2;
 
-        if (!ping.owner().equals(client.player.getGameProfile().getName())) {
+        if (!ping.owner().equals(client.player.getGameProfile().name())) {
             guiGraphics.drawString(client.font, ping.owner(), x, y, ModConfig.infoColor, true);
             y += client.font.lineHeight + 2;
         }

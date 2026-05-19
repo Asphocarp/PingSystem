@@ -191,7 +191,7 @@ public final class RenderHandler {
         guiGraphics.drawString(client.font, "%.0f m".formatted(distance), x, y, ModConfig.infoColor, true);
         y += client.font.lineHeight + 2;
 
-        if (!ping.owner().equals(client.player.getGameProfile().getName())) {
+        if (!ping.owner().equals(client.player.getGameProfile().name())) {
             guiGraphics.drawString(client.font, ping.owner(), x, y, ModConfig.infoColor, true);
             y += client.font.lineHeight + 2;
         }

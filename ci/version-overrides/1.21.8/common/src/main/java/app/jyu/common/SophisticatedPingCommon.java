@@ -60,7 +60,7 @@ public final class SophisticatedPingCommon {
             return;
         }
 
-        for (ServerPlayer teammate : sender.serverLevel().players()) {
+        for (ServerPlayer teammate : (net.minecraft.server.level.ServerLevel) sender.level().players()) {
             if (teammate.getUUID().equals(sender.getUUID())) {
                 continue;
             }
@@ -70,7 +70,7 @@ public final class SophisticatedPingCommon {
 
     private static void multicastPing(ServerPlayer sender, PingPoint point) {
         SoundEvent sound = soundIdxToEvent(point.sound());
-        for (ServerPlayer teammate : sender.serverLevel().players()) {
+        for (ServerPlayer teammate : (net.minecraft.server.level.ServerLevel) sender.level().players()) {
             teammate.level().playSound(
                     null,
                     teammate.blockPosition(),
@@ -97,7 +97,7 @@ public final class SophisticatedPingCommon {
         UUID entityUuid = point.entityUuid();
         long glowEndTime = System.currentTimeMillis() + GLOW_DURATION_MS;
         server.execute(() -> {
-            Entity entity = findEntity(server, sender.serverLevel(), entityUuid);
+            Entity entity = findEntity(server, (net.minecraft.server.level.ServerLevel) sender.level(), entityUuid);
             if (entity == null) {
                 Constants.LOGGER.warn("Received highlight request for {}, but entity was not found", entityUuid);
                 return;

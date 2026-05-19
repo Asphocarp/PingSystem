@@ -5,7 +5,7 @@ import app.jyu.common.render.WorldRenderContext;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -23,7 +23,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
     }
 
     @Override
-    public void registerRenderGui(BiConsumer<GuiGraphics, Float> callback) {
+    public void registerRenderGui(BiConsumer<GuiGraphicsExtractor, Float> callback) {
         HudRenderCallback.EVENT.register((guiGraphics, tickCounter) ->
                 callback.accept(guiGraphics, tickCounter.getGameTimeDeltaPartialTick(true)));
     }

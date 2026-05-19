@@ -7,6 +7,7 @@ import app.jyu.common.platform.IPlatformNetworkService;
 import app.jyu.common.render.RenderHandler;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -31,7 +32,7 @@ public final class SophisticatedPingClientCommon {
             "key.sophisticated_ping.ping",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_C,
-            "category.sophisticated_ping.sophisticated_ping"
+            KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sophisticated_ping"))
     );
 
     private SophisticatedPingClientCommon() {
@@ -73,12 +74,12 @@ public final class SophisticatedPingClientCommon {
     }
 
     private static void handlePingAction(Minecraft client, LocalPlayer player, boolean includeFluids) {
-        Entity cameraEntity = client.cameraEntity;
+        Entity cameraEntity = client.getCameraEntity();
         if (client.level == null || cameraEntity == null) {
             return;
         }
 
-        HitResult hit = raycast(cameraEntity, MAX_REACH, client.getTimer().getGameTimeDeltaPartialTick(true), includeFluids);
+        HitResult hit = raycast(cameraEntity, MAX_REACH, client.getDeltaTracker().getGameTimeDeltaPartialTick(true), includeFluids);
         if (hit == null) {
             return;
         }
@@ -91,7 +92,7 @@ public final class SophisticatedPingClientCommon {
                 BlockState blockState = client.level.getBlockState(blockHit.getBlockPos());
                 Block block = blockState.getBlock();
                 player.displayClientMessage(block.getName(), true);
-                pingToSend = PingPoint.location(hit.getLocation(), player.getGameProfile().getName(), ModConfig.highlightColor, ModConfig.soundIndex);
+                pingToSend = PingPoint.location(hit.getLocation(), player.getGameProfile().name(), ModConfig.highlightColor, ModConfig.soundIndex);
             }
             case ENTITY -> {
                 EntityHitResult entityHit = (EntityHitResult) hit;
@@ -99,7 +100,7 @@ public final class SophisticatedPingClientCommon {
                 player.displayClientMessage(entity.getName(), true);
                 pingToSend = PingPoint.entity(
                         entity.getBoundingBox().getCenter(),
-                        player.getGameProfile().getName(),
+                        player.getGameProfile().name(),
                         ModConfig.highlightColor,
                         ModConfig.soundIndex,
                         entity.getUUID()

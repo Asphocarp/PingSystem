@@ -14,6 +14,13 @@ on:
         type: string
         default: "1.19.2, 1.19.3, 1.19.4, 1.20.1, 1.20.2, 1.20.4, 1.20.6, 1.21.1, 1.21.3, 1.21.4, 1.21.5, 1.21.8, 1.21.10, 1.21.11, 26.1.2"
 
+permissions:
+  contents: write
+
+concurrency:
+  group: platform-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   prepare:
     name: Prepare Matrix
@@ -29,6 +36,7 @@ jobs:
       - name: Set matrix
         id: set-matrix
         run: |
+          set -euo pipefail
           VERSIONS="${{ github.event.inputs.versions }}"
           LOADERS="${{ github.event.inputs.loaders }}"
           MATRIX_JSON='{"include":['
@@ -67,7 +75,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Build loader
-        run: chmod +x ./gradlew && ./gradlew -Dnet.minecraftforge.gradle.check.certs=false :${{ matrix.loader }}:build
+        run: chmod +x ./gradlew && ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${{ matrix.loader }}:build"
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
@@ -77,6 +85,7 @@ jobs:
             ./${{ matrix.loader }}/build/libs
             CHANGELOG.md
             gradle.properties
+          retention-days: 7
 
   publish:
     name: Publish
@@ -114,6 +123,8 @@ jobs:
 
       - name: Prepare publish environment
         run: |
+          set -euo pipefail
+
           get_prop() {
             grep "^$1=" gradle.properties | cut -d'=' -f2- | xargs
           }
@@ -129,6 +140,7 @@ jobs:
           JAR_PATH="./build/libs/${JAR_NAME}.jar"
 
           mkdir -p ./build/libs
+          test -f "./${LOADER}/build/libs/${JAR_NAME}.jar"
           mv "./${LOADER}/build/libs/${JAR_NAME}.jar" "$JAR_PATH"
 
           {

@@ -46,7 +46,7 @@ public final class SophisticatedPingCommon {
 
     public static void onPingPacket(MinecraftServer server, ServerPlayer sender, PingPoint point) {
         if (point == null || point.isCorrupt()) {
-            Constants.LOGGER.warn("Ignoring corrupt ping packet from {}", sender.getGameProfile().getName());
+            Constants.LOGGER.warn("Ignoring corrupt ping packet from {}", sender.getGameProfile().name());
             return;
         }
 
@@ -56,11 +56,11 @@ public final class SophisticatedPingCommon {
 
     public static void onRemovePingPacket(ServerPlayer sender, PingPoint point) {
         if (point == null || point.isCorrupt()) {
-            Constants.LOGGER.warn("Ignoring corrupt remove ping packet from {}", sender.getGameProfile().getName());
+            Constants.LOGGER.warn("Ignoring corrupt remove ping packet from {}", sender.getGameProfile().name());
             return;
         }
 
-        for (ServerPlayer teammate : sender.serverLevel().players()) {
+        for (ServerPlayer teammate : (net.minecraft.server.level.ServerLevel) sender.level().players()) {
             if (teammate.getUUID().equals(sender.getUUID())) {
                 continue;
             }
@@ -70,7 +70,7 @@ public final class SophisticatedPingCommon {
 
     private static void multicastPing(ServerPlayer sender, PingPoint point) {
         SoundEvent sound = soundIdxToEvent(point.sound());
-        for (ServerPlayer teammate : sender.serverLevel().players()) {
+        for (ServerPlayer teammate : (net.minecraft.server.level.ServerLevel) sender.level().players()) {
             teammate.level().playSound(
                     null,
                     teammate.blockPosition(),
@@ -85,7 +85,7 @@ public final class SophisticatedPingCommon {
             }
 
             IPlatformNetworkService.INSTANCE.sendPingToClient(teammate, point);
-            Constants.LOGGER.debug("{} sent ping to {}", sender.getGameProfile().getName(), teammate.getGameProfile().getName());
+            Constants.LOGGER.debug("{} sent ping to {}", sender.getGameProfile().name(), teammate.getGameProfile().name());
         }
     }
 
@@ -97,7 +97,7 @@ public final class SophisticatedPingCommon {
         UUID entityUuid = point.entityUuid();
         long glowEndTime = System.currentTimeMillis() + GLOW_DURATION_MS;
         server.execute(() -> {
-            Entity entity = findEntity(server, sender.serverLevel(), entityUuid);
+            Entity entity = findEntity(server, (net.minecraft.server.level.ServerLevel) sender.level(), entityUuid);
             if (entity == null) {
                 Constants.LOGGER.warn("Received highlight request for {}, but entity was not found", entityUuid);
                 return;

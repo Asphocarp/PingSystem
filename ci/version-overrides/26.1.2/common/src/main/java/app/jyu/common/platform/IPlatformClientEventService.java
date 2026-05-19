@@ -1,7 +1,7 @@
 package app.jyu.common.platform;
 
 import app.jyu.common.render.WorldRenderContext;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.ServiceLoader;
 import java.util.function.BiConsumer;
@@ -16,5 +16,5 @@ public interface IPlatformClientEventService {
 
     void registerRenderWorld(Consumer<WorldRenderContext> callback);
 
-    void registerRenderGui(BiConsumer<GuiGraphics, Float> callback);
+    void registerRenderGui(BiConsumer<GuiGraphicsExtractor, Float> callback);
 }
