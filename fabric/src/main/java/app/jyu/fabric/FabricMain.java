@@ -11,7 +11,7 @@ public final class FabricMain implements ModInitializer {
         FabricPayloads.register();
 
         ServerPlayNetworking.registerGlobalReceiver(FabricPayloads.PingC2S.TYPE, (payload, context) ->
-                SophisticatedPingCommon.onPingPacket(context.player().getServer(), context.player(), payload.point()));
+                SophisticatedPingCommon.onPingPacket(context.server(), context.player(), payload.point()));
 
         ServerPlayNetworking.registerGlobalReceiver(FabricPayloads.RemovePingC2S.TYPE, (payload, context) ->
                 SophisticatedPingCommon.onRemovePingPacket(context.player(), payload.point()));

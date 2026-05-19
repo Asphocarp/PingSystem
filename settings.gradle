@@ -10,6 +10,7 @@ pluginManagement {
                 }
             }
             filter {
+                includeGroup("net.fabricmc.unpick")
                 includeGroup("net.fabricmc")
                 includeGroup("fabric-loom")
             }
@@ -47,3 +48,4 @@ rootProject.name = "Sophisticated_Ping"
 include("common")
 include("fabric")
 include("forge")
+include("neoforge")

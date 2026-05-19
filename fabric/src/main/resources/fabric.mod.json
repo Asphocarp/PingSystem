@@ -24,9 +24,6 @@
     ],
     "client": [
       "app.jyu.fabric.FabricClient"
-    ],
-    "modmenu": [
-      "app.jyu.fabric.integration.ModMenuIntegration"
     ]
   },
   "mixins": [
@@ -41,9 +38,5 @@
     "fabric-api": "*",
     "minecraft": "${fabric_compatible_range}",
     "java": ">=${java_version}"
-  },
-  "recommends": {
-    "modmenu": "*",
-    "cloth-config": "*"
   }
 }
