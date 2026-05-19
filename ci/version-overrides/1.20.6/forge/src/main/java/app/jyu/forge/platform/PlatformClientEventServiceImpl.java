@@ -2,8 +2,9 @@ package app.jyu.forge.platform;
 
 import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -41,14 +42,16 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
         @SubscribeEvent
         public void onRenderWorld(RenderLevelStageEvent event) {
             if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
-                callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
+                PoseStack poseStack = new PoseStack();
+                poseStack.last().pose().set(event.getPoseStack());
+                callback.accept(WorldRenderContext.of(poseStack, event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
             }
         }
     }
 
     private record RenderGuiHandler(BiConsumer<GuiGraphics, Float> callback) {
         @SubscribeEvent
-        public void onRenderGui(RenderGuiOverlayEvent.Post event) {
+        public void onRenderGui(CustomizeGuiOverlayEvent.Chat event) {
             callback.accept(event.getGuiGraphics(), event.getPartialTick());
         }
     }
