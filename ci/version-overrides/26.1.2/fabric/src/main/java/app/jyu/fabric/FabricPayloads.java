@@ -17,10 +17,10 @@ public final class FabricPayloads {
     }
 
     static void register() {
-        PayloadTypeRegistry.playC2S().register(PingC2S.TYPE, PING_C2S_CODEC);
-        PayloadTypeRegistry.playC2S().register(RemovePingC2S.TYPE, REMOVE_PING_C2S_CODEC);
-        PayloadTypeRegistry.playS2C().register(PingS2C.TYPE, PING_S2C_CODEC);
-        PayloadTypeRegistry.playS2C().register(RemovePingS2C.TYPE, REMOVE_PING_S2C_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(PingC2S.TYPE, PING_C2S_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(RemovePingC2S.TYPE, REMOVE_PING_C2S_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(PingS2C.TYPE, PING_S2C_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(RemovePingS2C.TYPE, REMOVE_PING_S2C_CODEC);
     }
 
     public record PingC2S(PingPoint point) implements CustomPacketPayload {

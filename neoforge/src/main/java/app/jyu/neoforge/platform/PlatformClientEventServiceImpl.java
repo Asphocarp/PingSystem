@@ -2,7 +2,7 @@ package app.jyu.neoforge.platform;
 
 import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
@@ -19,11 +19,11 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 
     @Override
     public void registerRenderWorld(Consumer<WorldRenderContext> callback) {
-        // NeoForge 1.21.10+ exposes CameraRenderState instead of Camera here.
+        // NeoForge 26.x exposes CameraRenderState instead of Camera here.
     }
 
     @Override
-    public void registerRenderGui(BiConsumer<GuiGraphics, Float> callback) {
+    public void registerRenderGui(BiConsumer<GuiGraphicsExtractor, Float> callback) {
         NeoForge.EVENT_BUS.register(new RenderGuiHandler(callback));
     }
 
@@ -34,7 +34,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
         }
     }
 
-    private record RenderGuiHandler(BiConsumer<GuiGraphics, Float> callback) {
+    private record RenderGuiHandler(BiConsumer<GuiGraphicsExtractor, Float> callback) {
         @SubscribeEvent
         public void onRenderGui(RenderGuiEvent.Post event) {
             callback.accept(event.getGuiGraphics(), event.getPartialTick().getGameTimeDeltaPartialTick(true));

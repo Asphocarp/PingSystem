@@ -86,18 +86,18 @@ public final class SophisticatedPingClientCommon {
 
         PingPoint pingToSend = null;
         switch (hit.getType()) {
-            case MISS -> player.displayClientMessage(Component.literal("Too far"), true);
+            case MISS -> player.sendOverlayMessage(Component.literal("Too far"));
             case BLOCK -> {
                 BlockHitResult blockHit = (BlockHitResult) hit;
                 BlockState blockState = client.level.getBlockState(blockHit.getBlockPos());
                 Block block = blockState.getBlock();
-                player.displayClientMessage(block.getName(), true);
+                player.sendOverlayMessage(block.getName());
                 pingToSend = PingPoint.location(hit.getLocation(), player.getGameProfile().name(), ModConfig.highlightColor, ModConfig.soundIndex);
             }
             case ENTITY -> {
                 EntityHitResult entityHit = (EntityHitResult) hit;
                 Entity entity = entityHit.getEntity();
-                player.displayClientMessage(entity.getName(), true);
+                player.sendOverlayMessage(entity.getName());
                 pingToSend = PingPoint.entity(
                         entity.getBoundingBox().getCenter(),
                         player.getGameProfile().name(),

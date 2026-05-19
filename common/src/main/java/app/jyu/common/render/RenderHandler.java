@@ -5,7 +5,7 @@ import app.jyu.common.PingPoint;
 import app.jyu.common.SophisticatedPingClientCommon;
 import app.jyu.common.config.ModConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -79,7 +79,7 @@ public final class RenderHandler {
         calculatePingScreenCoordinates(context);
     }
 
-    public void onRenderGui(GuiGraphics guiGraphics, float tickDelta) {
+    public void onRenderGui(GuiGraphicsExtractor guiGraphics, float tickDelta) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null || client.options.hideGui) {
             return;
@@ -175,29 +175,29 @@ public final class RenderHandler {
         return ping.pos();
     }
 
-    private void renderIcon(GuiGraphics guiGraphics, double centerX, double centerY) {
+    private void renderIcon(GuiGraphicsExtractor guiGraphics, double centerX, double centerY) {
         int size = Math.max(8, Math.round(8 * ModConfig.iconSize));
         int x = (int) Math.round(centerX - size / 2.0);
         int y = (int) Math.round(centerY - size / 2.0);
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, PING_BASIC, x, y, 0, 0, size, size, size, size);
     }
 
-    private void renderInfo(GuiGraphics guiGraphics, int x, int y, PingPoint ping) {
+    private void renderInfo(GuiGraphicsExtractor guiGraphics, int x, int y, PingPoint ping) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) {
             return;
         }
 
         double distance = client.player.position().distanceTo(ping.pos());
-        guiGraphics.drawString(client.font, "%.0f m".formatted(distance), x, y, ModConfig.infoColor, true);
+        guiGraphics.text(client.font, "%.0f m".formatted(distance), x, y, ModConfig.infoColor, true);
         y += client.font.lineHeight + 2;
 
         if (!ping.owner().equals(client.player.getGameProfile().name())) {
-            guiGraphics.drawString(client.font, ping.owner(), x, y, ModConfig.infoColor, true);
+            guiGraphics.text(client.font, ping.owner(), x, y, ModConfig.infoColor, true);
             y += client.font.lineHeight + 2;
         }
 
-        guiGraphics.drawString(client.font, "Cancel (" + humanReadableHotkey() + ")", x, y, 0xFFFFFFFF, true);
+        guiGraphics.text(client.font, "Cancel (" + humanReadableHotkey() + ")", x, y, 0xFFFFFFFF, true);
     }
 
     private static String humanReadableHotkey() {
