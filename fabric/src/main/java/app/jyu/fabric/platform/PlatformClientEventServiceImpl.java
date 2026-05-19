@@ -17,7 +17,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 
     @Override
     public void registerRenderWorld(Consumer<WorldRenderContext> callback) {
-        // Fabric API 1.21.10 removed the world-render callback used by older branches.
+        // Fabric API 1.21.10+ removed the world-render callback used by older branches.
     }
 
     @Override

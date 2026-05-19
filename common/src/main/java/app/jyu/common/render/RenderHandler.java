@@ -7,7 +7,7 @@ import app.jyu.common.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
@@ -21,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class RenderHandler {
     private static final RenderHandler INSTANCE = new RenderHandler();
-    private static final ResourceLocation PING_BASIC = Constants.id("textures/ping/ping_basic.png");
+    private static final Identifier PING_BASIC = Constants.id("textures/ping/ping_basic.png");
 
     private final Map<String, CopyOnWriteArrayList<PingPoint>> pings = new HashMap<>();
     private final Map<UUID, Vector4f> pingClipCoordinates = new HashMap<>();
@@ -145,7 +145,7 @@ public final class RenderHandler {
         }
 
         pingClipCoordinates.clear();
-        Vec3 cameraPos = context.camera.getPosition();
+        Vec3 cameraPos = context.camera.position();
         Matrix4f projectionMatrix = new Matrix4f(context.projectionMatrix);
 
         for (CopyOnWriteArrayList<PingPoint> pingList : pings.values()) {

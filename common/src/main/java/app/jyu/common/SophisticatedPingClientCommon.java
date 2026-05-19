@@ -7,7 +7,7 @@ import app.jyu.common.platform.IPlatformNetworkService;
 import app.jyu.common.render.RenderHandler;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -32,7 +32,7 @@ public final class SophisticatedPingClientCommon {
             "key.sophisticated_ping.ping",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_C,
-            KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sophisticated_ping"))
+            KeyMapping.Category.register(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "sophisticated_ping"))
     );
 
     private SophisticatedPingClientCommon() {

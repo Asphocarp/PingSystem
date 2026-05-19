@@ -145,7 +145,7 @@ public final class RenderHandler {
         }
 
         pingClipCoordinates.clear();
-        Vec3 cameraPos = context.camera.getPosition();
+        Vec3 cameraPos = context.camera.position();
         Matrix4f projectionMatrix = new Matrix4f(context.projectionMatrix);
 
         for (CopyOnWriteArrayList<PingPoint> pingList : pings.values()) {
