@@ -89,6 +89,7 @@ Manual inputs:
 ```text
 versions
 loaders
+publish_curseforge
 ```
 
 Behavior:
@@ -116,7 +117,7 @@ v${mod_version}-${loader}-${minecraft_version}
 Example:
 
 ```text
-v1.2.1-fabric-1.19.2
+v1.2.2-fabric-1.19.2
 ```
 
 The workflow deletes any existing GitHub release/tag for a rerun before republishing:
@@ -133,14 +134,16 @@ Fabric releases declare Fabric API as a required dependency. Forge/NeoForge rele
 
 ## CurseForge
 
-`publish.gradle` supports CurseForge only if both are present:
+CurseForge publishing is wired through the same `me.modmuss50.mod-publish-plugin` release path as GitHub and Modrinth. The platform deploy workflow passes:
 
 ```text
 CURSEFORGE_TOKEN
 CURSEFORGE_PROJECT
 ```
 
-If `CURSEFORGE_PROJECT` is absent, CurseForge publishing is skipped. This keeps CurseForge optional.
+`CURSEFORGE_TOKEN` must be a GitHub Actions secret. `CURSEFORGE_PROJECT` may be either a repository variable or a secret.
+
+CurseForge requires a numeric project ID for uploads. The upload API posts files to `/api/projects/{projectId}/upload-file`; project creation is done in the CurseForge Authors dashboard, and the project ID is shown in that project URL/dashboard. If `publish_curseforge` is true and either value is missing, the workflow fails before running `gradle publishMods` so skipped CurseForge releases are not mistaken for successful publishing.
 
 ## Release Artifacts
 
@@ -164,10 +167,16 @@ Expected GitHub Actions secrets:
 
 ```text
 MODRINTH_TOKEN
-CURSEFORGE_TOKEN optional
+CURSEFORGE_TOKEN
 ```
 
 `GITHUB_TOKEN` is provided by GitHub Actions.
+
+Expected repository variable or secret after the CurseForge project exists:
+
+```text
+CURSEFORGE_PROJECT
+```
 
 Never commit tokens or local `temp/secrets.md`.
 
@@ -188,4 +197,3 @@ After publishing:
 2. confirm Modrinth files exist;
 3. confirm loader/version metadata is correct;
 4. test at least one Fabric, Forge, and NeoForge jar manually.
-

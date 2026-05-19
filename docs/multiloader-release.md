@@ -104,7 +104,7 @@ v${mod_version}-${loader}-${minecraft_version}
 Example:
 
 ```text
-v1.2.1-fabric-1.19.2
+v1.2.2-fabric-1.19.2
 ```
 
 ## Publishing
@@ -122,4 +122,4 @@ The workflow:
 3. uploads artifacts;
 4. publishes serially through `publish.gradle`.
 
-GitHub and Modrinth are supported. CurseForge is optional and only runs when its project ID and token are configured.
+GitHub, Modrinth, and CurseForge are supported. CurseForge requires an existing CurseForge project ID configured as `CURSEFORGE_PROJECT`.

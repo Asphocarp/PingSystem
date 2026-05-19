@@ -13,6 +13,11 @@ on:
         required: true
         type: string
         default: "1.19.2, 1.19.3, 1.19.4, 1.20.1, 1.20.2, 1.20.4, 1.20.6, 1.21.1, 1.21.3, 1.21.4, 1.21.5, 1.21.8, 1.21.10, 1.21.11, 26.1.2"
+      publish_curseforge:
+        description: "Publish to CurseForge"
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -161,9 +166,26 @@ jobs:
 
       - name: Publish to platforms
         run: |
+          set -euo pipefail
+          if [ "${PUBLISH_CURSEFORGE}" = "true" ]; then
+            if [ -z "${CURSEFORGE_TOKEN}" ]; then
+              echo "::error::CURSEFORGE_TOKEN is required when publish_curseforge is true."
+              exit 1
+            fi
+            if [ -z "${CURSEFORGE_PROJECT}" ]; then
+              echo "::error::CURSEFORGE_PROJECT is required when publish_curseforge is true. Create the CurseForge project manually, then save its numeric project ID as a repository variable or secret named CURSEFORGE_PROJECT."
+              exit 1
+            fi
+          else
+            export CURSEFORGE_TOKEN=""
+            export CURSEFORGE_PROJECT=""
+          fi
           echo "rootProject.buildFileName = 'publish.gradle'" > settings.gradle
           gradle publishMods
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT: RECCOz9u
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          CURSEFORGE_PROJECT: ${{ vars.CURSEFORGE_PROJECT || secrets.CURSEFORGE_PROJECT }}
+          PUBLISH_CURSEFORGE: ${{ inputs.publish_curseforge }}

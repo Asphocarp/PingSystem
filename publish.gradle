@@ -99,3 +99,12 @@ publishMods {
         }
     }
 }
+
+tasks.matching { it.name.startsWith("publishFabric-") }.configureEach {
+    mustRunAfter(tasks.matching { it.name.startsWith("publishNeoForge-") })
+    mustRunAfter(tasks.matching { it.name.startsWith("publishForge-") })
+}
+
+tasks.matching { it.name.startsWith("publishNeoForge-") }.configureEach {
+    mustRunAfter(tasks.matching { it.name.startsWith("publishForge-") })
+}
