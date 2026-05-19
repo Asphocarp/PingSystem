@@ -6,8 +6,8 @@ import app.jyu.common.SophisticatedPingClientCommon;
 import app.jyu.common.config.ModConfig;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
@@ -156,10 +156,7 @@ public final class RenderHandler {
                 context.poseStack.pushPose();
                 context.poseStack.translate(targetPos.x - cameraPos.x, targetPos.y - cameraPos.y, targetPos.z - cameraPos.z);
                 Matrix4f modelView = context.poseStack.last().pose();
-                Matrix4f transform = projectionMatrix.copy();
-                transform.multiply(modelView);
-                Vector4f clipPos = new Vector4f(0, 0, 0, 1);
-                clipPos.transform(transform);
+                Vector4f clipPos = new Matrix4f(projectionMatrix).mul(modelView).transform(new Vector4f(0, 0, 0, 1));
                 pingClipCoordinates.put(ping.id(), clipPos);
                 context.poseStack.popPose();
             }
