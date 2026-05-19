@@ -50,6 +50,8 @@ jobs:
           START_AFTER="${{ inputs.start_after }}"
           SHOULD_RUN="true"
 
+          git fetch origin "+refs/heads/*:refs/remotes/origin/*"
+
           if [ -n "${START_AFTER}" ]; then
             SHOULD_RUN="false"
           fi
@@ -65,7 +67,7 @@ jobs:
               if [ "${VERSION}" = "${START_AFTER}" ]; then
                 SHOULD_RUN="true"
               fi
-              PREVIOUS_BRANCH="${VERSION}"
+              PREVIOUS_BRANCH="origin/${VERSION}"
               continue
             fi
 
