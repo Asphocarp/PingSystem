@@ -37,10 +37,8 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 
     private record RenderWorldHandler(Consumer<WorldRenderContext> callback) {
         @SubscribeEvent
-        public void onRenderWorld(RenderLevelStageEvent event) {
-            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
-                callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick().getGameTimeDeltaPartialTick(true), event.getCamera()));
-            }
+        public void onRenderWorld(RenderLevelStageEvent.AfterWeather event) {
+            callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getModelViewMatrix(), event.getPartialTick().getGameTimeDeltaPartialTick(true), event.getCamera()));
         }
     }
 

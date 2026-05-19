@@ -6,7 +6,7 @@ import app.jyu.common.SophisticatedPingClientCommon;
 import app.jyu.common.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -179,7 +179,7 @@ public final class RenderHandler {
         int size = Math.max(8, Math.round(8 * ModConfig.iconSize));
         int x = (int) Math.round(centerX - size / 2.0);
         int y = (int) Math.round(centerY - size / 2.0);
-        guiGraphics.blit(RenderType::guiTextured, PING_BASIC, x, y, 0, 0, size, size, size, size);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, PING_BASIC, x, y, 0, 0, size, size, size, size);
     }
 
     private void renderInfo(GuiGraphics guiGraphics, int x, int y, PingPoint ping) {

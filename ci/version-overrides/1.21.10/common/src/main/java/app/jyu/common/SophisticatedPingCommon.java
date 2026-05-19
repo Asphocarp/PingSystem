@@ -60,7 +60,7 @@ public final class SophisticatedPingCommon {
             return;
         }
 
-        for (ServerPlayer teammate : (net.minecraft.server.level.ServerLevel) sender.level().players()) {
+        for (ServerPlayer teammate : ((net.minecraft.server.level.ServerLevel) sender.level()).players()) {
             if (teammate.getUUID().equals(sender.getUUID())) {
                 continue;
             }
@@ -70,7 +70,7 @@ public final class SophisticatedPingCommon {
 
     private static void multicastPing(ServerPlayer sender, PingPoint point) {
         SoundEvent sound = soundIdxToEvent(point.sound());
-        for (ServerPlayer teammate : (net.minecraft.server.level.ServerLevel) sender.level().players()) {
+        for (ServerPlayer teammate : ((net.minecraft.server.level.ServerLevel) sender.level()).players()) {
             teammate.level().playSound(
                     null,
                     teammate.blockPosition(),
