@@ -38,6 +38,16 @@
 	"unit.sophisticated_ping.meters": "%sm",
 	"unit.sophisticated_ping.percent": "%s%%",
 
+	"ping_wheel.sophisticated_ping.center": "PING",
+	"ping_type.sophisticated_ping.location": "Location",
+	"ping_type.sophisticated_ping.attack": "Attack",
+	"ping_type.sophisticated_ping.danger": "Danger",
+	"ping_type.sophisticated_ping.help": "Help",
+	"ping_type.sophisticated_ping.gather": "Gather",
+	"ping_type.sophisticated_ping.defend": "Defend",
+	"ping_type.sophisticated_ping.loot": "Loot",
+	"ping_type.sophisticated_ping.confirm": "Confirm",
+
 	"command.sophisticated_ping.config.description": "open configuration interface",
 	"command.sophisticated_ping.channel.get.description": "get your current channel",
 	"command.sophisticated_ping.channel.set.description": "set your channel, use \"\" for default channel",

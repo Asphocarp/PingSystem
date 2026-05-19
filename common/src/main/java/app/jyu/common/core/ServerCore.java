@@ -80,7 +80,7 @@ public class ServerCore {
 		final var playerList = server.getPlayerList();
 
 		if (!SERVER_CONFIG.isPlayerTrackingEnabled() && targetEntityIsPlayer(packet, playerList)) {
-			packetOut = new PingLocationS2CPacket(packet.channel(), packet.pos(), null, packet.sequence(), packet.dimension(), player.getUUID());
+			packetOut = new PingLocationS2CPacket(packet.channel(), packet.pos(), null, packet.sequence(), packet.dimension(), player.getUUID(), packet.type());
 		} else {
 			packetOut = PingLocationS2CPacket.fromClientPacket(packet, player.getUUID());
 		}

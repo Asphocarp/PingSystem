@@ -7,6 +7,7 @@ import app.jyu.common.config.ClientConfig;
 import app.jyu.common.core.GameContext;
 import app.jyu.common.core.PingController;
 import app.jyu.common.core.PingManager;
+import app.jyu.common.core.PingWheelController;
 import app.jyu.common.network.PingLocationS2CPacket;
 import app.jyu.common.network.UpdateChannelC2SPacket;
 import app.jyu.common.platform.IPlatformClientEventService;
@@ -56,11 +57,10 @@ public class CommonClient {
 
 		LegacyMigrationHandler.onTick();
 
-		if (InputUtils.consumePingHotkey()) {
-			PingController.queuePingAction();
-		}
+		PingWheelController.tick();
 
 		if (KEY_BINDING_SETTINGS.consumeClick()) {
+			PingWheelController.cancel();
 			Game.setScreen(new SettingsScreen());
 		}
 	}

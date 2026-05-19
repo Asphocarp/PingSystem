@@ -2,7 +2,6 @@ package app.jyu.common.render;
 
 import net.minecraft.world.phys.Vec2;
 import app.jyu.common.config.ClientConfig;
-import app.jyu.common.config.TeamColorMode;
 import app.jyu.common.core.PingView;
 import app.jyu.common.math.MathUtils;
 
@@ -12,8 +11,6 @@ public class DirectionIndicatorRenderer {
 	private DirectionIndicatorRenderer() {}
 
 	private static final ClientConfig CLIENT_CONFIG = ClientConfig.HANDLER.getConfig();
-	private static final int WHITE = 0xFFFFFFFF;
-
 	private static Vec2 screenSize;
 	private static Vec2 safeZoneTopLeft;
 	private static Vec2 safeZoneBottomRight;
@@ -60,8 +57,7 @@ public class DirectionIndicatorRenderer {
 		{
 			m.translate(edgePosition.x, edgePosition.y, 0f);
 
-			final var useTeamColor = CLIENT_CONFIG.getTeamColorMode() == TeamColorMode.FULL || CLIENT_CONFIG.getTeamColorMode() == TeamColorMode.PING_ONLY;
-			final var pingColor = useTeamColor ? ping.getTeamColor() : WHITE;
+			final var pingColor = ping.type.getColor();
 
 			m.pushPose();
 			{

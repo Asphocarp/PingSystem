@@ -28,4 +28,18 @@ public class InputUtils {
 
 		return isMiss && Game.options.keyPickItem.consumeClick();
 	}
+
+	public static boolean isPingKeyDown() {
+		if (!KEY_BINDING_PING.same(Game.options.keyPickItem)) {
+			return KEY_BINDING_PING.isDown();
+		}
+
+		if (Game.player == null || Game.hitResult == null) {
+			return false;
+		}
+
+		var isMiss = Game.hitResult.getType() == HitResult.Type.MISS || (!Game.player.isCreative() && Game.hitResult.getType() == HitResult.Type.ENTITY);
+
+		return isMiss && Game.options.keyPickItem.isDown();
+	}
 }

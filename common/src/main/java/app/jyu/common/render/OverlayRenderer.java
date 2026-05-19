@@ -13,6 +13,8 @@ public class OverlayRenderer {
 	private static final ClientConfig CLIENT_CONFIG = ClientConfig.HANDLER.getConfig();
 
 	public static void draw(PoseStack m, float tickDelta) {
+		PingWheelRenderer.draw(m);
+
 		final var pingRepo = PingManager.PING_REPO;
 
 		if (Game.player == null || pingRepo.isEmpty()) {

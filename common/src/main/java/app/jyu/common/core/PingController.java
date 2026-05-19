@@ -22,15 +22,18 @@ public class PingController {
 
 	@Getter
 	private static boolean pingQueued = false;
+	private static PingType queuedType = PingType.LOCATION;
 	private static int pingSequence = 0;
 	private static int lastPing = 0;
 
 	public static void revokePingAction() {
 		pingQueued = false;
+		queuedType = PingType.LOCATION;
 	}
 
-	public static void queuePingAction() {
+	public static void queuePingAction(PingType type) {
 		pingQueued = true;
+		queuedType = type == null ? PingType.LOCATION : type;
 	}
 
 	public static void pollPingAction(float tickDelta) {
@@ -46,10 +49,11 @@ public class PingController {
 
 		lastPing = time;
 		pingQueued = false;
-		performPingAction(tickDelta);
+		performPingAction(queuedType, tickDelta);
+		queuedType = PingType.LOCATION;
 	}
 
-	private static void performPingAction(float tickDelta) {
+	private static void performPingAction(PingType type, float tickDelta) {
 		var cameraEntity = Game.cameraEntity;
 
 		if (cameraEntity == null || Game.level == null) {
@@ -66,7 +70,7 @@ public class PingController {
 		if (hitResult == null || hitResult.getType() == HitResult.Type.MISS) {
 			if (ModContext.HasDistantHorizons) {
 				Raycast.traceDistantAsync(cameraDirection, tickDelta, (distantHitResult) -> {
-					IPlatformNetworkService.INSTANCE.sendToServer(new PingLocationC2SPacket(CLIENT_CONFIG.getChannel(), distantHitResult.getLocation(), null, pingSequence, GameContext.getDimension()));
+					IPlatformNetworkService.INSTANCE.sendToServer(new PingLocationC2SPacket(CLIENT_CONFIG.getChannel(), distantHitResult.getLocation(), null, pingSequence, GameContext.getDimension(), type));
 				});
 			}
 
@@ -79,6 +83,6 @@ public class PingController {
 			uuid = ((EntityHitResult)hitResult).getEntity().getUUID();
 		}
 
-		IPlatformNetworkService.INSTANCE.sendToServer(new PingLocationC2SPacket(CLIENT_CONFIG.getChannel(), hitResult.getLocation(), uuid, pingSequence, GameContext.getDimension()));
+		IPlatformNetworkService.INSTANCE.sendToServer(new PingLocationC2SPacket(CLIENT_CONFIG.getChannel(), hitResult.getLocation(), uuid, pingSequence, GameContext.getDimension(), type));
 	}
 }

@@ -40,17 +40,18 @@ public class PingView extends PingData {
 	@Getter
 	private float scale;
 
-	private PingView(Vec3 pos, @Nullable UUID entityId, @Nullable UUID authorId, int sequence, int dimension) {
-		super(pos, entityId, authorId, sequence, dimension);
+	private PingView(Vec3 pos, @Nullable UUID entityId, @Nullable UUID authorId, int sequence, int dimension, PingType type) {
+		super(pos, entityId, authorId, sequence, dimension, type);
 	}
 
-	public static PingView of(Vec3 pos, @Nullable UUID entityId, @Nullable UUID authorId, int sequence, int dimension) {
+	public static PingView of(Vec3 pos, @Nullable UUID entityId, @Nullable UUID authorId, int sequence, int dimension, PingType type) {
 		return new PingView(
 			pos,
 			entityId,
 			authorId,
 			sequence,
-			dimension
+			dimension,
+			type
 		);
 	}
 
@@ -60,7 +61,8 @@ public class PingView extends PingData {
 			packet.entity(),
 			packet.author(),
 			packet.sequence(),
-			packet.dimension()
+			packet.dimension(),
+			packet.type()
 		);
 	}
 

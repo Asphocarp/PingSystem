@@ -37,6 +37,9 @@ public class ClientConfig implements IConfig {
 	int safeZoneRight = 5;
 	int safeZoneTop = 5;
 	int safeZoneBottom = 60;
+	int wheelHoldMillis = 180;
+	int wheelDeadZone = 12;
+	double wheelMouseSensitivity = 1.0;
 
 	public static final int TPS = 20;
 	public static final int MAX_PING_DURATION = 60;
@@ -75,6 +78,10 @@ public class ClientConfig implements IConfig {
 				entry.setValue(channel.substring(0, MAX_CHANNEL_LENGTH));
 			}
 		}
+
+		wheelHoldMillis = Math.max(0, wheelHoldMillis);
+		wheelDeadZone = Math.max(0, wheelDeadZone);
+		wheelMouseSensitivity = Math.max(0.1, wheelMouseSensitivity);
 	}
 
 	@Override
