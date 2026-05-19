@@ -34,7 +34,7 @@ plugins {
     id "org.gradle.toolchains.foojay-resolver-convention" version "1.0.0"
 }
 
-rootProject.name = "Sophisticated_Ping"
+rootProject.name = "sophisticated_ping"
 include("common")
 include("fabric")
 include("neoforge")

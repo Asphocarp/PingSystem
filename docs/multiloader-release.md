@@ -32,7 +32,7 @@ The `1.20.1` branch builds Fabric and Forge. Do not add NeoForge to this branch.
 Artifacts are named:
 
 ```text
-Sophisticated_Ping-${mod_version}-${loader}-${minecraft_version}.jar
+sophisticated_ping-${mod_version}-${loader}-${minecraft_version}.jar
 ```
 
 Tags are named:
