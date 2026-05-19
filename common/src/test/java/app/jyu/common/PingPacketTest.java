@@ -108,6 +108,28 @@ class PingPacketTest {
 	}
 
 	@Test
+	void wheelCursorPositionConvertsFromWindowToGuiCoordinates() {
+		var mouseX = PingWheelController.toGuiCoordinate(740, 854, 854);
+		var mouseY = PingWheelController.toGuiCoordinate(240, 480, 480);
+
+		assertEquals(PingType.LOCATION, PingWheelController.selectType(mouseX, mouseY, 854, 480, 12));
+	}
+
+	@Test
+	void wheelCursorPositionMustUseMouseCoordinateSpaceNotFramebufferSize() {
+		var cursorX = 740;
+		var screenWidth = 854;
+		var framebufferWidth = 1708;
+		var guiWidth = 854;
+
+		var framebufferScaledX = PingWheelController.toGuiCoordinate(cursorX, framebufferWidth, guiWidth);
+		var screenScaledX = PingWheelController.toGuiCoordinate(cursorX, screenWidth, guiWidth);
+
+		assertEquals(PingType.GATHER, PingWheelController.selectType(framebufferScaledX, 240, guiWidth, 480, 12));
+		assertEquals(PingType.LOCATION, PingWheelController.selectType(screenScaledX, 240, guiWidth, 480, 12));
+	}
+
+	@Test
 	void holdThresholdControlsWheelOpenTiming() {
 		assertFalse(PingWheelController.isHoldElapsed(179, 180));
 		assertTrue(PingWheelController.isHoldElapsed(180, 180));

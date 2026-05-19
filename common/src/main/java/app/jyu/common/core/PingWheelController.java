@@ -96,12 +96,19 @@ public class PingWheelController {
 		return PingType.fromRadialSlot(slot);
 	}
 
+	public static double toGuiCoordinate(double cursorPosition, int mouseCoordinateSpaceSize, int guiScaledSize) {
+		if (mouseCoordinateSpaceSize <= 0) {
+			return cursorPosition;
+		}
+
+		return cursorPosition * guiScaledSize / mouseCoordinateSpaceSize;
+	}
+
 	private static @Nullable PingType selectTypeFromMouse() {
 		final var config = config();
 		final var window = Game.getWindow();
-		final var scale = window.getGuiScale();
-		final var mouseX = Game.mouseHandler.xpos() / scale;
-		final var mouseY = Game.mouseHandler.ypos() / scale;
+		final var mouseX = toGuiCoordinate(Game.mouseHandler.xpos(), window.getScreenWidth(), window.getGuiScaledWidth());
+		final var mouseY = toGuiCoordinate(Game.mouseHandler.ypos(), window.getScreenHeight(), window.getGuiScaledHeight());
 
 		return selectType(
 			mouseX,

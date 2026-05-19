@@ -4,9 +4,7 @@ This document describes the user-visible features of Sophisticated Ping as imple
 
 ## Summary
 
-Sophisticated Ping lets players mark locations and entities in the world with multiplayer-visible pings. The current implementation is modeled after Ping Wheel's direct ping UX: press the ping key to mark the target under the crosshair, then the mod renders a HUD marker with distance, optional player information, item icons, team colors, and off-screen direction indicators.
-
-The mod does **not** currently implement a radial hold-and-select ping-type menu. If that feature is added later, it should be documented as a separate interaction model.
+Sophisticated Ping lets players mark locations and entities in the world with multiplayer-visible pings. The current implementation is modeled after Ping Wheel's direct ping UX: tap the ping key to mark the target under the crosshair, or hold the key to choose a ping type from a radial wheel. The mod then renders a HUD marker with distance, optional player information, item icons, team colors, and off-screen direction indicators.
 
 ## Default Controls
 
@@ -33,6 +31,23 @@ Behavior:
 - clients render the ping at that world position.
 
 Location pings are static. They remain at the original world coordinate until replaced or expired.
+
+## Radial Ping Wheel
+
+Hold the ping key to open the radial wheel. The wheel releases Minecraft's mouse grab while active so the cursor is visible and camera rotation stops. Cursor selection uses Minecraft's screen-coordinate mouse space before converting to GUI coordinates; this matters on HiDPI displays where framebuffer size and cursor-coordinate size differ.
+
+The wheel supports:
+
+- `Location`
+- `Attack`
+- `Danger`
+- `Help`
+- `Gather`
+- `Defend`
+- `Loot`
+- `Confirm`
+
+If the cursor stays inside the dead zone, no typed sector is selected. Releasing the key without a selected type sends the default `Location` ping.
 
 ## Entity Pings
 
@@ -445,4 +460,3 @@ These are not currently implemented features:
 - server-authoritative ping removal packets;
 - non-vanilla team integrations such as FTB Teams or Simple Voice Chat groups;
 - Bukkit/plugin interoperability in this repository.
-
