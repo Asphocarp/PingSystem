@@ -15,9 +15,24 @@ neoForge {
     }
 }
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "RyanHCode Maven"
+                url = "https://maven.ryanhcode.dev/releases"
+            }
+        }
+        filter {
+            includeGroup "dev.ryanhcode.sable-companion"
+        }
+    }
+}
+
 dependencies {
     compileOnly group: "org.spongepowered", name: "mixin", version: "0.8.5"
     implementation group: "com.google.code.findbugs", name: "jsr305", version: "3.0.2"
+    compileOnly "dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:${sable_version}"
 }
 
 configurations.testCompileClasspath.extendsFrom(configurations.compileClasspath)

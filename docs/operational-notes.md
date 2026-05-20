@@ -56,6 +56,27 @@ Rules:
 - never require DH at runtime;
 - test both with and without DH installed.
 
+## Optional Team Integrations
+
+Simple Voice Chat and FTB Teams are compile-only integrations. Runtime code must check `ModContext.HasVoiceChat` or `ModContext.HasFTBTeams` before touching integration APIs.
+
+Rules:
+
+- keep Simple Voice Chat API access in `VoiceChatIntegration` and `VoiceChatWrapper`;
+- keep FTB Teams API access in `FTBTeamsWrapper`;
+- preserve context priority: voice group, FTB team, vanilla team;
+- test startup without either optional mod installed.
+
+## Sable
+
+Sable support is version-limited. The only current Sable source override is for `1.21.1`, where Sable Companion projects sub-level block hit positions into global world space before ping packets are sent.
+
+Rules:
+
+- do not add Sable classes to baseline common sources;
+- add Sable dependencies only in explicit version overrides with known supported coordinates;
+- smoke test both with and without Sable installed on any branch that enables the override.
+
 ## ServiceLoader Failures
 
 Symptoms:
@@ -163,4 +184,3 @@ Avoid committing:
 - `.DS_Store`.
 
 The existing repository may contain historical generated/local files; do not expand that footprint.
-

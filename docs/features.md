@@ -144,7 +144,13 @@ Behavior:
 - `PING_ONLY`: apply team color only to the ping icon.
 - `LABELS_ONLY`: apply team color only to labels.
 
-The baseline implementation uses vanilla Minecraft teams for team context and team color.
+Team context resolution uses the first available context in this order:
+
+- Simple Voice Chat group;
+- FTB Teams non-personal team;
+- vanilla Minecraft team.
+
+Team color rendering still comes from vanilla player team color data.
 
 ## Direction Indicators
 
@@ -440,6 +446,16 @@ Behavior:
 
 This feature needs runtime smoke testing whenever the DH API dependency or target Minecraft version changes.
 
+## Sable Sub-level Pings
+
+On the `1.21.1` generated branch, Sophisticated Ping uses Sable Companion when Sable is installed.
+
+Behavior:
+
+- if a block hit is inside a Sable sub-level, the ping position is projected back into global world space before the packet is sent;
+- if Sable is absent, normal block pings are unchanged;
+- Sable classes are only compiled into the explicit `1.21.1` override recipe.
+
 ## Multiplayer Behavior
 
 In multiplayer:
@@ -455,8 +471,6 @@ In multiplayer:
 These are not currently implemented features:
 
 - radial hold-and-select ping-type wheel;
-- multiple semantic ping types such as attack/defend/look/go-here;
 - persistent server-side ping storage;
 - server-authoritative ping removal packets;
-- non-vanilla team integrations such as FTB Teams or Simple Voice Chat groups;
 - Bukkit/plugin interoperability in this repository.

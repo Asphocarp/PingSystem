@@ -149,9 +149,19 @@ fabric, neoforge
 
 Always trust `loaders` in `ci/version-matrix.yml`.
 
+## Optional Integration Overrides
+
+Most optional integrations live in baseline common code and are replayed forward through the matrix:
+
+- Distant Horizons far raycast;
+- Simple Voice Chat team context;
+- FTB Teams team context;
+- Fabric Mod Menu metadata.
+
+Sable is different because the companion API is only enabled in explicit supported version recipes. Keep Sable dependencies and source imports inside version overrides; the current supported override is `ci/version-overrides/1.21.1/`.
+
 ## Current Caveat
 
 The codebase recently migrated away from the old renderer and deleted stale Java override sources. That prevents generated branches from reintroducing old `PingPoint`/`RenderHandler` code, but newer branches still need verified source overrides for the new architecture where Minecraft APIs changed.
 
 Before claiming full matrix support, run the branch regeneration workflow or build each branch locally.
-

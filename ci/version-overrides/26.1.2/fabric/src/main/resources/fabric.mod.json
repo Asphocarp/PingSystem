@@ -24,6 +24,12 @@
     ],
     "client": [
       "app.jyu.fabric.FabricClient"
+    ],
+    "modmenu": [
+      "app.jyu.fabric.integration.ModMenuIntegration"
+    ],
+    "voicechat": [
+      "app.jyu.common.integration.VoiceChatIntegration"
     ]
   },
   "mixins": [

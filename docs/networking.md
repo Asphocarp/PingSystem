@@ -136,8 +136,16 @@ Eligibility:
 - recipients must be on the same explicit channel;
 - default-channel recipients depend on `ChannelMode`;
 - `GLOBAL` allows all default-channel players;
-- `TEAM_ONLY` requires same team/default team context;
+- `TEAM_ONLY` requires same default team context;
 - `DISABLED` rejects default-channel pings.
+
+Default team context is resolved as:
+
+1. Simple Voice Chat group if both players have a group;
+2. FTB Teams non-personal team if both players have a team;
+3. vanilla Minecraft team.
+
+Voice Chat has priority over FTB Teams when both integrations are present.
 
 ## Rate Limiting
 
@@ -175,4 +183,3 @@ Client correction behavior is controlled by:
 ```java
 ClientConfig.correctionPeriod
 ```
-

@@ -98,6 +98,10 @@ Minimum manual smoke test:
 8. Verify pings expire.
 9. Open settings screen and change a value.
 10. Restart and verify config persists.
+11. With Simple Voice Chat installed, verify default-channel pings relay inside a voice group and not outside it.
+12. With FTB Teams installed, verify default-channel pings relay inside a non-personal FTB team and not outside it.
+13. With both Simple Voice Chat and FTB Teams installed, verify voice groups take priority.
+14. On the `1.21.1` generated branch with Sable installed, verify block pings inside sub-levels appear at global positions.
 
 ## Runtime Acceptance Checklist
 
@@ -107,6 +111,7 @@ Client:
 - settings screen opens;
 - ping hotkey triggers raycast;
 - Distant Horizons absent does not crash startup;
+- Simple Voice Chat, FTB Teams, and Sable absent do not crash startup;
 - item pings render item icons when enabled;
 - player labels follow `PlayerInfoMode`;
 - direction indicators work for off-screen pings.
@@ -146,4 +151,3 @@ Fabric may warn about locating a render method mapping. Treat warnings seriously
 ### NeoForge Payload Registration
 
 NeoForge custom payload IDs must be unique per direction. Do not register C2S and S2C handlers against the same payload ID.
-
