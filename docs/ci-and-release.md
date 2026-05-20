@@ -84,6 +84,8 @@ Minecraft 1.21.3 and later Forge branches no longer expose the `RenderLevelStage
 
 Minecraft 1.21.8 and later Forge branches use Forge EventBus 7. Do not import `net.minecraftforge.eventbus.api.IEventBus` or the old `net.minecraftforge.eventbus.api.SubscribeEvent` package in those generated sources. The override under `ci/version-overrides/1.21.8/forge/` uses `FMLJavaModLoadingContext` constructor injection, stores the mod `BusGroup`, and registers listeners through per-event `BUS` fields or `getBus(BusGroup)` methods. Forge 58 also moved the `EventNetworkChannel` API to `net.minecraftforge.network` and expects channels to be created with `ChannelBuilder`, so keep the Forge network override with the EventBus 7 override. The same override uses `sender.level().getServer()` instead of `ServerPlayer#getServer()` so it survives the 1.21.10 server-player API cleanup.
 
+Minecraft 1.21.11 renames Mojang's `ResourceLocation` type to `Identifier`. Common, Fabric, NeoForge, and Forge sources that refer to packet IDs, texture IDs, or sound IDs need 1.21.11-specific overrides using `net.minecraft.resources.Identifier`.
+
 ## Platform Deploy
 
 Workflow:

@@ -8,6 +8,7 @@
 - Add the 1.21.1 Forge sound registration override required by private `ResourceLocation` constructors.
 - Add the 1.21.3+ Forge world-render mixin fallback after Forge removed `RenderLevelStageEvent`.
 - Add the 1.21.8+ Forge EventBus 7 and networking overrides required by the `BusGroup` listener API and moved `EventNetworkChannel` API.
+- Add the 1.21.11 Forge identifier rename override after `ResourceLocation` became `Identifier`.
 
 # 1.2.2
 
