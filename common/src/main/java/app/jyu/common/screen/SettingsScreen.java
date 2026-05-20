@@ -14,7 +14,6 @@ import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.OptionsList;
-import net.minecraft.client.gui.components.TooltipAccessor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.MutableComponent;
@@ -73,7 +72,9 @@ public class SettingsScreen extends Screen {
 		this.addWidget(this.channelTextField);
 
 		this.addWidget(this.list);
-		this.addRenderableWidget(new Button(this.width / 2 - 100, this.height - 27, 200, 20, CommonComponents.GUI_DONE, button -> onClose()));
+		this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
+			.bounds(this.width / 2 - 100, this.height - 27, 200, 20)
+			.build());
 	}
 
 	@Override
@@ -94,11 +95,11 @@ public class SettingsScreen extends Screen {
 		this.list.render(matrices, mouseX, mouseY, delta);
 		drawCenteredString(matrices, this.font, this.title, this.width / 2, 20, WHITE);
 
-		drawString(matrices, this.font, LanguageUtils.settings("channel").get(), this.width / 2 - 100, this.channelTextField.y - 12, GRAY);
+		drawString(matrices, this.font, LanguageUtils.settings("channel").get(), this.width / 2 - 100, this.channelTextField.getY() - 12, GRAY);
 		this.channelTextField.render(matrices, mouseX, mouseY, delta);
 
 		if (this.channelTextField.getValue().isEmpty()) {
-			drawString(matrices, this.font, getChannelPlaceholder(), this.width / 2 - 100 + 4, this.channelTextField.y + 6, WHITE);
+			drawString(matrices, this.font, getChannelPlaceholder(), this.width / 2 - 100 + 4, this.channelTextField.getY() + 6, WHITE);
 		}
 
 		super.render(matrices, mouseX, mouseY, delta);
@@ -113,12 +114,6 @@ public class SettingsScreen extends Screen {
 	}
 
 	private static List<FormattedCharSequence> getHoveredButtonTooltip(OptionsList buttonList, int mouseX, int mouseY) {
-		final var orderableTooltip = (TooltipAccessor)buttonList.getMouseOver(mouseX, mouseY).orElse(null);
-
-		if (orderableTooltip != null) {
-			return orderableTooltip.getTooltip();
-		}
-
 		return Collections.emptyList();
 	}
 

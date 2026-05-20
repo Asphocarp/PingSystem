@@ -1,10 +1,12 @@
 package app.jyu.common.math;
 
+import app.jyu.common.compat.Vector4f;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import app.jyu.common.compat.Vector4f;
+import org.joml.AxisAngle4f;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 
 import static app.jyu.common.CommonClient.Game;
 
@@ -32,7 +34,7 @@ public class MathUtils {
 	}
 
 	public static void rotateZ(PoseStack matrixStack, float theta) {
-		matrixStack.mulPose(com.mojang.math.Vector3f.ZP.rotation(theta));
+		matrixStack.mulPose(new Quaternionf(new AxisAngle4f(theta, 0f, 0f, 1f)));
 	}
 
 	public static Vec2 calculateAngleRectIntersection(float angle, Vec2 leftTop, Vec2 rightBottom) {
@@ -48,14 +50,12 @@ public class MathUtils {
 
 		if (Math.abs(direction.x) < Math.abs(direction.y)) {
 			if (direction.y < 0) {
-				// top
 				var t = -cy / dy;
 				var x = cx + t * dx;
 
 				return new Vec2((float)x + leftTop.x, leftTop.y);
 			}
 
-			// bottom
 			var t = cy / dy;
 			var x = cx + t * dx;
 
@@ -63,14 +63,12 @@ public class MathUtils {
 		}
 
 		if (direction.x < 0) {
-			// left
 			var t = -cx / dx;
 			var y = cy + t * dy;
 
 			return new Vec2(leftTop.x, (float)y + leftTop.y);
 		}
 
-		// right
 		var t = cx / dx;
 		var y = cy + t * dy;
 

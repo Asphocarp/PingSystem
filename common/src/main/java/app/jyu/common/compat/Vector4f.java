@@ -1,7 +1,7 @@
 package app.jyu.common.compat;
 
-import com.mojang.math.Matrix4f;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
 
 public class Vector4f {
 
@@ -18,8 +18,8 @@ public class Vector4f {
 	}
 
 	public Vector4f mul(Matrix4f mat) {
-		var v = new com.mojang.math.Vector4f(this.x, this.y, this.z, this.w);
-		v.transform(mat);
+		var v = new org.joml.Vector4f(this.x, this.y, this.z, this.w);
+		v.mul(mat);
 
 		this.x = v.x();
 		this.y = v.y();
