@@ -62,7 +62,7 @@ public class OptionUtils {
 
 		return new OptionInstance<>(
 			key,
-			minecraft -> tooltipSupplier::apply,
+			OptionInstance.noTooltip(),
 			(caption, value) -> formatter.apply(value),
 			new OptionInstance.Enum<>(values, codec),
 			getter.get(),
