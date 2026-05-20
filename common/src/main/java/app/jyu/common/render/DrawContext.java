@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -52,8 +53,8 @@ public class DrawContext {
 
 	public void renderPlayerHead(PlayerInfo player) {
 		var texture = player.getSkin().texture();
-		guiGraphics.blit(texture, 0, 0, 0, 8, 8, 8, 8, 64, 64);
-		guiGraphics.blit(texture, 0, 0, 0, 40, 8, 8, 8, 64, 64);
+		guiGraphics.blit(RenderType::guiTextured, texture, 0, 0, 0, 8, 8, 8, 64, 64);
+		guiGraphics.blit(RenderType::guiTextured, texture, 0, 0, 0, 40, 8, 8, 8, 64, 64);
 	}
 
 	public void renderPing(ItemStack itemStack, boolean drawItemIcon, int color) {
@@ -87,14 +88,7 @@ public class DrawContext {
 
 	public void renderTexture(ResourceLocation texture, int size, int color) {
 		final var offset = size / -2;
-		final float a = ((color >>> 24) & 0xFF) / 255f;
-		final float r = ((color >>> 16) & 0xFF) / 255f;
-		final float g = ((color >>> 8) & 0xFF) / 255f;
-		final float b = (color & 0xFF) / 255f;
-
-		guiGraphics.setColor(r, g, b, a);
-		guiGraphics.blit(texture, offset, offset, 0, 0, size, size, size, size);
-		guiGraphics.setColor(1f, 1f, 1f, 1f);
+		guiGraphics.blit(RenderType::guiTextured, texture, offset, offset, 0, 0, size, size, size, size);
 	}
 
 	public void renderArrowIcon(int color) {

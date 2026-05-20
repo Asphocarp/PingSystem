@@ -13,6 +13,9 @@ authors = "${mod_author}, ${contributors}"
 description = '''${description}'''
 displayTest = "IGNORE_SERVER_VERSION"
 
+[[mixins]]
+config = "${mod_id}.forge.mixins.json"
+
 [[dependencies.${forge_mod_id}]]
 modId = "forge"
 mandatory = true
