@@ -88,7 +88,7 @@ public class SettingsScreen extends Screen {
 
 	@Override
 	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-		this.renderBackground(guiGraphics);
+		this.renderBackground(guiGraphics, mouseX, mouseY, delta);
 		guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 20, WHITE);
 		guiGraphics.drawString(this.font, LanguageUtils.settings("channel").get(), this.width / 2 - 100, this.channelTextField.getY() - 12, GRAY, false);
 
