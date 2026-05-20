@@ -44,7 +44,7 @@ public class PingLocationRenderer {
 		MutableComponent label = ping.type == PingType.LOCATION ? Component.literal("") : ping.type.getLabel();
 
 		if (showVerbosePlayerInfo && author != null) {
-			var displayName = PlayerTeam.formatNameForTeam(author.getTeam(), Component.literal(author.getProfile().getName()));
+			var displayName = PlayerTeam.formatNameForTeam(author.getTeam(), Component.literal(author.getProfile().name()));
 			displayName = displayName.withStyle(ChatFormatting.RESET);
 			label = ping.type == PingType.LOCATION
 				? displayName

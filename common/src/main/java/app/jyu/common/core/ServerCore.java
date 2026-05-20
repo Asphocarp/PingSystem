@@ -37,7 +37,7 @@ public class ServerCore {
 
 	public static void onChannelUpdate(ServerPlayer player, UpdateChannelC2SPacket packet) {
 		if (packet.isCorrupt()) {
-			LOGGER.warn(() -> "invalid channel update from %s (%s)".formatted(player.getGameProfile().getName(), player.getUUID()));
+			LOGGER.warn(() -> "invalid channel update from %s (%s)".formatted(player.getGameProfile().name(), player.getUUID()));
 			player.displayClientMessage(Component.literal("§8[Sophisticated Ping] §cChannel couldn't be updated\n§fMake sure your version matches the server's version: §d" + MOD_VERSION), false);
 			return;
 		}
@@ -47,7 +47,7 @@ public class ServerCore {
 
 	public static void onPingLocation(MinecraftServer server, ServerPlayer player, PingLocationC2SPacket packet) {
 		if (packet.isCorrupt()) {
-			LOGGER.warn(() -> "invalid ping location from %s (%s)".formatted(player.getGameProfile().getName(), player.getUUID()));
+			LOGGER.warn(() -> "invalid ping location from %s (%s)".formatted(player.getGameProfile().name(), player.getUUID()));
 			player.displayClientMessage(Component.literal("§8[Sophisticated Ping] §cUnable to send ping\n§fMake sure your version matches the server's version: §d" + MOD_VERSION), false);
 			return;
 		}
@@ -111,10 +111,10 @@ public class ServerCore {
 	private static void updatePlayerChannel(ServerPlayer player, String channel) {
 		if (channel.isEmpty()) {
 			PLAYER_CHANNELS.remove(player.getUUID());
-			LOGGER.info(() -> "Channel update: %s -> default".formatted(player.getGameProfile().getName()));
+			LOGGER.info(() -> "Channel update: %s -> default".formatted(player.getGameProfile().name()));
 		} else {
 			PLAYER_CHANNELS.put(player.getUUID(), channel);
-			LOGGER.info(() -> "Channel update: %s -> \"%s\"".formatted(player.getGameProfile().getName(), channel));
+			LOGGER.info(() -> "Channel update: %s -> \"%s\"".formatted(player.getGameProfile().name(), channel));
 		}
 	}
 }

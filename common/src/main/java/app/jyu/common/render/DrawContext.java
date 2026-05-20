@@ -51,7 +51,7 @@ public class DrawContext {
 	}
 
 	public void renderPlayerHead(PlayerInfo player) {
-		var texture = player.getSkin().texture();
+		var texture = player.getSkin().body().texturePath();
 		guiGraphics.blit(texture, 0, 0, 8, 8, 0f, 0.125f, 0.125f, 0.25f);
 		guiGraphics.blit(texture, 0, 0, 8, 8, 0f, 0.625f, 0.125f, 0.75f);
 	}

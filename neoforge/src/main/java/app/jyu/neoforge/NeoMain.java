@@ -26,7 +26,7 @@ public final class NeoMain {
 		CommonServer.INSTANCE.onInit();
 		NeoForge.EVENT_BUS.register(this);
 
-		if (FMLEnvironment.dist.isClient()) {
+		if (FMLEnvironment.getDist().isClient()) {
 			new NeoClient(modBus);
 		}
 	}
@@ -35,12 +35,12 @@ public final class NeoMain {
 		var registrar = event.registrar(Global.MOD_ID).optional();
 		registrar.playToServer(NeoPayloads.PingLocationC2S.TYPE, NeoPayloads.PingLocationC2S.CODEC, (payload, context) -> context.enqueueWork(() -> {
 			if (context.player() instanceof ServerPlayer serverPlayer) {
-				CommonServer.INSTANCE.onPingLocationPacket(serverPlayer.getServer(), serverPlayer, payload.packet());
+				CommonServer.INSTANCE.onPingLocationPacket(serverPlayer.level().getServer(), serverPlayer, payload.packet());
 			}
 		}));
 		registrar.playToServer(NeoPayloads.UpdateChannelC2S.TYPE, NeoPayloads.UpdateChannelC2S.CODEC, (payload, context) -> context.enqueueWork(() -> {
 			if (context.player() instanceof ServerPlayer serverPlayer) {
-				CommonServer.INSTANCE.onChannelUpdatePacket(serverPlayer.getServer(), serverPlayer, payload.packet());
+				CommonServer.INSTANCE.onChannelUpdatePacket(serverPlayer.level().getServer(), serverPlayer, payload.packet());
 			}
 		}));
 		registrar.playToClient(NeoPayloads.PingLocationS2C.TYPE, NeoPayloads.PingLocationS2C.CODEC, (payload, context) ->

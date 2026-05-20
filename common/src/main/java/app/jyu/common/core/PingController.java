@@ -54,7 +54,7 @@ public class PingController {
 	}
 
 	private static void performPingAction(PingType type, float tickDelta) {
-		var cameraEntity = Game.cameraEntity;
+		var cameraEntity = Game.getCameraEntity();
 
 		if (cameraEntity == null || Game.level == null) {
 			return;
