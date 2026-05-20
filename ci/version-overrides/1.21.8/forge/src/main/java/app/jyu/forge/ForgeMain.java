@@ -77,7 +77,7 @@ public class ForgeMain {
 	private static void onRegisterCommands(RegisterCommandsEvent event) {
 		event.getDispatcher().register(ServerCommandBuilder.build((context, success, response) -> {
 			if (success) {
-				context.getSource().sendSuccess(LanguageUtils.withModPrefix(response), false);
+				context.getSource().sendSuccess(() -> LanguageUtils.withModPrefix(response), false);
 			} else {
 				context.getSource().sendFailure(LanguageUtils.withModPrefix(response));
 			}
