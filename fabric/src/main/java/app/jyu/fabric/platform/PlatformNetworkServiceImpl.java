@@ -1,36 +1,40 @@
 package app.jyu.fabric.platform;
 
-import io.netty.buffer.Unpooled;
+import app.jyu.common.network.IPacket;
+import app.jyu.common.network.PingLocationC2SPacket;
+import app.jyu.common.network.PingLocationS2CPacket;
+import app.jyu.common.network.UpdateChannelC2SPacket;
+import app.jyu.common.platform.IPlatformNetworkService;
+import app.jyu.fabric.payload.FabricPayloads;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import app.jyu.common.network.IPacket;
-import app.jyu.common.platform.IPlatformNetworkService;
 
 public class PlatformNetworkServiceImpl implements IPlatformNetworkService {
-
 	@Override
 	public void sendToServer(IPacket packet) {
-		if (!ClientPlayNetworking.canSend(packet.getId())) {
+		if (packet instanceof PingLocationC2SPacket pingPacket) {
+			if (ClientPlayNetworking.canSend(FabricPayloads.PingLocationC2S.TYPE)) {
+				ClientPlayNetworking.send(new FabricPayloads.PingLocationC2S(pingPacket));
+			}
 			return;
 		}
 
-		var buf = new FriendlyByteBuf(Unpooled.buffer());
-		packet.write(buf);
-
-		ClientPlayNetworking.send(packet.getId(), buf);
+		if (packet instanceof UpdateChannelC2SPacket channelPacket && ClientPlayNetworking.canSend(FabricPayloads.UpdateChannelC2S.TYPE)) {
+			ClientPlayNetworking.send(new FabricPayloads.UpdateChannelC2S(channelPacket));
+		}
 	}
 
 	@Override
 	public void sendToClient(IPacket packet, ServerPlayer player) {
-		if (!ServerPlayNetworking.canSend(player, packet.getId())) {
+		if (!(packet instanceof PingLocationS2CPacket pingPacket)) {
 			return;
 		}
 
-		var buf = new FriendlyByteBuf(Unpooled.buffer());
-		packet.write(buf);
+		if (!ServerPlayNetworking.canSend(player, FabricPayloads.PingLocationS2C.TYPE)) {
+			return;
+		}
 
-		ServerPlayNetworking.send(player, packet.getId(), buf);
+		ServerPlayNetworking.send(player, new FabricPayloads.PingLocationS2C(pingPacket));
 	}
 }
