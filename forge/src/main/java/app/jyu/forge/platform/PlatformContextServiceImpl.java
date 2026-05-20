@@ -1,18 +1,18 @@
 package app.jyu.forge.platform;
 
+import app.jyu.common.platform.IPlatformContextService;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
-import app.jyu.common.platform.IPlatformContextService;
 
 import java.nio.file.Path;
 
 import static app.jyu.common.Global.MOD_ID;
 
 public class PlatformContextServiceImpl implements IPlatformContextService {
-	public static IEventBus modBus;
+	public static BusGroup modBus;
 
 	@Override
 	public String getSelfModVersion() {
@@ -34,7 +34,7 @@ public class PlatformContextServiceImpl implements IPlatformContextService {
 	@Override
 	public void registerKeyMapping(KeyMapping keyMapping) {
 		if (modBus != null) {
-			modBus.addListener((RegisterKeyMappingsEvent event) -> event.register(keyMapping));
+			RegisterKeyMappingsEvent.getBus(modBus).addListener(event -> event.register(keyMapping));
 		}
 	}
 

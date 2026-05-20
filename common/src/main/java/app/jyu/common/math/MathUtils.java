@@ -5,6 +5,7 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import app.jyu.common.compat.Vector4f;
 import org.joml.AxisAngle4f;
+import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
@@ -35,6 +36,10 @@ public class MathUtils {
 
 	public static void rotateZ(PoseStack matrixStack, float theta) {
 		matrixStack.mulPose(new Quaternionf(new AxisAngle4f(theta, 0f, 0f, 1f)));
+	}
+
+	public static void rotateZ(Matrix3x2fStack matrixStack, float theta) {
+		matrixStack.rotate(theta);
 	}
 
 	public static Vec2 calculateAngleRectIntersection(float angle, Vec2 leftTop, Vec2 rightBottom) {

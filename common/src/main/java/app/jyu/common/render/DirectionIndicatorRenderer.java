@@ -53,31 +53,31 @@ public class DirectionIndicatorRenderer {
 		final var indicatorOffsetX = Math.cos(pingAngle + Math.PI) * 12;
 		final var indicatorOffsetY = Math.sin(pingAngle + Math.PI) * 12;
 
-		m.pushPose();
+		m.pushMatrix();
 		{
-			m.translate(edgePosition.x, edgePosition.y, 0f);
+			m.translate(edgePosition.x, edgePosition.y);
 
 			final var pingColor = ping.type.getColor();
 
-			m.pushPose();
+			m.pushMatrix();
 			{
-				m.scale(pingScale, pingScale, 1f);
-				m.translate(indicatorOffsetX, indicatorOffsetY, 0);
+				m.scale(pingScale, pingScale);
+				m.translate((float)indicatorOffsetX, (float)indicatorOffsetY);
 				ctx.renderPing(ping.getItemStack(), CLIENT_CONFIG.isItemIconVisible(), pingColor);
 			}
-			m.popPose();
+			m.popMatrix();
 
-			m.pushPose();
+			m.pushMatrix();
 			{
 				MathUtils.rotateZ(m, pingAngle);
-				m.scale(pingSize, pingSize, 1f);
+				m.scale(pingSize, pingSize);
 
-				m.scale(0.25f, 0.25f, 1f);
-				m.translate(-5f, 0f, 0f);
+				m.scale(0.25f, 0.25f);
+				m.translate(-5f, 0f);
 				ctx.renderArrowIcon(pingColor);
 			}
-			m.popPose();
+			m.popMatrix();
 		}
-		m.popPose();
+		m.popMatrix();
 	}
 }

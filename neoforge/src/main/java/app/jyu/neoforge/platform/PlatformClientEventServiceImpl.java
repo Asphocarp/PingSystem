@@ -13,6 +13,8 @@ import net.neoforged.neoforge.common.NeoForge;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static app.jyu.common.CommonClient.Game;
+
 public final class PlatformClientEventServiceImpl implements IPlatformClientEventService {
 	@Override
 	public void registerTickStartEvent(Runnable callback) {
@@ -63,10 +65,10 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 	private record RenderWorldHandler(Consumer<WorldRenderContext> callback) {
 		@SubscribeEvent
 		public void onRenderWorld(RenderLevelStageEvent event) {
-			if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
+			if (event instanceof RenderLevelStageEvent.AfterWeather) {
 				callback.accept(WorldRenderContext.of(
 					event.getModelViewMatrix(),
-					event.getProjectionMatrix(),
+					Game.gameRenderer.getProjectionMatrix(event.getPartialTick().getGameTimeDeltaTicks()),
 					event.getPartialTick().getGameTimeDeltaTicks(),
 					event.getCamera()
 				));

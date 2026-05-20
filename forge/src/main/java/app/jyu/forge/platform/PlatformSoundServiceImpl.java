@@ -4,7 +4,7 @@ import app.jyu.common.Global;
 import app.jyu.common.platform.IPlatformSoundService;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -16,10 +16,10 @@ import java.util.Map;
 public final class PlatformSoundServiceImpl implements IPlatformSoundService {
 	private static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, Global.MOD_ID);
 	private static final Map<String, RegistryObject<SoundEvent>> REGISTERED_SOUNDS = new LinkedHashMap<>();
-	private static IEventBus modBus;
+	private static BusGroup modBus;
 	private static boolean registeredBus;
 
-	public static void registerModBus(IEventBus eventBus) {
+	public static void registerModBus(BusGroup eventBus) {
 		modBus = eventBus;
 	}
 

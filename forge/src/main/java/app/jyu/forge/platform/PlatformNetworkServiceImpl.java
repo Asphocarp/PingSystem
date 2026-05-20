@@ -7,7 +7,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.EventNetworkChannel;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,12 +40,12 @@ public class PlatformNetworkServiceImpl implements IPlatformNetworkService {
 	public void sendToClient(IPacket packet, ServerPlayer player) {
 		var chan = CHANNEL_MAP.get(packet.getId());
 
-		if (chan == null) {
+		if (chan == null || !chan.isRemotePresent(player.connection.getConnection())) {
 			return;
 		}
 
 		var buf = new FriendlyByteBuf(Unpooled.buffer());
 		packet.write(buf);
-		chan.send(buf, PacketDistributor.PLAYER.with(player));
+		chan.send(buf, player.connection.getConnection());
 	}
 }

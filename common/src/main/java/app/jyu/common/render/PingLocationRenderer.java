@@ -26,9 +26,9 @@ public class PingLocationRenderer {
 		final var m = ctx.getMatrices();
 		final var pingScale = ping.getScale();
 
-		m.pushPose();
-		m.translate(screenPos.x, screenPos.y, 0);
-		m.scale(pingScale, pingScale, 1f);
+		m.pushMatrix();
+		m.translate(screenPos.x, screenPos.y);
+		m.scale(pingScale, pingScale);
 
 		final var typeColor = ping.type.getColor();
 
@@ -55,6 +55,6 @@ public class PingLocationRenderer {
 			ctx.renderLabel(label, 1.75f, showVerbosePlayerInfo ? author : null, typeColor);
 		}
 
-		m.popPose();
+		m.popMatrix();
 	}
 }
