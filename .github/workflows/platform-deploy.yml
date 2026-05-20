@@ -57,6 +57,30 @@ jobs:
           MATRIX_JSON="${MATRIX_JSON%,}]}"
           echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
 
+      - name: Validate CurseForge publishing token
+        if: ${{ inputs.publish_curseforge }}
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          CURSEFORGE_PROJECT: ${{ vars.CURSEFORGE_PROJECT || secrets.CURSEFORGE_PROJECT }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${CURSEFORGE_TOKEN}" ]; then
+            echo "::error::CURSEFORGE_TOKEN is required when publish_curseforge is true."
+            exit 1
+          fi
+
+          if [ -z "${CURSEFORGE_PROJECT}" ]; then
+            echo "::error::CURSEFORGE_PROJECT is required when publish_curseforge is true. Create the CurseForge project manually, then save its numeric project ID as CURSEFORGE_PROJECT."
+            exit 1
+          fi
+
+          status="$(curl --silent --show-error --output /tmp/curseforge-version-types.json --write-out '%{http_code}' --header "X-Api-Token: ${CURSEFORGE_TOKEN}" https://minecraft.curseforge.com/api/game/version-types || true)"
+          if [ "${status}" != "200" ]; then
+            echo "::error::CURSEFORGE_TOKEN was rejected by the CurseForge Upload API (HTTP ${status}). Use an API token from the CurseForge Authors API Tokens page, not the bcrypt-like Personal API Key."
+            exit 1
+          fi
+
   build:
     name: Build
     needs: prepare
@@ -151,6 +175,15 @@ jobs:
           MC_VERSION=$(get_prop "minecraft_version")
           LOADER="${{ matrix.loader }}"
           LOADER_UPPER=$(echo "$LOADER" | tr '[:lower:]' '[:upper:]')
+          case "$LOADER" in
+            fabric) LOADER_GRADLE="Fabric" ;;
+            forge) LOADER_GRADLE="Forge" ;;
+            neoforge) LOADER_GRADLE="NeoForge" ;;
+            *)
+              echo "::error::Unsupported loader: $LOADER"
+              exit 1
+              ;;
+          esac
           VERSION_RANGE=$(get_prop "${LOADER}_compatible_range")
           VERSION_START=$(echo "$VERSION_RANGE" | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | sed -n '1p')
           JAR_NAME="${ARCHIVE_NAME}-${MOD_VERSION}-${LOADER}-${MC_VERSION}"
@@ -166,6 +199,7 @@ jobs:
             echo "MC_VERSION=$MC_VERSION"
             echo "${LOADER_UPPER}_VERSION_START=$VERSION_START"
             echo "${LOADER_UPPER}_JAR_PATH=$JAR_PATH"
+            echo "LOADER_GRADLE=$LOADER_GRADLE"
             echo "RELEASE_TAG=v${MOD_VERSION}-${LOADER}-${MC_VERSION}"
             echo "REF_NAME=${{ matrix.version }}"
           } >> "$GITHUB_ENV"
@@ -192,7 +226,10 @@ jobs:
             export CURSEFORGE_PROJECT=""
           fi
           echo "rootProject.buildFileName = 'publish.gradle'" > settings.gradle
-          gradle publishMods
+          if [ "${PUBLISH_CURSEFORGE}" = "true" ]; then
+            gradle "publish${LOADER_GRADLE}-CF"
+          fi
+          gradle "publish${LOADER_GRADLE}-MR" "publish${LOADER_GRADLE}-GH"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}

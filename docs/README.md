@@ -65,7 +65,7 @@ Use `Sophisticated Ping` when human-facing spaces/capitals are allowed. Use `sop
 `gradle.properties` on `1.19.2` currently declares:
 
 ```properties
-mod_version=1.2.4
+mod_version=1.2.5
 minecraft_version=1.19.2
 java_version=17
 fabric_loader_min_version=0.14.9

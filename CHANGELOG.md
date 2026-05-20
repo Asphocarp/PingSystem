@@ -1,7 +1,13 @@
+# 1.2.5
+
+- Add a CurseForge Upload API preflight check before release builds or uploads.
+- Publish CurseForge before Modrinth/GitHub for each artifact to avoid partial public releases when CurseForge rejects credentials.
+- Supersede `1.2.4`, which was aborted after the configured CurseForge credential was rejected as malformed.
+
 # 1.2.4
 
 - Retry Gradle builds in CI/release workflows to absorb transient Maven/plugin repository failures.
-- Republish the CurseForge-enabled release with the corrected CurseForge token secret.
+- Superseded before public completion because the configured CurseForge credential was rejected by the Upload API.
 
 # 1.2.3
 

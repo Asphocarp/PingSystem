@@ -104,7 +104,7 @@ v${mod_version}-${loader}-${minecraft_version}
 Example:
 
 ```text
-v1.2.4-fabric-1.19.2
+v1.2.5-fabric-1.19.2
 ```
 
 ## Publishing
@@ -122,4 +122,6 @@ The workflow:
 3. uploads artifacts;
 4. publishes serially through `publish.gradle`.
 
-GitHub, Modrinth, and CurseForge are supported. CurseForge requires an existing CurseForge project ID configured as `CURSEFORGE_PROJECT`.
+GitHub, Modrinth, and CurseForge are supported. CurseForge requires an existing CurseForge project ID configured as `CURSEFORGE_PROJECT` and an Upload API token configured as `CURSEFORGE_TOKEN`.
+
+When CurseForge publishing is enabled, the workflow validates the token before building or uploading. Use the CurseForge Authors API Tokens page token, not the bcrypt-like Personal API Key. Per artifact, CurseForge publishes before Modrinth/GitHub so a CurseForge rejection does not leave new partial releases on the other platforms.
