@@ -76,7 +76,7 @@ Use it after changes to:
 
 Failure rule: if a generated branch fails to build, do not treat later branches as valid. Fix the baseline recipe or overrides, then rerun.
 
-Minecraft 1.20.6 is the first generated branch in this repo that needs Fabric's typed `CustomPacketPayload` networking override while still keeping the older Forge branch layout. Keep that split in `ci/version-overrides/1.20.6/`; do not move the 1.20.6 Fabric payload wrappers into the `1.20.1` or baseline sources.
+Minecraft 1.20.6 is the first generated branch in this repo that needs Fabric's typed `CustomPacketPayload` networking override while still keeping the older Forge branch layout. It also needs a Forge 50 GUI render hook override because `RenderGuiEvent` is not present in the compiled Forge API for that branch. Keep those splits in `ci/version-overrides/1.20.6/`; do not move the 1.20.6 Fabric payload wrappers or Forge GUI hook into the `1.20.1` or baseline sources.
 
 ## Platform Deploy
 
