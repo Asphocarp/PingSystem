@@ -5,6 +5,7 @@
 - Fix generated 1.19.3+ migration sources for the JOML matrix API.
 - Add the 1.20.6 Fabric typed custom-payload override required by Fabric API 0.100+.
 - Add the 1.20.6 Forge GUI and world-render overrides required by Forge 50 API changes.
+- Add the 1.21.1 Forge sound registration override required by private `ResourceLocation` constructors.
 
 # 1.2.2
 
