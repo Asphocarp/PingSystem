@@ -75,9 +75,9 @@ jobs:
             exit 1
           fi
 
-          status="$(curl --silent --show-error --output /tmp/curseforge-version-types.json --write-out '%{http_code}' --header "X-Api-Token: ${CURSEFORGE_TOKEN}" https://minecraft.curseforge.com/api/game/version-types || true)"
-          if [ "${status}" != "200" ]; then
-            echo "::error::CURSEFORGE_TOKEN was rejected by the CurseForge Upload API (HTTP ${status}). Use an API token from the CurseForge Authors API Tokens page, not the bcrypt-like Personal API Key."
+          http_status="$(curl --silent --show-error --output /tmp/curseforge-version-types.json --write-out '%{http_code}' --header "X-Api-Token: ${CURSEFORGE_TOKEN}" https://minecraft.curseforge.com/api/game/version-types || true)"
+          if [ "${http_status}" != "200" ]; then
+            echo "::error::CURSEFORGE_TOKEN was rejected by the legacy CurseForge Upload API (HTTP ${http_status}). Use an API token from legacy.curseforge.com account settings / Authors API Tokens. The bcrypt-like Personal API Key and cfc_pat Studio/Core API token are rejected by this upload API."
             exit 1
           fi
 

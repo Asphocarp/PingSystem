@@ -122,6 +122,6 @@ The workflow:
 3. uploads artifacts;
 4. publishes serially through `publish.gradle`.
 
-GitHub, Modrinth, and CurseForge are supported. CurseForge requires an existing CurseForge project ID configured as `CURSEFORGE_PROJECT` and an Upload API token configured as `CURSEFORGE_TOKEN`.
+GitHub, Modrinth, and CurseForge are supported. CurseForge requires an existing CurseForge project ID configured as `CURSEFORGE_PROJECT` and a legacy Upload API token configured as `CURSEFORGE_TOKEN`.
 
-When CurseForge publishing is enabled, the workflow validates the token before building or uploading. Use the CurseForge Authors API Tokens page token, not the bcrypt-like Personal API Key. Per artifact, CurseForge publishes before Modrinth/GitHub so a CurseForge rejection does not leave new partial releases on the other platforms.
+When CurseForge publishing is enabled, the workflow validates the token before building or uploading. Use the legacy CurseForge account settings / Authors API Tokens token for `minecraft.curseforge.com/api`, not the bcrypt-like Personal API Key or a `cfc_pat_...` Studio/Core API token. Per artifact, CurseForge publishes before Modrinth/GitHub so a CurseForge rejection does not leave new partial releases on the other platforms.

@@ -112,7 +112,7 @@ Behavior:
 
 Gradle build steps retry up to three times before failing, with a 15-minute timeout per attempt. This is only for transient dependency repository failures or hung downloads, such as temporary Maven Central or plugin portal `403`/connection errors; compile failures still fail after the final attempt.
 
-When `publish_curseforge` is true, the prepare job validates `CURSEFORGE_TOKEN` against the CurseForge Upload API before any build or upload job runs. This prevents a malformed CurseForge credential from creating partial GitHub or Modrinth releases.
+When `publish_curseforge` is true, the prepare job validates `CURSEFORGE_TOKEN` against the legacy CurseForge Upload API before any build or upload job runs. This prevents a malformed CurseForge credential from creating partial GitHub or Modrinth releases.
 
 Publishing uses:
 
@@ -159,7 +159,7 @@ CURSEFORGE_PROJECT
 
 CurseForge requires a numeric project ID for uploads. The upload API posts files to `/api/projects/{projectId}/upload-file`; project creation is done in the CurseForge Authors dashboard, and the project ID is shown in that project URL/dashboard. If `publish_curseforge` is true and either value is missing, the workflow fails before running any release build so skipped CurseForge releases are not mistaken for successful publishing.
 
-`CURSEFORGE_TOKEN` must be an Upload API token from the CurseForge Authors API Tokens page. Do not use the bcrypt-like CurseForge Personal API Key; the Upload API rejects that credential as malformed.
+`CURSEFORGE_TOKEN` must be an Upload API token from the legacy CurseForge account settings / Authors API Tokens page used by `minecraft.curseforge.com/api`. Do not use the bcrypt-like CurseForge Personal API Key or a `cfc_pat_...` CurseForge Studio/Core API token; the legacy upload API rejects both credential types as malformed.
 
 For each artifact, the workflow publishes CurseForge first. Modrinth and GitHub are published only after the CurseForge task succeeds, reducing partial release cleanup if CurseForge rejects a file or credential.
 
