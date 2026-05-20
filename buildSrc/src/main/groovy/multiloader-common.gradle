@@ -74,7 +74,7 @@ tasks.named("test", Test) {
 
 jar {
     manifest {
-        attributes([
+        def manifestAttributes = [
                 "Specification-Title"   : mod_name,
                 "Specification-Vendor"  : mod_author,
                 "Specification-Version" : project.jar.archiveVersion,
@@ -82,7 +82,14 @@ jar {
                 "Implementation-Version": project.jar.archiveVersion,
                 "Implementation-Vendor" : mod_author,
                 "Built-On-Minecraft"    : minecraft_version,
-        ])
+        ]
+
+        def forgeMixinConfig = file("src/main/resources/${mod_id}.forge.mixins.json")
+        if (forgeMixinConfig.exists()) {
+            manifestAttributes["MixinConfigs"] = "${mod_id}.forge.mixins.json"
+        }
+
+        attributes(manifestAttributes)
     }
 }
 
