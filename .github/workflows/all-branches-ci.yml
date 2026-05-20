@@ -68,7 +68,7 @@ jobs:
           set -euo pipefail
           chmod +x ./gradlew
           for attempt in 1 2 3; do
-            if ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${{ matrix.loader }}:build"; then
+            if timeout 15m ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${{ matrix.loader }}:build"; then
               exit 0
             fi
             if [ "$attempt" = "3" ]; then

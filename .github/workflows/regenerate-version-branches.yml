@@ -91,7 +91,7 @@ jobs:
 
             for LOADER in $(./scripts/migrate-version.sh --loaders "${VERSION}"); do
               for attempt in 1 2 3; do
-                if ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"; then
+                if timeout 15m ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"; then
                   break
                 fi
                 if [ "$attempt" = "3" ]; then

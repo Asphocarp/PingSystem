@@ -110,7 +110,7 @@ Behavior:
 4. uploads temporary build artifacts;
 5. serially publishes releases with `publish.gradle`.
 
-Gradle build steps retry up to three times before failing. This is only for transient dependency repository failures, such as temporary Maven Central or plugin portal `403`/connection errors; compile failures still fail after the final attempt.
+Gradle build steps retry up to three times before failing, with a 15-minute timeout per attempt. This is only for transient dependency repository failures or hung downloads, such as temporary Maven Central or plugin portal `403`/connection errors; compile failures still fail after the final attempt.
 
 Publishing uses:
 
