@@ -1,4 +1,11 @@
+# 1.2.4
+
+- Retry Gradle builds in CI/release workflows to absorb transient Maven/plugin repository failures.
+- Republish the CurseForge-enabled release with the corrected CurseForge token secret.
+
 # 1.2.3
+
+- Superseded before public completion because the first CurseForge token secret was malformed.
 
 - Fix ping wheel cursor selection on HiDPI displays.
 - Publish CurseForge through the platform deploy workflow when a CurseForge project ID is configured.

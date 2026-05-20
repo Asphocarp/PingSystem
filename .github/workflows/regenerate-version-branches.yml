@@ -90,7 +90,15 @@ jobs:
             export PATH="${JAVA_HOME}/bin:${PATH}"
 
             for LOADER in $(./scripts/migrate-version.sh --loaders "${VERSION}"); do
-              ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"
+              for attempt in 1 2 3; do
+                if ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"; then
+                  break
+                fi
+                if [ "$attempt" = "3" ]; then
+                  exit 1
+                fi
+                sleep $((attempt * 20))
+              done
               mkdir -p "${ARTIFACTS_DIR}/${VERSION}/${LOADER}"
               cp "${LOADER}/build/libs/"*.jar "${ARTIFACTS_DIR}/${VERSION}/${LOADER}/"
             done

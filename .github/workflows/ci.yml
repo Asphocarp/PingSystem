@@ -31,7 +31,15 @@ jobs:
           chmod +x ./gradlew ./scripts/migrate-version.sh
           MC_VERSION="$(grep '^minecraft_version=' gradle.properties | cut -d'=' -f2- | xargs)"
           for LOADER in $(./scripts/migrate-version.sh --loaders "${MC_VERSION}"); do
-            ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"
+            for attempt in 1 2 3; do
+              if ./gradlew -Dnet.minecraftforge.gradle.check.certs=false ":${LOADER}:build"; then
+                break
+              fi
+              if [ "$attempt" = "3" ]; then
+                exit 1
+              fi
+              sleep $((attempt * 20))
+            done
           done
 
   branch-freshness:

@@ -110,6 +110,8 @@ Behavior:
 4. uploads temporary build artifacts;
 5. serially publishes releases with `publish.gradle`.
 
+Gradle build steps retry up to three times before failing. This is only for transient dependency repository failures, such as temporary Maven Central or plugin portal `403`/connection errors; compile failures still fail after the final attempt.
+
 Publishing uses:
 
 ```text
@@ -127,7 +129,7 @@ v${mod_version}-${loader}-${minecraft_version}
 Example:
 
 ```text
-v1.2.3-fabric-1.19.2
+v1.2.4-fabric-1.19.2
 ```
 
 The workflow deletes any existing GitHub release/tag for a rerun before republishing:

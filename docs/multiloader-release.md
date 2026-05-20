@@ -104,7 +104,7 @@ v${mod_version}-${loader}-${minecraft_version}
 Example:
 
 ```text
-v1.2.3-fabric-1.19.2
+v1.2.4-fabric-1.19.2
 ```
 
 ## Publishing
