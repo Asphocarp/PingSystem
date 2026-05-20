@@ -117,7 +117,7 @@ v${mod_version}-${loader}-${minecraft_version}
 Example:
 
 ```text
-v1.2.2-fabric-1.19.2
+v1.2.3-fabric-1.19.2
 ```
 
 The workflow deletes any existing GitHub release/tag for a rerun before republishing:
