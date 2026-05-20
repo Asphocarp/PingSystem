@@ -22,7 +22,7 @@ public class GameContext {
 		}
 
 		lastWorld = Game.level;
-		dimension = lastWorld.dimension().location().hashCode();
+		dimension = lastWorld.dimension().identifier().hashCode();
 	}
 
 	public static Entity getEntity(UUID uuid) {

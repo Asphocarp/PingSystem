@@ -20,7 +20,7 @@ public final class NeoClient {
 		CommonClient.INSTANCE.onInit();
 		NeoForge.EVENT_BUS.register(this);
 		modBus.addListener((AddClientReloadListenersEvent event) -> event.addListener(
-			net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Global.MOD_ID, "resources"),
+			net.minecraft.resources.Identifier.fromNamespaceAndPath(Global.MOD_ID, "resources"),
 			new ResourceReloadListener()
 		));
 		ModLoadingContext.get().registerExtensionPoint(

@@ -17,7 +17,7 @@ public class MathUtils {
 	public static ScreenPos worldToScreen(Vec3 worldPos, Matrix4f modelViewMatrix, Matrix4f projectionMatrix) {
 		var window = Game.getWindow();
 		var camera = Game.gameRenderer.getMainCamera();
-		var worldPosRel = new Vector4f(camera.getPosition().reverse().add(worldPos), 1f);
+		var worldPosRel = new Vector4f(camera.position().reverse().add(worldPos), 1f);
 		worldPosRel.mul(modelViewMatrix);
 		worldPosRel.mul(projectionMatrix);
 

@@ -1,13 +1,13 @@
 package app.jyu.common.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static app.jyu.common.config.ClientConfig.MAX_CHANNEL_LENGTH;
 
 public record UpdateChannelC2SPacket(String channel) implements IPacket {
 
-	public static final ResourceLocation PACKET_ID = ResourceLocation.fromNamespaceAndPath(app.jyu.common.Global.MOD_ID, "update_channel_c2s");
+	public static final Identifier PACKET_ID = Identifier.fromNamespaceAndPath(app.jyu.common.Global.MOD_ID, "update_channel_c2s");
 
 	public UpdateChannelC2SPacket() {
 		this((String)null);
@@ -25,7 +25,7 @@ public record UpdateChannelC2SPacket(String channel) implements IPacket {
 		return channel == null;
 	}
 
-	public ResourceLocation getId() {
+	public Identifier getId() {
 		return PACKET_ID;
 	}
 

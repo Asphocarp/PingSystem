@@ -2,7 +2,7 @@ package app.jyu.forge.platform;
 
 import app.jyu.common.Global;
 import app.jyu.common.platform.IPlatformSoundService;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.registries.DeferredRegister;
@@ -33,7 +33,7 @@ public final class PlatformSoundServiceImpl implements IPlatformSoundService {
 		}
 
 		for (String soundName : soundNames) {
-			var soundId = ResourceLocation.fromNamespaceAndPath(Global.MOD_ID, soundName);
+			var soundId = Identifier.fromNamespaceAndPath(Global.MOD_ID, soundName);
 			REGISTERED_SOUNDS.put(soundName, SOUND_EVENTS.register(
 				soundName,
 				() -> SoundEvent.createVariableRangeEvent(soundId)

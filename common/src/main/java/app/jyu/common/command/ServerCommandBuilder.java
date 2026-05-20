@@ -10,6 +10,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.permissions.Permissions;
 import app.jyu.common.compat.Component;
 import app.jyu.common.config.ChannelMode;
 import app.jyu.common.config.ServerConfig;
@@ -152,7 +153,7 @@ public class ServerCommandBuilder {
 			.executes(helpCallback);
 
 		return LiteralArgumentBuilder.<CommandSourceStack>literal("sophisticated_ping:server")
-			.requires(source -> source.hasPermission(2))
+			.requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
 			.executes(helpCallback)
 			.then(cmdHelp)
 			.then(cmdDefaultChannel)

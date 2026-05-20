@@ -1,7 +1,7 @@
 package app.jyu.common.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import app.jyu.common.core.PingType;
 
@@ -11,7 +11,7 @@ import static app.jyu.common.config.ClientConfig.MAX_CHANNEL_LENGTH;
 
 public record PingLocationC2SPacket(String channel, Vec3 pos, UUID entity, int sequence, int dimension, PingType type) implements IPacket {
 
-	public static final ResourceLocation PACKET_ID = ResourceLocation.fromNamespaceAndPath(app.jyu.common.Global.MOD_ID, "ping_location_c2s");
+	public static final Identifier PACKET_ID = Identifier.fromNamespaceAndPath(app.jyu.common.Global.MOD_ID, "ping_location_c2s");
 
 	public PingLocationC2SPacket() {
 		this(null, null, null, 0, 0, null);
@@ -48,7 +48,7 @@ public record PingLocationC2SPacket(String channel, Vec3 pos, UUID entity, int s
 		return channel == null || pos == null || type == null;
 	}
 
-	public ResourceLocation getId() {
+	public Identifier getId() {
 		return PACKET_ID;
 	}
 

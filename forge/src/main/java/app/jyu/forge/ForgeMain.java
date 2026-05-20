@@ -10,6 +10,7 @@ import app.jyu.forge.platform.PlatformContextServiceImpl;
 import app.jyu.forge.platform.PlatformNetworkServiceImpl;
 import app.jyu.forge.platform.PlatformSoundServiceImpl;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
@@ -69,7 +70,7 @@ public class ForgeMain {
 		});
 	}
 
-	private static EventNetworkChannel eventChannel(net.minecraft.resources.ResourceLocation id) {
+	private static EventNetworkChannel eventChannel(Identifier id) {
 		return ChannelBuilder
 			.named(id)
 			.networkProtocolVersion(Integer.parseInt(PROTOCOL_VERSION))

@@ -17,7 +17,7 @@ public class OptionUtils {
 	public static OptionInstance<Integer> ofInt(String key, int min, int max, int step, Function<Integer, Component> formatter, Supplier<Integer> getter, Consumer<Integer> setter) {
 		final var steps = Math.max(1, (max - min) / step);
 		final var values = new OptionInstance.IntRange(0, steps)
-			.xmap(value -> min + value * step, value -> Math.max(0, Math.min(steps, Math.round((value - min) / (float)step))));
+			.xmap(value -> min + value * step, value -> Math.max(0, Math.min(steps, Math.round((value - min) / (float)step))), false);
 
 		return new OptionInstance<>(
 			key,
@@ -32,7 +32,7 @@ public class OptionUtils {
 	public static OptionInstance<Float> ofFloat(String key, float min, float max, float step, Function<Float, Component> formatter, Supplier<Float> getter, Consumer<Float> setter) {
 		final var steps = Math.max(1, Math.round((max - min) / step));
 		final var values = new OptionInstance.IntRange(0, steps)
-			.xmap(value -> min + value * step, value -> Math.max(0, Math.min(steps, Math.round((value - min) / step))));
+			.xmap(value -> min + value * step, value -> Math.max(0, Math.min(steps, Math.round((value - min) / step))), false);
 
 		return new OptionInstance<>(
 			key,

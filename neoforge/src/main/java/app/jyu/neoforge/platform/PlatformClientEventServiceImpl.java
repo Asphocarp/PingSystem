@@ -66,10 +66,11 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 		@SubscribeEvent
 		public void onRenderWorld(RenderLevelStageEvent event) {
 			if (event instanceof RenderLevelStageEvent.AfterWeather) {
+				float tickDelta = Game.getDeltaTracker().getGameTimeDeltaTicks();
 				callback.accept(WorldRenderContext.of(
 					event.getModelViewMatrix(),
-					Game.gameRenderer.getProjectionMatrix(event.getPartialTick().getGameTimeDeltaTicks()),
-					event.getPartialTick().getGameTimeDeltaTicks(),
+					Game.gameRenderer.getProjectionMatrix(tickDelta),
+					tickDelta,
 					Game.gameRenderer.getMainCamera()
 				));
 			}
