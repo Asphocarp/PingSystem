@@ -51,8 +51,8 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains:annotations:24.1.0"
-    compileOnly "org.projectlombok:lombok:1.18.32"
-    annotationProcessor "org.projectlombok:lombok:1.18.32"
+    compileOnly "org.projectlombok:lombok:1.18.46"
+    annotationProcessor "org.projectlombok:lombok:1.18.46"
     compileOnly "maven.modrinth:DistantHorizonsApi:${distanthorizons_api_version}"
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
@@ -74,7 +74,7 @@ tasks.named("test", Test) {
 
 jar {
     manifest {
-        def manifestAttributes = [
+        attributes([
                 "Specification-Title"   : mod_name,
                 "Specification-Vendor"  : mod_author,
                 "Specification-Version" : project.jar.archiveVersion,
@@ -82,14 +82,7 @@ jar {
                 "Implementation-Version": project.jar.archiveVersion,
                 "Implementation-Vendor" : mod_author,
                 "Built-On-Minecraft"    : minecraft_version,
-        ]
-
-        def forgeMixinConfig = file("src/main/resources/${mod_id}.forge.mixins.json")
-        if (forgeMixinConfig.exists()) {
-            manifestAttributes["MixinConfigs"] = "${mod_id}.forge.mixins.json"
-        }
-
-        attributes(manifestAttributes)
+        ])
     }
 }
 

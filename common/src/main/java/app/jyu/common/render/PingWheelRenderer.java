@@ -3,7 +3,7 @@ package app.jyu.common.render;
 import app.jyu.common.resource.LanguageUtils;
 import app.jyu.common.core.PingType;
 import app.jyu.common.core.PingWheelController;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.joml.Matrix3x2fStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +18,7 @@ public class PingWheelRenderer {
 	private static final float ICON_SCALE = 2.2f;
 	private static final int CENTER_TEXT_Y_OFFSET = -22;
 
-	public static void draw(GuiGraphics guiGraphics) {
+	public static void draw(GuiGraphicsExtractor guiGraphics) {
 		if (!PingWheelController.isOpen()) {
 			return;
 		}
@@ -34,7 +34,7 @@ public class PingWheelRenderer {
 		drawCenteredText(guiGraphics, LanguageUtils.of("ping_wheel", "center").get().getString(), centerX, centerY + CENTER_TEXT_Y_OFFSET, CENTER_TEXT_COLOR);
 	}
 
-	private static void drawTypes(GuiGraphics guiGraphics, int centerX, int centerY, @Nullable PingType selected) {
+	private static void drawTypes(GuiGraphicsExtractor guiGraphics, int centerX, int centerY, @Nullable PingType selected) {
 		for (var type : PingType.values()) {
 			final var angle = type.getRadialSlot() * (Math.PI / 4.0);
 			final var iconX = centerX + Math.cos(angle) * ICON_RING_RADIUS;
@@ -44,11 +44,11 @@ public class PingWheelRenderer {
 		}
 	}
 
-	private static void drawCenteredText(GuiGraphics guiGraphics, String text, int centerX, int y, int color) {
-		guiGraphics.drawString(Game.font, text, centerX - Game.font.width(text) / 2, y, color, true);
+	private static void drawCenteredText(GuiGraphicsExtractor guiGraphics, String text, int centerX, int y, int color) {
+		guiGraphics.text(Game.font, text, centerX - Game.font.width(text) / 2, y, color, true);
 	}
 
-	private static void drawIcon(GuiGraphics guiGraphics, PingType type, int centerX, int centerY, boolean selected) {
+	private static void drawIcon(GuiGraphicsExtractor guiGraphics, PingType type, int centerX, int centerY, boolean selected) {
 		if (selected) {
 			drawSelectionCorners(guiGraphics, centerX, centerY);
 		}
@@ -56,17 +56,17 @@ public class PingWheelRenderer {
 		drawScaledCenteredText(guiGraphics, type.getIcon(), centerX, centerY, ICON_SCALE, type.getColor());
 	}
 
-	private static void drawScaledCenteredText(GuiGraphics guiGraphics, String text, int centerX, int centerY, float scale, int color) {
+	private static void drawScaledCenteredText(GuiGraphicsExtractor guiGraphics, String text, int centerX, int centerY, float scale, int color) {
 		final var width = Game.font.width(text);
 		final Matrix3x2fStack matrices = guiGraphics.pose();
 		matrices.pushMatrix();
 		matrices.translate(centerX, centerY);
 		matrices.scale(scale, scale);
-		guiGraphics.drawString(Game.font, text, (int)(-width / 2f), -4, color, true);
+		guiGraphics.text(Game.font, text, (int)(-width / 2f), -4, color, true);
 		matrices.popMatrix();
 	}
 
-	private static void drawSelectionCorners(GuiGraphics guiGraphics, int centerX, int centerY) {
+	private static void drawSelectionCorners(GuiGraphicsExtractor guiGraphics, int centerX, int centerY) {
 		final var left = centerX - 12;
 		final var right = centerX + 12;
 		final var top = centerY - 12;

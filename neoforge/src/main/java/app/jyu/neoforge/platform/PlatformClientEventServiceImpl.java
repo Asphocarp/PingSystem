@@ -2,13 +2,14 @@ package app.jyu.neoforge.platform;
 
 import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import org.joml.Matrix4f;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -37,7 +38,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 	}
 
 	@Override
-	public void registerRenderGUIEvent(BiConsumer<GuiGraphics, Float> callback) {
+	public void registerRenderGUIEvent(BiConsumer<GuiGraphicsExtractor, Float> callback) {
 		NeoForge.EVENT_BUS.register(new RenderGuiHandler(callback));
 	}
 
@@ -68,8 +69,8 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 			if (event instanceof RenderLevelStageEvent.AfterWeather) {
 				float tickDelta = Game.getDeltaTracker().getGameTimeDeltaTicks();
 				callback.accept(WorldRenderContext.of(
-					event.getModelViewMatrix(),
-					Game.gameRenderer.getProjectionMatrix(tickDelta),
+					new Matrix4f(event.getModelViewMatrix()),
+					event.getLevelRenderState().cameraRenderState.projectionMatrix,
 					tickDelta,
 					Game.gameRenderer.getMainCamera()
 				));
@@ -77,7 +78,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 		}
 	}
 
-	private record RenderGuiHandler(BiConsumer<GuiGraphics, Float> callback) {
+	private record RenderGuiHandler(BiConsumer<GuiGraphicsExtractor, Float> callback) {
 		@SubscribeEvent
 		public void onGuiRender(RenderGuiEvent.Post event) {
 			callback.accept(event.getGuiGraphics(), event.getPartialTick().getGameTimeDeltaTicks());

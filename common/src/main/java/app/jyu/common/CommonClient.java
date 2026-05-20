@@ -1,7 +1,7 @@
 package app.jyu.common;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import app.jyu.common.compat.LegacyMigrationHandler;
 import app.jyu.common.config.ClientConfig;
 import app.jyu.common.core.GameContext;
@@ -70,7 +70,7 @@ public class CommonClient {
 		PingController.pollPingAction(ctx.tickDelta);
 	}
 
-	public void onRenderGUI(GuiGraphics guiGraphics, float tickDelta) {
+	public void onRenderGUI(GuiGraphicsExtractor guiGraphics, float tickDelta) {
 		OverlayRenderer.draw(guiGraphics, tickDelta);
 	}
 

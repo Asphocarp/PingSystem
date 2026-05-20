@@ -3,7 +3,7 @@ package app.jyu.common.render;
 import app.jyu.common.core.GameContext;
 import app.jyu.common.core.PingManager;
 import app.jyu.common.config.ClientConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import static app.jyu.common.CommonClient.Game;
 
@@ -12,7 +12,7 @@ public class OverlayRenderer {
 
 	private static final ClientConfig CLIENT_CONFIG = ClientConfig.HANDLER.getConfig();
 
-	public static void draw(GuiGraphics guiGraphics, float tickDelta) {
+	public static void draw(GuiGraphicsExtractor guiGraphics, float tickDelta) {
 		PingWheelRenderer.draw(guiGraphics);
 
 		final var pingRepo = PingManager.PING_REPO;

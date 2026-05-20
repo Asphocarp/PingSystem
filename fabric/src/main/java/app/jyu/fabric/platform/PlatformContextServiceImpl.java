@@ -1,6 +1,6 @@
 package app.jyu.fabric.platform;
 
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import app.jyu.common.platform.IPlatformContextService;
@@ -30,7 +30,7 @@ public class PlatformContextServiceImpl implements IPlatformContextService {
 
 	@Override
 	public void registerKeyMapping(KeyMapping keyMapping) {
-		KeyBindingHelper.registerKeyBinding(keyMapping);
+		KeyMappingHelper.registerKeyMapping(keyMapping);
 	}
 
 	@Override

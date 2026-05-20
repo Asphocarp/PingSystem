@@ -16,9 +16,9 @@ public class FabricMain implements ModInitializer {
 	public void onInitialize() {
 		CommonServer.INSTANCE.onInit();
 
-		PayloadTypeRegistry.playC2S().register(FabricPayloads.PingLocationC2S.TYPE, FabricPayloads.PingLocationC2S.CODEC);
-		PayloadTypeRegistry.playC2S().register(FabricPayloads.UpdateChannelC2S.TYPE, FabricPayloads.UpdateChannelC2S.CODEC);
-		PayloadTypeRegistry.playS2C().register(FabricPayloads.PingLocationS2C.TYPE, FabricPayloads.PingLocationS2C.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(FabricPayloads.PingLocationC2S.TYPE, FabricPayloads.PingLocationC2S.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(FabricPayloads.UpdateChannelC2S.TYPE, FabricPayloads.UpdateChannelC2S.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(FabricPayloads.PingLocationS2C.TYPE, FabricPayloads.PingLocationS2C.CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(
 			FabricPayloads.PingLocationC2S.TYPE,
