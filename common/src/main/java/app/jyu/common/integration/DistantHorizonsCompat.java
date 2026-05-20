@@ -29,7 +29,7 @@ public final class DistantHorizonsCompat {
 	public static void traceDistantAsync(Vec3 direction, float tickDelta, Consumer<BlockHitResult> callback) {
 		final var cameraEntity = Game.cameraEntity;
 
-		if (cameraEntity == null || cameraEntity.level == null) {
+		if (cameraEntity == null || cameraEntity.level() == null) {
 			return;
 		}
 

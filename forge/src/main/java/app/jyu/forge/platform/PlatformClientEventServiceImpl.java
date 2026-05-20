@@ -1,14 +1,14 @@
 package app.jyu.forge.platform;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import app.jyu.common.platform.IPlatformClientEventService;
+import app.jyu.common.render.WorldRenderContext;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import app.jyu.common.platform.IPlatformClientEventService;
-import app.jyu.common.render.WorldRenderContext;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -64,13 +64,13 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 	}
 
 	@Override
-	public void registerRenderGUIEvent(BiConsumer<PoseStack, Float> callback) {
+	public void registerRenderGUIEvent(BiConsumer<GuiGraphics, Float> callback) {
 		MinecraftForge.EVENT_BUS.register(new RenderGUIEventEventHandler(callback));
 	}
-	private record RenderGUIEventEventHandler(BiConsumer<PoseStack, Float> callback) {
+	private record RenderGUIEventEventHandler(BiConsumer<GuiGraphics, Float> callback) {
 		@SubscribeEvent
 		public void onPreGuiRender(RenderGuiEvent.Pre event) {
-			callback.accept(event.getPoseStack(), event.getPartialTick());
+			callback.accept(event.getGuiGraphics(), event.getPartialTick());
 		}
 	}
 }

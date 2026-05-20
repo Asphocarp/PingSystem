@@ -62,7 +62,7 @@ public class ForgeClient {
 	public void onRegisterClientCommands(RegisterClientCommandsEvent event) {
 		event.getDispatcher().register(ClientCommandBuilder.build((context, success, response) -> {
 			if (success) {
-				context.getSource().sendSuccess(LanguageUtils.withModPrefix(response), false);
+				context.getSource().sendSuccess(() -> LanguageUtils.withModPrefix(response), false);
 			} else {
 				context.getSource().sendFailure(LanguageUtils.withModPrefix(response));
 			}

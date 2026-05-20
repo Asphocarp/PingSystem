@@ -28,7 +28,7 @@ public class FabricMain implements ModInitializer {
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(ServerCommandBuilder.build((context, success, response) -> {
 			if (success) {
-				context.getSource().sendSuccess(LanguageUtils.withModPrefix(response), false);
+				context.getSource().sendSuccess(() -> LanguageUtils.withModPrefix(response), false);
 			} else {
 				context.getSource().sendFailure(LanguageUtils.withModPrefix(response));
 			}
