@@ -5,7 +5,7 @@ import app.jyu.common.render.WorldRenderContext;
 import app.jyu.forge.event.WorldRenderCallback;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -61,7 +61,7 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 	}
 	private record RenderGUIEventEventHandler(BiConsumer<GuiGraphics, Float> callback) {
 		@SubscribeEvent
-		public void onPreGuiRender(RenderGuiEvent.Pre event) {
+		public void onPreGuiRender(CustomizeGuiOverlayEvent.Chat event) {
 			callback.accept(event.getGuiGraphics(), event.getPartialTick());
 		}
 	}

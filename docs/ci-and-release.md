@@ -80,7 +80,7 @@ Minecraft 1.20.6 is the first generated branch in this repo that needs Fabric's 
 
 Minecraft 1.21.1 is the first branch where Forge sources must stop calling `new ResourceLocation(namespace, path)`. Put Forge-specific registrations that need resource IDs under `ci/version-overrides/1.21.1/forge/` so later generated branches inherit the modern factory method.
 
-Minecraft 1.21.3 and later Forge branches no longer expose the `RenderLevelStageEvent` API used by the 1.21.1 adapter. Those branches use a Forge-only `LevelRenderer` mixin under `ci/version-overrides/1.21.3/forge/` to fire the same internal world-render callback, plus a `1.21.8` mixin signature override for the newer renderer method. Keep the `sophisticated_ping.forge.mixins.json` config and conditional `MixinConfigs` manifest behavior together with those overrides.
+Minecraft 1.21.3 and later Forge branches no longer expose the `RenderLevelStageEvent` API used by the 1.21.1 adapter. Those branches use a Forge-only `LevelRenderer` mixin under `ci/version-overrides/1.21.3/forge/` to fire the same internal world-render callback, plus a `1.21.8` mixin signature override for the newer renderer method. The same override uses `CustomizeGuiOverlayEvent.Chat` because the old `RenderGuiEvent` is not available in Forge 53. Keep the `sophisticated_ping.forge.mixins.json` config and conditional `MixinConfigs` manifest behavior together with those overrides.
 
 ## Platform Deploy
 
