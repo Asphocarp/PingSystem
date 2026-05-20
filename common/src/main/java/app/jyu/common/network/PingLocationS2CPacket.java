@@ -11,7 +11,7 @@ import static app.jyu.common.config.ClientConfig.MAX_CHANNEL_LENGTH;
 
 public record PingLocationS2CPacket(String channel, Vec3 pos, UUID entity, int sequence, int dimension, UUID author, PingType type) implements IPacket {
 
-	public static final ResourceLocation PACKET_ID = new ResourceLocation(app.jyu.common.Global.MOD_ID, "ping_location_s2c");
+	public static final ResourceLocation PACKET_ID = ResourceLocation.fromNamespaceAndPath(app.jyu.common.Global.MOD_ID, "ping_location_s2c");
 
 	public PingLocationS2CPacket() {
 		this(null, null, null, 0, 0, null, null);

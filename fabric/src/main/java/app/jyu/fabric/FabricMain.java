@@ -2,6 +2,8 @@ package app.jyu.fabric;
 
 import app.jyu.common.CommonServer;
 import app.jyu.common.command.ServerCommandBuilder;
+import app.jyu.common.network.PingLocationC2SPacket;
+import app.jyu.common.network.UpdateChannelC2SPacket;
 import app.jyu.common.resource.LanguageUtils;
 import app.jyu.fabric.payload.FabricPayloads;
 import net.fabricmc.api.ModInitializer;
@@ -21,7 +23,7 @@ public class FabricMain implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(
 			FabricPayloads.PingLocationC2S.TYPE,
 			(payload, context) -> CommonServer.INSTANCE.onPingLocationPacket(
-				context.player().getServer(),
+				context.server(),
 				context.player(),
 				payload.packet()
 			)
@@ -29,7 +31,7 @@ public class FabricMain implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(
 			FabricPayloads.UpdateChannelC2S.TYPE,
 			(payload, context) -> CommonServer.INSTANCE.onChannelUpdatePacket(
-				context.player().getServer(),
+				context.server(),
 				context.player(),
 				payload.packet()
 			)
