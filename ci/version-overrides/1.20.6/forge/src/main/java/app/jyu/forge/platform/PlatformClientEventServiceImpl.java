@@ -58,7 +58,7 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 		@SubscribeEvent
 		public void onRenderWorld(RenderLevelStageEvent event) {
 			if (event.getStage().equals(RenderLevelStageEvent.Stage.AFTER_WEATHER)) {
-				callback.accept(WorldRenderContext.of(event.getPoseStack().last().pose(), event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
+				callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
 			}
 		}
 	}
