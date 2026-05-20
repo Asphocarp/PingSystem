@@ -18,8 +18,8 @@ import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.event.EventNetworkChannel;
+import net.minecraftforge.network.ChannelBuilder;
+import net.minecraftforge.network.EventNetworkChannel;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.function.Function;
@@ -30,24 +30,9 @@ import static app.jyu.common.Global.MOD_ID;
 public class ForgeMain {
 
 	private static final String PROTOCOL_VERSION = "1";
-	public static final EventNetworkChannel PING_LOCATION_CHANNEL_C2S = NetworkRegistry.newEventChannel(
-		PingLocationC2SPacket.PACKET_ID,
-		() -> PROTOCOL_VERSION,
-		c -> true,
-		s -> true
-	);
-	public static final EventNetworkChannel PING_LOCATION_CHANNEL_S2C = NetworkRegistry.newEventChannel(
-		PingLocationS2CPacket.PACKET_ID,
-		() -> PROTOCOL_VERSION,
-		c -> true,
-		s -> true
-	);
-	public static final EventNetworkChannel UPDATE_CHANNEL_C2S = NetworkRegistry.newEventChannel(
-		UpdateChannelC2SPacket.PACKET_ID,
-		() -> PROTOCOL_VERSION,
-		c -> true,
-		s -> true
-	);
+	public static final EventNetworkChannel PING_LOCATION_CHANNEL_C2S = eventChannel(PingLocationC2SPacket.PACKET_ID);
+	public static final EventNetworkChannel PING_LOCATION_CHANNEL_S2C = eventChannel(PingLocationS2CPacket.PACKET_ID);
+	public static final EventNetworkChannel UPDATE_CHANNEL_C2S = eventChannel(UpdateChannelC2SPacket.PACKET_ID);
 
 	@SuppressWarnings({"java:S1118", "the public constructor is required by forge"})
 	public ForgeMain(FMLJavaModLoadingContext context) {
@@ -68,7 +53,7 @@ public class ForgeMain {
 
 	public static <T> void registerPacketHandler(EventNetworkChannel channel, Function<FriendlyByteBuf, T> packetReader, TriConsumer<MinecraftServer, ServerPlayer, T> packetHandler) {
 		channel.addListener((event) -> {
-			var ctx = event.getSource().get();
+			var ctx = event.getSource();
 			var payload = event.getPayload();
 			var sender = ctx.getSender();
 
@@ -79,6 +64,14 @@ public class ForgeMain {
 
 			ctx.setPacketHandled(true);
 		});
+	}
+
+	private static EventNetworkChannel eventChannel(net.minecraft.resources.ResourceLocation id) {
+		return ChannelBuilder
+			.named(id)
+			.networkProtocolVersion(Integer.parseInt(PROTOCOL_VERSION))
+			.optional()
+			.eventNetworkChannel();
 	}
 
 	private static void onRegisterCommands(RegisterCommandsEvent event) {

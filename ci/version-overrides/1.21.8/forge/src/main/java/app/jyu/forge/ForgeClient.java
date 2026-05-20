@@ -12,7 +12,7 @@ import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.network.event.EventNetworkChannel;
+import net.minecraftforge.network.EventNetworkChannel;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -41,7 +41,7 @@ public class ForgeClient {
 
 	public static <T> void registerPacketHandler(EventNetworkChannel channel, Function<FriendlyByteBuf, T> packetReader, Consumer<T> packetHandler) {
 		channel.addListener((event) -> {
-			var ctx = event.getSource().get();
+			var ctx = event.getSource();
 			var payload = event.getPayload();
 
 			if (payload != null) {

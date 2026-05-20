@@ -7,7 +7,7 @@
 - Add the 1.20.6 Forge GUI and world-render overrides required by Forge 50 API changes.
 - Add the 1.21.1 Forge sound registration override required by private `ResourceLocation` constructors.
 - Add the 1.21.3+ Forge world-render mixin fallback after Forge removed `RenderLevelStageEvent`.
-- Add the 1.21.8+ Forge EventBus 7 override required by the `BusGroup` listener API.
+- Add the 1.21.8+ Forge EventBus 7 and networking overrides required by the `BusGroup` listener API and moved `EventNetworkChannel` API.
 
 # 1.2.2
 
