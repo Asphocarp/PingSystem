@@ -82,6 +82,8 @@ Minecraft 1.21.1 is the first branch where Forge sources must stop calling `new 
 
 Minecraft 1.21.3 and later Forge branches no longer expose the `RenderLevelStageEvent` API used by the 1.21.1 adapter. Those branches use a Forge-only `LevelRenderer` mixin under `ci/version-overrides/1.21.3/forge/` to fire the same internal world-render callback, plus a `1.21.8` mixin signature override for the newer renderer method. The same override uses `CustomizeGuiOverlayEvent.Chat` because the old `RenderGuiEvent` is not available in Forge 53. Keep the `sophisticated_ping.forge.mixins.json` config and conditional `MixinConfigs` manifest behavior together with those overrides.
 
+Minecraft 1.21.8 and later Forge branches use Forge EventBus 7. Do not import `net.minecraftforge.eventbus.api.IEventBus` or the old `net.minecraftforge.eventbus.api.SubscribeEvent` package in those generated sources. The override under `ci/version-overrides/1.21.8/forge/` uses `FMLJavaModLoadingContext` constructor injection, stores the mod `BusGroup`, and registers listeners through per-event `BUS` fields or `getBus(BusGroup)` methods.
+
 ## Platform Deploy
 
 Workflow:
