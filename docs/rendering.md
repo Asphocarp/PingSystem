@@ -38,6 +38,8 @@ CommonClient.INSTANCE.onRenderWorld(WorldRenderContext ctx)
 
 `PingManager.updatePings(ctx)` updates every active `PingView`. Each `PingView` resolves its world position and calls `MathUtils.worldToScreen(...)`.
 
+`tickDelta` is the render partial tick/interpolation progress used for world and entity sampling. On `DeltaTracker`-based Minecraft versions this must come from `getGameTimeDeltaPartialTick(...)`, not from `getGameTimeDeltaTicks()`, because entity pings call `Entity#getPosition(ctx.tickDelta)` and need the same interpolation value vanilla entity rendering uses.
+
 ## World-to-Screen Projection
 
 `MathUtils.worldToScreen`:
@@ -158,4 +160,3 @@ NeoForge render hooks are version-specific and live in generated branch override
 - Player labels/heads follow `PlayerInfoMode`.
 - Team coloring follows `TeamColorMode`.
 - Pings expire according to client duration.
-

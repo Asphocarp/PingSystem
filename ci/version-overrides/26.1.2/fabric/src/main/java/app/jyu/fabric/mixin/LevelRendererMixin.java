@@ -22,6 +22,6 @@ import static app.jyu.common.CommonClient.Game;
 public abstract class LevelRendererMixin {
 	@Inject(method = "renderLevel", at = @At(value = "TAIL"))
 	private void onStartRenderLevel(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraRenderState, Matrix4fc frustumMatrix, GpuBufferSlice fog, org.joml.Vector4f fogColor, boolean renderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
-		WorldRenderCallback.START.invoker().onRenderWorld(WorldRenderContext.of(RenderSystem.getModelViewMatrix(), cameraRenderState.projectionMatrix, deltaTracker.getGameTimeDeltaTicks(), Game.gameRenderer.getMainCamera()));
+		WorldRenderCallback.START.invoker().onRenderWorld(WorldRenderContext.of(RenderSystem.getModelViewMatrix(), cameraRenderState.projectionMatrix, deltaTracker.getGameTimeDeltaPartialTick(false), Game.gameRenderer.getMainCamera()));
 	}
 }
