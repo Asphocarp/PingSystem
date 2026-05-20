@@ -1,9 +1,9 @@
 package app.jyu.common.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import app.jyu.common.core.GameContext;
 import app.jyu.common.core.PingManager;
 import app.jyu.common.config.ClientConfig;
+import net.minecraft.client.gui.GuiGraphics;
 
 import static app.jyu.common.CommonClient.Game;
 
@@ -12,8 +12,8 @@ public class OverlayRenderer {
 
 	private static final ClientConfig CLIENT_CONFIG = ClientConfig.HANDLER.getConfig();
 
-	public static void draw(PoseStack m, float tickDelta) {
-		PingWheelRenderer.draw(m);
+	public static void draw(GuiGraphics guiGraphics, float tickDelta) {
+		PingWheelRenderer.draw(guiGraphics);
 
 		final var pingRepo = PingManager.PING_REPO;
 
@@ -21,8 +21,9 @@ public class OverlayRenderer {
 			return;
 		}
 
-		final var ctx = new DrawContext(m);
+		final var ctx = new DrawContext(guiGraphics);
 		final var showDirectionIndicator = CLIENT_CONFIG.isDirectionIndicatorVisible();
+		final var m = guiGraphics.pose();
 
 		if (showDirectionIndicator) {
 			DirectionIndicatorRenderer.prepareSafeZone();

@@ -1,18 +1,17 @@
 package app.jyu.fabric.platform;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
 import app.jyu.fabric.event.GuiRenderCallback;
 import app.jyu.fabric.event.WorldRenderCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class PlatformClientEventServiceImpl implements IPlatformClientEventService {
-
 	@Override
 	public void registerTickStartEvent(Runnable callback) {
 		ClientTickEvents.START_CLIENT_TICK.register(client -> callback.run());
@@ -34,7 +33,7 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 	}
 
 	@Override
-	public void registerRenderGUIEvent(BiConsumer<PoseStack, Float> callback) {
+	public void registerRenderGUIEvent(BiConsumer<GuiGraphics, Float> callback) {
 		GuiRenderCallback.START.register(callback::accept);
 	}
 }
