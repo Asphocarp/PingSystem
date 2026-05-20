@@ -11,7 +11,7 @@ Sophisticated Ping lets players mark locations and entities in the world with mu
 Default keybinds:
 
 ```text
-Ping Location: Mouse Button 5
+Ping Location: Mouse5 (Forward side mouse button)
 Open Settings: unbound
 ```
 

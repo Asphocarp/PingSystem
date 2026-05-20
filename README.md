@@ -8,7 +8,7 @@ Sophisticated Ping for Minecraft. Make MC Apex Again!
 
 ## Sophisticated Ping
 
-Default hotkey: `c`
+Default hotkey: `Mouse5` (`Forward` side mouse button)
 
 Send signal to your team for communication.
 
@@ -53,7 +53,7 @@ Technical Architecture:
 - Configuration: ModMenu integration with ClothConfig for extensive customization
 
 Key Features:
-- Default 'C' key binding with toggle functionality
+- Default `Mouse5` (`Forward`) key binding with toggle functionality
 - Thread-safe ping storage with automatic cleanup
 - Screen projection mathematics for accurate HUD positioning
 - Entity interpolation for smooth tracking of moving targets
