@@ -120,8 +120,8 @@ The workflow:
 1. checks out each requested version branch;
 2. builds each requested loader if declared by the matrix;
 3. uploads artifacts;
-4. publishes serially through `publish.gradle`.
+4. publishes through `publish.gradle` with limited parallelism.
 
 GitHub, Modrinth, and CurseForge are supported. CurseForge requires an existing CurseForge project ID configured as `CURSEFORGE_PROJECT` and a legacy Upload API token configured as `CURSEFORGE_TOKEN`.
 
-When CurseForge publishing is enabled, the workflow validates the token before building or uploading. Use the legacy CurseForge account settings / Authors API Tokens token for `minecraft.curseforge.com/api`, not the bcrypt-like Personal API Key or a `cfc_pat_...` Studio/Core API token. Per artifact, CurseForge publishes before Modrinth/GitHub so a CurseForge rejection does not leave new partial releases on the other platforms.
+When CurseForge publishing is enabled, the workflow validates the token before building or uploading. Use the legacy CurseForge account settings / Authors API Tokens token for `minecraft.curseforge.com/api`, not the bcrypt-like Personal API Key or a `cfc_pat_...` Studio/Core API token. Per artifact, CurseForge publishes before Modrinth/GitHub so a CurseForge rejection does not leave new partial releases on the other platforms; publish jobs use limited parallelism across independent artifacts.

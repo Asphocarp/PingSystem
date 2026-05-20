@@ -108,7 +108,7 @@ Behavior:
 2. checks out each version branch;
 3. builds the loader artifact;
 4. uploads temporary build artifacts;
-5. serially publishes releases with `publish.gradle`.
+5. publishes releases with `publish.gradle` using limited parallelism.
 
 Gradle build steps retry up to three times before failing, with a 15-minute timeout per attempt. This is only for transient dependency repository failures or hung downloads, such as temporary Maven Central or plugin portal `403`/connection errors; compile failures still fail after the final attempt.
 
@@ -161,7 +161,7 @@ CurseForge requires a numeric project ID for uploads. The upload API posts files
 
 `CURSEFORGE_TOKEN` must be an Upload API token from the legacy CurseForge account settings / Authors API Tokens page used by `minecraft.curseforge.com/api`. Do not use the bcrypt-like CurseForge Personal API Key or a `cfc_pat_...` CurseForge Studio/Core API token; the legacy upload API rejects both credential types as malformed.
 
-For each artifact, the workflow publishes CurseForge first. Modrinth and GitHub are published only after the CurseForge task succeeds, reducing partial release cleanup if CurseForge rejects a file or credential.
+For each artifact, the workflow publishes CurseForge first. Modrinth and GitHub are published only after that artifact's CurseForge task succeeds, reducing partial release cleanup if CurseForge rejects a file or credential. Publish jobs run with limited parallelism so the full matrix does not stall behind one platform upload lane.
 
 ## Release Artifacts
 
