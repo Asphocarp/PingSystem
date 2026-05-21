@@ -86,7 +86,7 @@ public class LegacyMigrationHandler {
 			msg.append(" to ");
 			msg.append(Component.literal("\"assets/sophisticated_ping\"").withStyle(ChatFormatting.GRAY));
 
-			Game.player.sendSystemMessage(LanguageUtils.withModPrefix(msg));
+			Game.player.displayClientMessage(LanguageUtils.withModPrefix(msg), false);
 			notifyDeprecatedResourcePack = false;
 		}
 	}

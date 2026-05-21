@@ -2,10 +2,10 @@ package app.jyu.forge.platform;
 
 import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
+import app.jyu.forge.event.WorldRenderCallback;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -52,15 +52,7 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 
 	@Override
 	public void registerRenderWorldEvent(Consumer<WorldRenderContext> callback) {
-		MinecraftForge.EVENT_BUS.register(new RenderWorldEventEventHandler(callback));
-	}
-	private record RenderWorldEventEventHandler(Consumer<WorldRenderContext> callback) {
-		@SubscribeEvent
-		public void onRenderWorld(RenderLevelStageEvent event) {
-			if (event.getStage().equals(RenderLevelStageEvent.Stage.AFTER_WEATHER)) {
-				callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
-			}
-		}
+		WorldRenderCallback.register(callback);
 	}
 
 	@Override
@@ -69,7 +61,7 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 	}
 	private record RenderGUIEventEventHandler(BiConsumer<GuiGraphics, Float> callback) {
 		@SubscribeEvent
-		public void onChatOverlayRender(CustomizeGuiOverlayEvent.Chat event) {
+		public void onPreGuiRender(CustomizeGuiOverlayEvent.Chat event) {
 			callback.accept(event.getGuiGraphics(), event.getPartialTick());
 		}
 	}
