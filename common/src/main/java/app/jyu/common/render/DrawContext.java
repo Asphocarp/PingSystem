@@ -1,5 +1,6 @@
 package app.jyu.common.render;
 
+import app.jyu.common.math.MathUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -7,15 +8,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec2;
-import app.jyu.common.math.MathUtils;
 
 import static app.jyu.common.CommonClient.Game;
 import static app.jyu.common.resource.ResourceConstants.ARROW_TEXTURE_ID;
@@ -59,7 +59,7 @@ public class DrawContext {
 		RenderSystem.setShaderTexture(0, player.getSkinLocation());
 		RenderSystem.enableBlend();
 		GuiComponent.blit(matrices, 0, 0, 0, 8, 8, 8, 8, 64, 64);
-		GuiComponent.blit(matrices, 0, 0, 0, 40, 8, 8, 8, 64, 64); // Overlay (hat)
+		GuiComponent.blit(matrices, 0, 0, 0, 40, 8, 8, 8, 64, 64);
 		RenderSystem.disableBlend();
 	}
 
@@ -93,15 +93,15 @@ public class DrawContext {
 		RenderSystem.applyModelViewMatrix();
 
 		var immediate = Game.renderBuffers().bufferSource();
-		var bl = !model.usesBlockLight();
-		if (bl) {
+		var flatLighting = !model.usesBlockLight();
+		if (flatLighting) {
 			Lighting.setupForFlatItems();
 		}
 
 		var matrixStackDummy = new PoseStack();
 		Game.getItemRenderer().render(
 			itemStack,
-			ItemTransforms.TransformType.GUI,
+			ItemDisplayContext.GUI,
 			false,
 			matrixStackDummy,
 			immediate,
@@ -112,7 +112,7 @@ public class DrawContext {
 		immediate.endBatch();
 		RenderSystem.enableDepthTest();
 
-		if (bl) {
+		if (flatLighting) {
 			Lighting.setupFor3DItems();
 		}
 
