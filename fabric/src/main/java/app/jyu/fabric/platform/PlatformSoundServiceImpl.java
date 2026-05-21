@@ -4,7 +4,7 @@ import app.jyu.common.Global;
 import app.jyu.common.platform.IPlatformSoundService;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 
 import java.util.LinkedHashMap;
@@ -21,7 +21,7 @@ public final class PlatformSoundServiceImpl implements IPlatformSoundService {
 		}
 
 		for (String soundName : soundNames) {
-			var soundId = ResourceLocation.fromNamespaceAndPath(Global.MOD_ID, soundName);
+			var soundId = Identifier.fromNamespaceAndPath(Global.MOD_ID, soundName);
 			var soundEvent = SoundEvent.createVariableRangeEvent(soundId);
 			Registry.register(BuiltInRegistries.SOUND_EVENT, soundId, soundEvent);
 			SOUND_EVENTS.put(soundName, soundEvent);

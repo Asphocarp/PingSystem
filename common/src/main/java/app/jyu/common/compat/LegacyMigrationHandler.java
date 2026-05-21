@@ -2,7 +2,7 @@ package app.jyu.common.compat;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import app.jyu.common.platform.IPlatformContextService;
 import app.jyu.common.resource.LanguageUtils;
@@ -93,9 +93,9 @@ public class LegacyMigrationHandler {
 
 	public static void checkResources(ResourceManager resourceManager) {
 		var legacyTextures = List.of(
-			ResourceLocation.fromNamespaceAndPath("sophisticated-ping", "ping"),
-			ResourceLocation.fromNamespaceAndPath("sophisticated-ping", "textures/ping.png"),
-			ResourceLocation.fromNamespaceAndPath("sophisticated-ping", "textures/arrow.png")
+			Identifier.fromNamespaceAndPath("sophisticated-ping", "ping"),
+			Identifier.fromNamespaceAndPath("sophisticated-ping", "textures/ping.png"),
+			Identifier.fromNamespaceAndPath("sophisticated-ping", "textures/arrow.png")
 		);
 
 		notifyDeprecatedResourcePack = false;
