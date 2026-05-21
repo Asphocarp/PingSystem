@@ -6,6 +6,7 @@
 - Document conditional Factions runtime support for 1.20.6, 1.21.3, and 26.1.2.
 - Fix generated 1.21.1 loader builds by sharing the Sable compile-only classpath with loader source compiles.
 - Fix Sable Companion Maven resolution for the generated 1.21.1 build.
+- Clear row-scoped Sable matrix properties during branch migration so unsupported later branches do not inherit the 1.21.1 Sable dependency.
 
 # 1.2.5
 
