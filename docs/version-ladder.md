@@ -159,7 +159,7 @@ Most optional integrations live in baseline common code and are replayed forward
 - Factions team context;
 - Fabric Mod Menu metadata.
 
-Sable is different because the companion API is only enabled in explicit supported version recipes. Keep Sable dependencies and source imports inside version overrides; the current supported override is `ci/version-overrides/1.21.1/`.
+Sable is different because the companion API is only enabled in explicit supported version recipes. Keep Sable source imports inside version overrides; the current supported override is `ci/version-overrides/1.21.1/`. Supported rows pin `sable_version` in `ci/version-matrix.yml`, and the shared build plugin turns that property into a compile-only dependency for `:common` and loader source compiles.
 
 Factions support also needs matrix metadata because its Modrinth artifact version changes by Minecraft version. Every `ci/version-matrix.yml` row must pin `factions_version`, Fabric metadata overrides must keep `suggests.factions`, and buildSrc overrides must keep the compile-only Factions dependency. `MatrixFactionsContractTest` enforces those invariants.
 
