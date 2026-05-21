@@ -470,7 +470,6 @@ In multiplayer:
 
 These are not currently implemented features:
 
-- radial hold-and-select ping-type wheel;
 - persistent server-side ping storage;
 - server-authoritative ping removal packets;
 - Bukkit/plugin interoperability in this repository.
