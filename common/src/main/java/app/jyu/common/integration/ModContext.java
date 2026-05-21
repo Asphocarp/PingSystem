@@ -10,12 +10,14 @@ public class ModContext {
 	public static boolean HasDistantHorizons = false;
 	public static boolean HasVoiceChat = false;
 	public static boolean HasFTBTeams = false;
+	public static boolean HasFactions = false;
 	public static boolean HasSable = false;
 
 	public static void indexMods() {
 		HasDistantHorizons = IPlatformContextService.INSTANCE.isModLoaded("distanthorizons");
 		HasVoiceChat = IPlatformContextService.INSTANCE.isModLoaded("voicechat");
 		HasFTBTeams = IPlatformContextService.INSTANCE.isModLoaded("ftbteams");
+		HasFactions = IPlatformContextService.INSTANCE.isModLoaded("factions");
 		HasSable = IPlatformContextService.INSTANCE.isModLoaded("sable");
 
 		if (HasDistantHorizons) {

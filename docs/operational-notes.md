@@ -58,14 +58,17 @@ Rules:
 
 ## Optional Team Integrations
 
-Simple Voice Chat and FTB Teams are compile-only integrations. Runtime code must check `ModContext.HasVoiceChat` or `ModContext.HasFTBTeams` before touching integration APIs.
+Simple Voice Chat, FTB Teams, and Factions are compile-only integrations. Runtime code must check `ModContext.HasVoiceChat`, `ModContext.HasFTBTeams`, or `ModContext.HasFactions` before touching integration APIs.
 
 Rules:
 
 - keep Simple Voice Chat API access in `VoiceChatIntegration` and `VoiceChatWrapper`;
 - keep FTB Teams API access in `FTBTeamsWrapper`;
-- preserve context priority: voice group, FTB team, vanilla team;
-- test startup without either optional mod installed.
+- keep Factions API access in `FactionsWrapper`;
+- preserve context priority: voice group, FTB team, Factions faction, vanilla team;
+- test startup without optional team mods installed.
+
+Factions is a Fabric, server-side mod. The server relay uses Factions as authoritative teammate context when it is loaded, but clients connected to dedicated servers may not show Factions in the settings placeholder because the mod does not need to be installed client-side.
 
 ## Sable
 

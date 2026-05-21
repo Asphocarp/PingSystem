@@ -148,6 +148,7 @@ Team context resolution uses the first available context in this order:
 
 - Simple Voice Chat group;
 - FTB Teams non-personal team;
+- Factions faction;
 - vanilla Minecraft team.
 
 Team color rendering still comes from vanilla player team color data.

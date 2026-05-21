@@ -44,5 +44,8 @@
   "recommends": {
     "modmenu": "*",
     "cloth-config": "*"
+  },
+  "suggests": {
+    "factions": "*"
   }
 }
