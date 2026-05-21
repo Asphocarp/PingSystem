@@ -1,13 +1,13 @@
 package app.jyu.common.core;
 
+import lombok.Getter;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import app.jyu.common.config.ClientConfig;
 import app.jyu.common.integration.ModContext;
 import app.jyu.common.math.Raycast;
 import app.jyu.common.network.PingLocationC2SPacket;
 import app.jyu.common.platform.IPlatformNetworkService;
-import lombok.Getter;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 
 import java.util.UUID;
 
@@ -54,7 +54,7 @@ public class PingController {
 	}
 
 	private static void performPingAction(PingType type, float tickDelta) {
-		var cameraEntity = Game.cameraEntity;
+		var cameraEntity = Game.getCameraEntity();
 
 		if (cameraEntity == null || Game.level == null) {
 			return;

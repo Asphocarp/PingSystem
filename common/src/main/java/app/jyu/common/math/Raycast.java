@@ -21,7 +21,7 @@ public class Raycast {
 											 float tickDelta,
 											 double maxDistance,
 											 boolean hitTranslucent) {
-		var cameraEntity = Game.cameraEntity;
+		var cameraEntity = Game.getCameraEntity();
 
 		if (cameraEntity == null || cameraEntity.level() == null) {
 			return null;

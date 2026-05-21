@@ -71,7 +71,7 @@ public final class PlatformClientEventServiceImpl implements IPlatformClientEven
 					event.getModelViewMatrix(),
 					Game.gameRenderer.getProjectionMatrix(tickDelta),
 					tickDelta,
-					event.getCamera()
+					Game.gameRenderer.getMainCamera()
 				));
 			}
 		}

@@ -15,7 +15,6 @@ import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -43,8 +42,8 @@ public class FabricClient implements ClientModInitializer {
 				}
 
 				@Override
-				public CompletableFuture<Void> reload(PreparationBarrier helper, ResourceManager resourceManager, Executor loadExecutor, Executor applyExecutor) {
-					return ResourceReloadListener.reloadTextures(helper, resourceManager, loadExecutor, applyExecutor);
+				public CompletableFuture<Void> reload(SharedState sharedState, Executor loadExecutor, PreparationBarrier helper, Executor applyExecutor) {
+					return ResourceReloadListener.reloadTextures(helper, sharedState.resourceManager(), loadExecutor, applyExecutor);
 				}
 			});
 
