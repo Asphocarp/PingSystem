@@ -1,13 +1,15 @@
 package app.jyu.common.core;
 
-import lombok.Getter;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 import app.jyu.common.config.ClientConfig;
 import app.jyu.common.integration.ModContext;
 import app.jyu.common.math.Raycast;
 import app.jyu.common.network.PingLocationC2SPacket;
 import app.jyu.common.platform.IPlatformNetworkService;
+import dev.ryanhcode.sable.companion.SableCompanion;
+import lombok.Getter;
+import net.minecraft.core.Position;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 
 import java.util.UUID;
 
@@ -75,6 +77,18 @@ public class PingController {
 			}
 
 			return;
+		}
+
+		if (ModContext.HasSable && hitResult.getType() == HitResult.Type.BLOCK) {
+			var pos = hitResult.getLocation();
+			var subLevelAccess = SableCompanion.INSTANCE.getContainingClient(pos);
+
+			if (subLevelAccess != null) {
+				var realPos = SableCompanion.INSTANCE.projectOutOfSubLevel(Game.level, (Position)pos);
+				IPlatformNetworkService.INSTANCE.sendToServer(new PingLocationC2SPacket(CLIENT_CONFIG.getChannel(), realPos, null, pingSequence, GameContext.getDimension(), type));
+
+				return;
+			}
 		}
 
 		UUID uuid = null;

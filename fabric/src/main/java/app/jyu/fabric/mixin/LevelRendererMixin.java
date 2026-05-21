@@ -3,8 +3,8 @@ package app.jyu.fabric.mixin;
 import app.jyu.common.render.WorldRenderContext;
 import app.jyu.fabric.event.WorldRenderCallback;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -16,9 +16,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;applyModelViewMatrix()V", ordinal = 0, shift = At.Shift.AFTER))
-	private void onStartRenderLevel(PoseStack $$0, float tickDelta, long $$2, boolean $$3, Camera camera, GameRenderer $$5, LightTexture $$6, Matrix4f $$7, CallbackInfo ci) {
-		WorldRenderCallback.START.invoker().onRenderWorld(WorldRenderContext.of(RenderSystem.getModelViewMatrix(), RenderSystem.getProjectionMatrix(), tickDelta, camera));
+	@Inject(method = "renderLevel", at = @At(value = "TAIL"))
+	private void onStartRenderLevel(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f modelViewMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
+		WorldRenderCallback.START.invoker().onRenderWorld(WorldRenderContext.of(RenderSystem.getModelViewMatrix(), RenderSystem.getProjectionMatrix(), deltaTracker.getGameTimeDeltaPartialTick(false), camera));
 	}
 }

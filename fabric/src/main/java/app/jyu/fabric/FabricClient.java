@@ -2,6 +2,7 @@ package app.jyu.fabric;
 
 import app.jyu.common.CommonClient;
 import app.jyu.common.command.ClientCommandBuilder;
+import app.jyu.common.network.PingLocationS2CPacket;
 import app.jyu.common.resource.LanguageUtils;
 import app.jyu.common.resource.ResourceReloadListener;
 import app.jyu.fabric.payload.FabricPayloads;
@@ -24,7 +25,7 @@ import static app.jyu.common.Global.MOD_ID;
 
 @Environment(EnvType.CLIENT)
 public class FabricClient implements ClientModInitializer {
-	public static final ResourceLocation RELOAD_LISTENER_ID = new ResourceLocation(MOD_ID, "reload-listener");
+	public static final ResourceLocation RELOAD_LISTENER_ID = ResourceLocation.fromNamespaceAndPath(MOD_ID, "reload-listener");
 
 	@Override
 	public void onInitializeClient() {

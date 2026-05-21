@@ -7,7 +7,7 @@ import static app.jyu.common.config.ClientConfig.MAX_CHANNEL_LENGTH;
 
 public record UpdateChannelC2SPacket(String channel) implements IPacket {
 
-	public static final ResourceLocation PACKET_ID = new ResourceLocation(app.jyu.common.Global.MOD_ID, "update_channel_c2s");
+	public static final ResourceLocation PACKET_ID = ResourceLocation.fromNamespaceAndPath(app.jyu.common.Global.MOD_ID, "update_channel_c2s");
 
 	public UpdateChannelC2SPacket() {
 		this((String)null);

@@ -33,17 +33,17 @@
     ]
   },
   "mixins": [
-    "sophisticated_ping.fabric.mixins.json"
+    "sophisticated_ping.mixins.json",
+    {
+      "config": "sophisticated_ping.client.mixins.json",
+      "environment": "client"
+    }
   ],
   "depends": {
     "fabricloader": ">=${fabric_loader_min_version}",
     "fabric-api": "*",
     "minecraft": "${fabric_compatible_range}",
     "java": ">=${java_version}"
-  },
-  "recommends": {
-    "modmenu": "*",
-    "cloth-config": "*"
   },
   "suggests": {
     "factions": "*"

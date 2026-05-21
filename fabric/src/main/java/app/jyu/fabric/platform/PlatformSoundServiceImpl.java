@@ -21,7 +21,7 @@ public final class PlatformSoundServiceImpl implements IPlatformSoundService {
 		}
 
 		for (String soundName : soundNames) {
-			var soundId = new ResourceLocation(Global.MOD_ID, soundName);
+			var soundId = ResourceLocation.fromNamespaceAndPath(Global.MOD_ID, soundName);
 			var soundEvent = SoundEvent.createVariableRangeEvent(soundId);
 			Registry.register(BuiltInRegistries.SOUND_EVENT, soundId, soundEvent);
 			SOUND_EVENTS.put(soundName, soundEvent);

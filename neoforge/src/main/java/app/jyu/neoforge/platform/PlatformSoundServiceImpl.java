@@ -1,21 +1,20 @@
-package app.jyu.forge.platform;
+package app.jyu.neoforge.platform;
 
 import app.jyu.common.Global;
 import app.jyu.common.platform.IPlatformSoundService;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class PlatformSoundServiceImpl implements IPlatformSoundService {
-	private static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, Global.MOD_ID);
-	private static final Map<String, RegistryObject<SoundEvent>> REGISTERED_SOUNDS = new LinkedHashMap<>();
+	private static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(BuiltInRegistries.SOUND_EVENT, Global.MOD_ID);
+	private static final Map<String, DeferredHolder<SoundEvent, SoundEvent>> REGISTERED_SOUNDS = new LinkedHashMap<>();
 	private static IEventBus modBus;
 	private static boolean registeredBus;
 
@@ -28,16 +27,13 @@ public final class PlatformSoundServiceImpl implements IPlatformSoundService {
 		if (!REGISTERED_SOUNDS.isEmpty()) {
 			return;
 		}
+
 		if (modBus == null) {
-			throw new IllegalStateException("Forge mod event bus was not configured before sound registration");
+			throw new IllegalStateException("NeoForge mod event bus was not configured before sound registration");
 		}
 
 		for (String soundName : soundNames) {
-			var soundId = ResourceLocation.fromNamespaceAndPath(Global.MOD_ID, soundName);
-			REGISTERED_SOUNDS.put(soundName, SOUND_EVENTS.register(
-				soundName,
-				() -> SoundEvent.createVariableRangeEvent(soundId)
-			));
+			REGISTERED_SOUNDS.put(soundName, SOUND_EVENTS.register(soundName, SoundEvent::createVariableRangeEvent));
 		}
 
 		if (!registeredBus) {
