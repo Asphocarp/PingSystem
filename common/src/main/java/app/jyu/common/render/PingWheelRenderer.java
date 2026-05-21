@@ -3,7 +3,6 @@ package app.jyu.common.render;
 import app.jyu.common.resource.LanguageUtils;
 import app.jyu.common.core.PingType;
 import app.jyu.common.core.PingWheelController;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.Nullable;
@@ -31,10 +30,8 @@ public class PingWheelRenderer {
 		final var centerY = height / 2;
 		final var selected = PingWheelController.getSelectedType();
 
-		RenderSystem.enableBlend();
 		drawTypes(guiGraphics, centerX, centerY, selected);
 		drawCenteredText(guiGraphics, LanguageUtils.of("ping_wheel", "center").get().getString(), centerX, centerY + CENTER_TEXT_Y_OFFSET, CENTER_TEXT_COLOR);
-		RenderSystem.disableBlend();
 	}
 
 	private static void drawTypes(GuiGraphics guiGraphics, int centerX, int centerY, @Nullable PingType selected) {
