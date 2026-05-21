@@ -16,16 +16,9 @@ neoForge {
 }
 
 repositories {
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "RyanHCode Maven"
-                url = "https://maven.ryanhcode.dev/releases"
-            }
-        }
-        filter {
-            includeGroup "dev.ryanhcode.sable-companion"
-        }
+    maven {
+        name = "RyanHCode Maven"
+        url = uri("https://maven.ryanhcode.dev/releases")
     }
 }
 
