@@ -6,7 +6,7 @@ import app.jyu.fabric.event.GuiRenderCallback;
 import app.jyu.fabric.event.WorldRenderCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -33,7 +33,7 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 	}
 
 	@Override
-	public void registerRenderGUIEvent(BiConsumer<GuiGraphics, Float> callback) {
+	public void registerRenderGUIEvent(BiConsumer<GuiGraphicsExtractor, Float> callback) {
 		GuiRenderCallback.START.register(callback::accept);
 	}
 }

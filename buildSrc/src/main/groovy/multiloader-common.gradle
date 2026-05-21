@@ -62,28 +62,18 @@ repositories {
         name = "Simple Voice Chat"
         url = "https://maven.maxhenkel.de/repository/public"
     }
-    maven {
-        name = "RyanHCode Maven"
-        url = uri("https://maven.ryanhcode.dev/releases")
-    }
 }
 
 dependencies {
     implementation "org.jetbrains:annotations:24.1.0"
-    compileOnly "org.projectlombok:lombok:1.18.32"
-    annotationProcessor "org.projectlombok:lombok:1.18.32"
+    compileOnly "org.projectlombok:lombok:1.18.46"
+    annotationProcessor "org.projectlombok:lombok:1.18.46"
     compileOnly "maven.modrinth:DistantHorizonsApi:${distanthorizons_api_version}"
     compileOnly "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
     compileOnly "curse.maven:ftbteams-404468:${ftbteams_version}"
     compileOnly "maven.modrinth:factions:${factions_version}"
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-}
-
-if (project.findProperty("sable_version")) {
-    dependencies {
-        compileOnly "dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:${sable_version}"
-    }
 }
 
 tasks.named("test", Test) {
@@ -102,7 +92,7 @@ tasks.named("test", Test) {
 
 jar {
     manifest {
-        def manifestAttributes = [
+        attributes([
                 "Specification-Title"   : mod_name,
                 "Specification-Vendor"  : mod_author,
                 "Specification-Version" : project.jar.archiveVersion,
@@ -110,14 +100,7 @@ jar {
                 "Implementation-Version": project.jar.archiveVersion,
                 "Implementation-Vendor" : mod_author,
                 "Built-On-Minecraft"    : minecraft_version,
-        ]
-
-        def forgeMixinConfig = file("src/main/resources/${mod_id}.forge.mixins.json")
-        if (forgeMixinConfig.exists()) {
-            manifestAttributes["MixinConfigs"] = "${mod_id}.forge.mixins.json"
-        }
-
-        attributes(manifestAttributes)
+        ])
     }
 }
 

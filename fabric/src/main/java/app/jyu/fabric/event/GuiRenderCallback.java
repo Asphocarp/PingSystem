@@ -2,7 +2,7 @@ package app.jyu.fabric.event;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public interface GuiRenderCallback {
 	Event<GuiRenderCallback> START = EventFactory.createArrayBacked(GuiRenderCallback.class, (listeners) -> (guiGraphics, delta) -> {
@@ -11,5 +11,5 @@ public interface GuiRenderCallback {
 		}
 	});
 
-	void onRenderGui(GuiGraphics guiGraphics, float tickDelta);
+	void onRenderGui(GuiGraphicsExtractor guiGraphics, float tickDelta);
 }

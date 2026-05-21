@@ -10,7 +10,7 @@ import app.jyu.common.resource.LanguageUtils;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.OptionInstance;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -87,15 +87,15 @@ public class SettingsScreen extends Screen {
 	}
 
 	@Override
-	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-		this.renderBackground(guiGraphics, mouseX, mouseY, delta);
-		guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 20, WHITE);
-		guiGraphics.drawString(this.font, LanguageUtils.settings("channel").get(), this.width / 2 - 100, this.channelTextField.getY() - 12, GRAY, false);
+	public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float delta) {
+		this.extractBackground(guiGraphics, mouseX, mouseY, delta);
+		guiGraphics.centeredText(this.font, this.title, this.width / 2, 20, WHITE);
+		guiGraphics.text(this.font, LanguageUtils.settings("channel").get(), this.width / 2 - 100, this.channelTextField.getY() - 12, GRAY, false);
 
-		super.render(guiGraphics, mouseX, mouseY, delta);
+		super.extractRenderState(guiGraphics, mouseX, mouseY, delta);
 
 		if (this.channelTextField.getValue().isEmpty()) {
-			guiGraphics.drawString(this.font, getChannelPlaceholder(), this.width / 2 - 100 + 4, this.channelTextField.getY() + 6, WHITE, false);
+			guiGraphics.text(this.font, getChannelPlaceholder(), this.width / 2 - 100 + 4, this.channelTextField.getY() + 6, WHITE, false);
 		}
 
 		if (this.channelTextField.isHoveredOrFocused() && !this.channelTextField.isFocused()) {

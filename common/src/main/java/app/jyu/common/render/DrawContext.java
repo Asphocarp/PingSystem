@@ -2,7 +2,7 @@ package app.jyu.common.render;
 
 import app.jyu.common.math.MathUtils;
 import lombok.Getter;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -19,12 +19,12 @@ public class DrawContext {
 	private static final int SHADOW_BLACK = 0x40000000;
 
 	@Getter
-	private final GuiGraphics guiGraphics;
+	private final GuiGraphicsExtractor guiGraphics;
 
 	@Getter
 	private final Matrix3x2fStack matrices;
 
-	public DrawContext(GuiGraphics guiGraphics) {
+	public DrawContext(GuiGraphicsExtractor guiGraphics) {
 		this.guiGraphics = guiGraphics;
 		this.matrices = guiGraphics.pose();
 	}
@@ -40,7 +40,7 @@ public class DrawContext {
 		matrices.pushMatrix();
 		matrices.translate(textOffset.x, textOffset.y);
 		guiGraphics.fill(-2, -2, (int)textMetrics.x + 1, (int)textMetrics.y, SHADOW_BLACK);
-		guiGraphics.drawString(Game.font, text, (int)extraWidth, 0, color, false);
+		guiGraphics.text(Game.font, text, (int)extraWidth, 0, color, false);
 
 		if (player != null) {
 			matrices.translate(-0.5f, -0.5f);
@@ -73,7 +73,7 @@ public class DrawContext {
 	public void renderGuiItemModel(ItemStack itemStack) {
 		matrices.pushMatrix();
 		matrices.translate(-8f, -8f);
-		guiGraphics.renderFakeItem(itemStack, 0, 0);
+		guiGraphics.fakeItem(itemStack, 0, 0);
 		matrices.popMatrix();
 	}
 
