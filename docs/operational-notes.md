@@ -100,6 +100,7 @@ Rules:
 
 - do not add Sable classes to baseline common sources;
 - pin `sable_version` only in explicit supported matrix rows, so the shared build plugin can add the compile-only classpath to both `:common` and loader source compiles;
+- keep `sable_version` in the migrator's optional row-scoped property cleanup list so later branches do not inherit it accidentally;
 - smoke test both with and without Sable installed on any branch that enables the override.
 
 ## ServiceLoader Failures

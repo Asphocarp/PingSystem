@@ -76,6 +76,8 @@ Use it after changes to:
 
 Failure rule: if a generated branch fails to build, do not treat later branches as valid. Fix the baseline recipe or overrides, then rerun.
 
+The migration script clears optional row-scoped properties before applying each matrix entry. Keep transient dependency pins such as `sable_version` on that cleanup list unless every later branch should inherit them.
+
 Minecraft 1.20.6 is the first generated branch in this repo that needs Fabric's typed `CustomPacketPayload` networking override while still keeping the older Forge branch layout. It also needs a Forge 50 GUI render hook override because `RenderGuiEvent` is not present in the compiled Forge API for that branch. Keep those splits in `ci/version-overrides/1.20.6/`; do not move the 1.20.6 Fabric payload wrappers or Forge GUI hook into the `1.20.1` or baseline sources.
 
 Minecraft 1.21.1 is the first branch where Forge sources must stop calling `new ResourceLocation(namespace, path)`. Put Forge-specific registrations that need resource IDs under `ci/version-overrides/1.21.1/forge/` so later generated branches inherit the modern factory method.

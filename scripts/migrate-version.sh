@@ -5,6 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MATRIX_FILE="${ROOT_DIR}/ci/version-matrix.yml"
 GRADLE_PROPERTIES="${ROOT_DIR}/gradle.properties"
 OVERRIDES_DIR="${ROOT_DIR}/ci/version-overrides"
+OPTIONAL_MATRIX_PROPERTIES=(
+  "sable_version"
+)
 
 strip_quotes() {
   local value="$1"
@@ -95,9 +98,25 @@ set_property() {
   mv "${tmp}" "${GRADLE_PROPERTIES}"
 }
 
+remove_property() {
+  local key="$1"
+  local tmp
+  tmp="$(mktemp)"
+  awk -v key="${key}" '
+    $0 !~ "^" key "=" {
+      print
+    }
+  ' "${GRADLE_PROPERTIES}" > "${tmp}"
+  mv "${tmp}" "${GRADLE_PROPERTIES}"
+}
+
 migrate() {
   local target="$1"
   local applied=0
+
+  for key in "${OPTIONAL_MATRIX_PROPERTIES[@]}"; do
+    remove_property "${key}"
+  done
 
   while IFS='=' read -r key value; do
     case "${key}" in

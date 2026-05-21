@@ -62,6 +62,18 @@ class MatrixFactionsContractTest {
 		assertTrue(missing.isEmpty(), "Fabric metadata missing suggested Factions dependency: " + missing);
 	}
 
+	@Test
+	void migrationScriptClearsRowScopedSableVersion() throws IOException {
+		final var root = findRepoRoot(Path.of(System.getProperty("user.dir")).toAbsolutePath());
+		assertNotNull(root, "Could not locate repository root");
+
+		final var script = Files.readString(root.resolve("scripts/migrate-version.sh"));
+
+		assertTrue(script.contains("OPTIONAL_MATRIX_PROPERTIES"), "Migration script must track optional row-scoped properties");
+		assertTrue(script.contains("\"sable_version\""), "Migration script must clear stale sable_version between rows");
+		assertTrue(script.contains("remove_property"), "Migration script must remove absent optional properties before applying a row");
+	}
+
 	private static int countMatches(Pattern pattern, String text) {
 		final var matcher = pattern.matcher(text);
 		var count = 0;

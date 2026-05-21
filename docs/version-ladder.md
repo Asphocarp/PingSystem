@@ -61,6 +61,8 @@ Responsibilities:
 3. copy files from `ci/version-overrides/<target>/`;
 4. process optional `.delete` file entries.
 
+Before applying a row, the migrator clears optional row-scoped properties such as `sable_version`. This prevents a generated branch from inheriting a dependency that only exists on the previous branch.
+
 It does not invent API ports. If a branch needs source changes, encode them in `ci/version-overrides/<version>/`.
 
 ## Overrides
