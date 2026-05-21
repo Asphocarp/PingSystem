@@ -3,8 +3,8 @@ package app.jyu.common.render;
 import app.jyu.common.resource.LanguageUtils;
 import app.jyu.common.core.PingType;
 import app.jyu.common.core.PingWheelController;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
+import org.joml.Matrix3x2fStack;
 import org.jetbrains.annotations.Nullable;
 
 import static app.jyu.common.CommonClient.Game;
@@ -58,12 +58,12 @@ public class PingWheelRenderer {
 
 	private static void drawScaledCenteredText(GuiGraphics guiGraphics, String text, int centerX, int centerY, float scale, int color) {
 		final var width = Game.font.width(text);
-		final PoseStack matrices = guiGraphics.pose();
-		matrices.pushPose();
-		matrices.translate(centerX, centerY, 0);
-		matrices.scale(scale, scale, 1f);
+		final Matrix3x2fStack matrices = guiGraphics.pose();
+		matrices.pushMatrix();
+		matrices.translate(centerX, centerY);
+		matrices.scale(scale, scale);
 		guiGraphics.drawString(Game.font, text, (int)(-width / 2f), -4, color, true);
-		matrices.popPose();
+		matrices.popMatrix();
 	}
 
 	private static void drawSelectionCorners(GuiGraphics guiGraphics, int centerX, int centerY) {

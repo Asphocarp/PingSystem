@@ -13,9 +13,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GuiMixin {
 	@Inject(method = "render", at = @At(value = "HEAD"))
 	public void render(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo callbackInfo) {
-		guiGraphics.pose().pushPose();
-		guiGraphics.pose().translate(0, 0, -90);
+		guiGraphics.pose().pushMatrix();
 		GuiRenderCallback.START.invoker().onRenderGui(guiGraphics, deltaTracker.getGameTimeDeltaTicks());
-		guiGraphics.pose().popPose();
+		guiGraphics.pose().popMatrix();
 	}
 }

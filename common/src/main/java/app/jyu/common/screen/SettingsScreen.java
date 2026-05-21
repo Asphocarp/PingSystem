@@ -100,7 +100,7 @@ public class SettingsScreen extends Screen {
 
 		if (this.channelTextField.isHoveredOrFocused() && !this.channelTextField.isFocused()) {
 			var tooltipLines = this.font.split(LanguageUtils.settings("channel.tooltip").get(), LINE_LENGTH);
-			guiGraphics.renderTooltip(this.font, tooltipLines, mouseX, mouseY);
+			guiGraphics.setTooltipForNextFrame(this.font, tooltipLines, mouseX, mouseY);
 		}
 	}
 
