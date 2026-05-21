@@ -1,16 +1,15 @@
 package app.jyu.fabric.event;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
+import net.minecraft.client.gui.GuiGraphics;
 
 public interface GuiRenderCallback {
-
-	Event<GuiRenderCallback> START = EventFactory.createArrayBacked(GuiRenderCallback.class, (listeners) -> (matrixStack, delta) -> {
+	Event<GuiRenderCallback> START = EventFactory.createArrayBacked(GuiRenderCallback.class, (listeners) -> (guiGraphics, delta) -> {
 		for (GuiRenderCallback event : listeners) {
-			event.onRenderGui(matrixStack, delta);
+			event.onRenderGui(guiGraphics, delta);
 		}
 	});
 
-	void onRenderGui(PoseStack matrixStack, float tickDelta);
+	void onRenderGui(GuiGraphics guiGraphics, float tickDelta);
 }

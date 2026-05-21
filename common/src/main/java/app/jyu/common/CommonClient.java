@@ -1,7 +1,7 @@
 package app.jyu.common;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import app.jyu.common.compat.LegacyMigrationHandler;
 import app.jyu.common.config.ClientConfig;
 import app.jyu.common.core.GameContext;
@@ -70,8 +70,8 @@ public class CommonClient {
 		PingController.pollPingAction(ctx.tickDelta);
 	}
 
-	public void onRenderGUI(PoseStack poseStack, float tickDelta) {
-		OverlayRenderer.draw(poseStack, tickDelta);
+	public void onRenderGUI(GuiGraphics guiGraphics, float tickDelta) {
+		OverlayRenderer.draw(guiGraphics, tickDelta);
 	}
 
 	public void onPingLocationPacket(PingLocationS2CPacket packet) {

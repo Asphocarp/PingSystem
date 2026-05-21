@@ -8,18 +8,16 @@ import app.jyu.common.integration.TeamContext;
 import app.jyu.common.integration.TeamContextHandler;
 import app.jyu.common.resource.LanguageUtils;
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.OptionInstance;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.OptionsList;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.util.FormattedCharSequence;
 
-import java.util.Collections;
 import java.util.List;
 
 import static app.jyu.common.CommonClient.Game;
@@ -32,11 +30,13 @@ public class SettingsScreen extends Screen {
 	private static final int WHITE = 0xFFFFFF;
 	private static final int GRAY = 0xA0A0A0;
 	private static final int LINE_LENGTH = 170;
+	private static final int WIDGET_WIDTH = 150;
+	private static final int WIDGET_HEIGHT = 20;
+	private static final int ROW_HEIGHT = 24;
 
 	private final ClientConfig config;
 
 	private Screen parent;
-	private OptionsList list;
 	private EditBox channelTextField;
 
 	public SettingsScreen() {
@@ -50,30 +50,27 @@ public class SettingsScreen extends Screen {
 	}
 
 	@Override
-	public void tick() {
-		this.channelTextField.tick();
-	}
-
-	@Override
 	protected void init() {
-		this.list = new OptionsList(this.minecraft, this.width, this.height, 32, this.height - 32, 25);
+		var y = 36;
+		addOptionRow(y, getPingVolumeOption(), getPingDurationOption());
+		y += ROW_HEIGHT;
+		addOptionRow(y, getPingDistanceOption(), getCorrectionPeriodOption());
+		y += ROW_HEIGHT;
+		addOptionRow(y, getItemIconsVisibleOption(), getDirectionIndicatorVisibleOption());
+		y += ROW_HEIGHT;
+		addOptionRow(y, getPlayerInfoModeOption(), getTeamColorModeOption());
+		y += ROW_HEIGHT;
+		addOptionRow(y, getPingSizeOption(), null);
+		y += ROW_HEIGHT + 14;
 
-		this.list.addSmall(getPingVolumeOption(), getPingDurationOption());
-		this.list.addSmall(getPingDistanceOption(), getCorrectionPeriodOption());
-		this.list.addSmall(getItemIconsVisibleOption(), getDirectionIndicatorVisibleOption());
-		this.list.addSmall(getPlayerInfoModeOption(), getTeamColorModeOption());
-		this.list.addSmall(getPingSizeOption(), null);
-
-		final var yOffset = 50 + 25 * this.list.children().size();
-		this.channelTextField = new EditBox(this.font, this.width / 2 - 100, yOffset, 200, 20, Component.empty());
+		this.channelTextField = new EditBox(this.font, this.width / 2 - 100, y, 200, WIDGET_HEIGHT, Component.empty());
 		this.channelTextField.setMaxLength(MAX_CHANNEL_LENGTH);
 		this.channelTextField.setValue(config.getChannel());
 		this.channelTextField.setResponder(config::setChannel);
-		this.addWidget(this.channelTextField);
+		this.addRenderableWidget(this.channelTextField);
 
-		this.addWidget(this.list);
 		this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-			.bounds(this.width / 2 - 100, this.height - 27, 200, 20)
+			.bounds(this.width / 2 - 100, this.height - 27, 200, WIDGET_HEIGHT)
 			.build());
 	}
 
@@ -90,31 +87,36 @@ public class SettingsScreen extends Screen {
 	}
 
 	@Override
-	public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
-		this.renderBackground(matrices);
-		this.list.render(matrices, mouseX, mouseY, delta);
-		drawCenteredString(matrices, this.font, this.title, this.width / 2, 20, WHITE);
+	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+		this.renderBackground(guiGraphics);
+		guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 20, WHITE);
+		guiGraphics.drawString(this.font, LanguageUtils.settings("channel").get(), this.width / 2 - 100, this.channelTextField.getY() - 12, GRAY, false);
 
-		drawString(matrices, this.font, LanguageUtils.settings("channel").get(), this.width / 2 - 100, this.channelTextField.getY() - 12, GRAY);
-		this.channelTextField.render(matrices, mouseX, mouseY, delta);
+		super.render(guiGraphics, mouseX, mouseY, delta);
 
 		if (this.channelTextField.getValue().isEmpty()) {
-			drawString(matrices, this.font, getChannelPlaceholder(), this.width / 2 - 100 + 4, this.channelTextField.getY() + 6, WHITE);
+			guiGraphics.drawString(this.font, getChannelPlaceholder(), this.width / 2 - 100 + 4, this.channelTextField.getY() + 6, WHITE, false);
 		}
 
-		super.render(matrices, mouseX, mouseY, delta);
-
-		var tooltipLines = getHoveredButtonTooltip(this.list, mouseX, mouseY);
-
-		if (tooltipLines.isEmpty() && this.channelTextField.isHoveredOrFocused() && !this.channelTextField.isFocused()) {
-			tooltipLines = this.font.split(LanguageUtils.settings("channel.tooltip").get(), LINE_LENGTH);
+		if (this.channelTextField.isHoveredOrFocused() && !this.channelTextField.isFocused()) {
+			var tooltipLines = this.font.split(LanguageUtils.settings("channel.tooltip").get(), LINE_LENGTH);
+			guiGraphics.renderTooltip(this.font, tooltipLines, mouseX, mouseY);
 		}
-
-		this.renderTooltip(matrices, tooltipLines, mouseX, mouseY);
 	}
 
-	private static List<FormattedCharSequence> getHoveredButtonTooltip(OptionsList buttonList, int mouseX, int mouseY) {
-		return Collections.emptyList();
+	private void addOptionRow(int y, OptionInstance<?> left, OptionInstance<?> right) {
+		addOptionWidget(left, this.width / 2 - WIDGET_WIDTH - 4, y);
+
+		if (right == null) {
+			return;
+		}
+
+		addOptionWidget(right, this.width / 2 + 4, y);
+	}
+
+	private void addOptionWidget(OptionInstance<?> option, int x, int y) {
+		AbstractWidget widget = option.createButton(Game.options, x, y, WIDGET_WIDTH);
+		this.addRenderableWidget(widget);
 	}
 
 	private MutableComponent getChannelPlaceholder() {
@@ -257,7 +259,7 @@ public class SettingsScreen extends Screen {
 			LanguageUtils.settings("team_color_mode").getKey(),
 			TeamColorMode.class,
 			mode -> LanguageUtils.of("value", mode.toString()).get(),
-			mode -> ImmutableList.of(),
+			mode -> List.of(),
 			config::getTeamColorMode,
 			config::setTeamColorMode
 		);
