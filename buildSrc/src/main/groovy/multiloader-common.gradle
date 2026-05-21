@@ -62,6 +62,17 @@ repositories {
         name = "Simple Voice Chat"
         url = "https://maven.maxhenkel.de/repository/public"
     }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "RyanHCode Maven"
+                url = "https://maven.ryanhcode.dev/releases"
+            }
+        }
+        filter {
+            includeGroup "dev.ryanhcode.sable-companion"
+        }
+    }
 }
 
 dependencies {
@@ -74,6 +85,12 @@ dependencies {
     compileOnly "maven.modrinth:factions:${factions_version}"
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+if (project.findProperty("sable_version")) {
+    dependencies {
+        compileOnly "dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:${sable_version}"
+    }
 }
 
 tasks.named("test", Test) {

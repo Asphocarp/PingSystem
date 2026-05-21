@@ -4,6 +4,7 @@
 - Pin Factions integration artifacts across the generated version matrix.
 - Add Fabric metadata and contract tests so generated branches keep Factions support wired.
 - Document conditional Factions runtime support for 1.20.6, 1.21.3, and 26.1.2.
+- Fix generated 1.21.1 loader builds by sharing the Sable compile-only classpath with loader source compiles.
 
 # 1.2.5
 

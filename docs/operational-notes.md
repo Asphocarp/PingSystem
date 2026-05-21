@@ -99,7 +99,7 @@ Sable support is version-limited. The only current Sable source override is for 
 Rules:
 
 - do not add Sable classes to baseline common sources;
-- add Sable dependencies only in explicit version overrides with known supported coordinates;
+- pin `sable_version` only in explicit supported matrix rows, so the shared build plugin can add the compile-only classpath to both `:common` and loader source compiles;
 - smoke test both with and without Sable installed on any branch that enables the override.
 
 ## ServiceLoader Failures
