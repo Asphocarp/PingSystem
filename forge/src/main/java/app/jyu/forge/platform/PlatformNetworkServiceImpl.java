@@ -4,11 +4,10 @@ import app.jyu.common.network.IPacket;
 import app.jyu.common.platform.IPlatformNetworkService;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
-import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.event.EventNetworkChannel;
+import net.minecraftforge.network.EventNetworkChannel;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,21 +34,19 @@ public class PlatformNetworkServiceImpl implements IPlatformNetworkService {
 
 		var buf = new FriendlyByteBuf(Unpooled.buffer());
 		packet.write(buf);
-
-		connection.send(new ServerboundCustomPayloadPacket(packet.getId(), buf));
+		chan.send(buf, connection.getConnection());
 	}
 
 	@Override
 	public void sendToClient(IPacket packet, ServerPlayer player) {
 		var chan = CHANNEL_MAP.get(packet.getId());
 
-		if (chan == null || !chan.isRemotePresent(player.connection.connection)) {
+		if (chan == null) {
 			return;
 		}
 
 		var buf = new FriendlyByteBuf(Unpooled.buffer());
 		packet.write(buf);
-
-		player.connection.send(new ClientboundCustomPayloadPacket(packet.getId(), buf));
+		chan.send(buf, PacketDistributor.PLAYER.with(player));
 	}
 }

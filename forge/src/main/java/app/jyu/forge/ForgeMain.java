@@ -1,24 +1,25 @@
 package app.jyu.forge;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.event.EventNetworkChannel;
 import app.jyu.common.CommonServer;
 import app.jyu.common.command.ServerCommandBuilder;
 import app.jyu.common.network.PingLocationC2SPacket;
 import app.jyu.common.network.PingLocationS2CPacket;
 import app.jyu.common.network.UpdateChannelC2SPacket;
 import app.jyu.common.resource.LanguageUtils;
+import app.jyu.forge.platform.PlatformContextServiceImpl;
 import app.jyu.forge.platform.PlatformNetworkServiceImpl;
 import app.jyu.forge.platform.PlatformSoundServiceImpl;
-import app.jyu.forge.platform.PlatformContextServiceImpl;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.ChannelBuilder;
+import net.minecraftforge.network.EventNetworkChannel;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.function.Function;
@@ -29,25 +30,10 @@ import static app.jyu.common.Global.MOD_ID;
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeMain {
 
-	private static final String PROTOCOL_VERSION = "1";
-	public static final EventNetworkChannel PING_LOCATION_CHANNEL_C2S = NetworkRegistry.newEventChannel(
-		PingLocationC2SPacket.PACKET_ID,
-		() -> PROTOCOL_VERSION,
-		c -> true,
-		s -> true
-	);
-	public static final EventNetworkChannel PING_LOCATION_CHANNEL_S2C = NetworkRegistry.newEventChannel(
-		PingLocationS2CPacket.PACKET_ID,
-		() -> PROTOCOL_VERSION,
-		c -> true,
-		s -> true
-	);
-	public static final EventNetworkChannel UPDATE_CHANNEL_C2S = NetworkRegistry.newEventChannel(
-		UpdateChannelC2SPacket.PACKET_ID,
-		() -> PROTOCOL_VERSION,
-		c -> true,
-		s -> true
-	);
+	private static final int PROTOCOL_VERSION = 1;
+	public static final EventNetworkChannel PING_LOCATION_CHANNEL_C2S = createChannel(PingLocationC2SPacket.PACKET_ID);
+	public static final EventNetworkChannel PING_LOCATION_CHANNEL_S2C = createChannel(PingLocationS2CPacket.PACKET_ID);
+	public static final EventNetworkChannel UPDATE_CHANNEL_C2S = createChannel(UpdateChannelC2SPacket.PACKET_ID);
 
 	@SuppressWarnings({"java:S1118", "the public constructor is required by forge"})
 	public ForgeMain() {
@@ -65,9 +51,17 @@ public class ForgeMain {
 		registerPacketHandler(UPDATE_CHANNEL_C2S, UpdateChannelC2SPacket::readSafe, CommonServer.INSTANCE::onChannelUpdatePacket);
 	}
 
+	private static EventNetworkChannel createChannel(net.minecraft.resources.ResourceLocation id) {
+		return ChannelBuilder
+			.named(id)
+			.networkProtocolVersion(PROTOCOL_VERSION)
+			.optional()
+			.eventNetworkChannel();
+	}
+
 	public static <T> void registerPacketHandler(EventNetworkChannel channel, Function<FriendlyByteBuf, T> packetReader, TriConsumer<MinecraftServer, ServerPlayer, T> packetHandler) {
-		channel.addListener((event) -> {
-			var ctx = event.getSource().get();
+		channel.addListener((CustomPayloadEvent event) -> {
+			var ctx = event.getSource();
 			var payload = event.getPayload();
 			var sender = ctx.getSender();
 
