@@ -70,6 +70,28 @@ Rules:
 
 Factions is a Fabric, server-side mod. The server relay uses Factions as authoritative teammate context when it is loaded, but clients connected to dedicated servers may not show Factions in the settings placeholder because the mod does not need to be installed client-side.
 
+### Factions Version Matrix
+
+All matrix branches compile the guarded Factions integration, but runtime teammate recognition requires a compatible Factions server mod.
+
+| Minecraft | Factions artifact | Runtime support note |
+| --- | --- | --- |
+| 1.19.2 | v2.3.1 | Upstream-listed |
+| 1.19.3 | v2.3.2 | Upstream-listed |
+| 1.19.4 | 2.4.0 | Upstream-listed |
+| 1.20.1 | 2.5.1 | Upstream-listed |
+| 1.20.2 | 2.5.2 | Upstream-listed |
+| 1.20.4 | 2.6.0 | Upstream-listed |
+| 1.20.6 | 2.6.1 | Conditional: upstream lists 1.20.5, artifact metadata allows >=1.20.2 |
+| 1.21.1 | 2.8.0-1.21 | Upstream-listed |
+| 1.21.3 | 2.6.4 | Conditional: upstream lists 1.21.2, artifact filename targets 1.21.3 and metadata allows >=1.21.2 |
+| 1.21.4 | 2.7.2 | Upstream-listed |
+| 1.21.5 | 2.9.0 | Upstream-listed |
+| 1.21.8 | 2.9.1 | Upstream-listed |
+| 1.21.10 | 2.9.2 | Upstream-listed |
+| 1.21.11 | 2.9.3 | Upstream-listed |
+| 26.1.2 | 2.9.4 | Conditional: upstream lists 26.1 and 26.1.1, artifact metadata allows ~26.1 |
+
 ## Sable
 
 Sable support is version-limited. The only current Sable source override is for `1.21.1`, where Sable Companion projects sub-level block hit positions into global world space before ping packets are sent.

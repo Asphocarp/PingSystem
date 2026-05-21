@@ -44,5 +44,8 @@
     "fabric-api": "*",
     "minecraft": "${fabric_compatible_range}",
     "java": ">=${java_version}"
+  },
+  "suggests": {
+    "factions": "*"
   }
 }

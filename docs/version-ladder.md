@@ -156,9 +156,12 @@ Most optional integrations live in baseline common code and are replayed forward
 - Distant Horizons far raycast;
 - Simple Voice Chat team context;
 - FTB Teams team context;
+- Factions team context;
 - Fabric Mod Menu metadata.
 
 Sable is different because the companion API is only enabled in explicit supported version recipes. Keep Sable dependencies and source imports inside version overrides; the current supported override is `ci/version-overrides/1.21.1/`.
+
+Factions support also needs matrix metadata because its Modrinth artifact version changes by Minecraft version. Every `ci/version-matrix.yml` row must pin `factions_version`, Fabric metadata overrides must keep `suggests.factions`, and buildSrc overrides must keep the compile-only Factions dependency. `MatrixFactionsContractTest` enforces those invariants.
 
 ## Current Caveat
 
