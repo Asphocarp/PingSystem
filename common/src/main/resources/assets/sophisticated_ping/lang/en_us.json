@@ -20,6 +20,7 @@
 	"settings.sophisticated_ping.channel.placeholder": "Synced to %s",
 
 	"value.sophisticated_ping.vanilla_team": "Vanilla Team",
+	"value.sophisticated_ping.factions": "Factions",
 	"value.sophisticated_ping.ftb_teams": "FTB Teams",
 	"value.sophisticated_ping.voice_chat": "Voice Chat",
 	"value.sophisticated_ping.always": "Always",

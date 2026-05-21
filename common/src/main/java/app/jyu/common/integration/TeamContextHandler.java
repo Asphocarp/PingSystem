@@ -2,10 +2,14 @@ package app.jyu.common.integration;
 
 import net.minecraft.world.entity.player.Player;
 
+import java.util.Optional;
+
 import static app.jyu.common.CommonClient.Game;
 
 public class TeamContextHandler {
 	private TeamContextHandler() {}
+
+	record ResolvedContext(TeamContext context, Object id) {}
 
 	public static boolean hasTeam(Player player) {
 		if (player == null) return false;
@@ -14,15 +18,7 @@ public class TeamContextHandler {
 	}
 
 	public static TeamContext getContext(Player player) {
-		final var voiceChatId = VoiceChatWrapper.getGroupId(player);
-		if (voiceChatId.isPresent()) return TeamContext.VOICE_CHAT;
-
-		final var ftbTeamId = FTBTeamsWrapper.getTeamId(player);
-		if (ftbTeamId.isPresent()) return TeamContext.FTB_TEAMS;
-
-		if (player.getTeam() != null) return TeamContext.VANILLA_TEAM;
-
-		return TeamContext.NONE;
+		return resolveContext(player).context();
 	}
 
 	public static TeamContext getSelfContext() {
@@ -32,17 +28,41 @@ public class TeamContextHandler {
 		final var ftbTeamId = FTBTeamsWrapper.getSelfTeamId();
 		if (ftbTeamId.isPresent()) return TeamContext.FTB_TEAMS;
 
-		if (Game.player != null && Game.player.getTeam() != null) return TeamContext.VANILLA_TEAM;
+		if (Game.player == null) return TeamContext.NONE;
 
-		return TeamContext.NONE;
+		return resolveContext(Game.player).context();
 	}
 
 	public static boolean inSameContext(Player p1, Player p2) {
-		final var p1TeamId = VoiceChatWrapper.getGroupId(p1).orElse(FTBTeamsWrapper.getTeamId(p1).orElse(null));
-		final var p2TeamId = VoiceChatWrapper.getGroupId(p2).orElse(FTBTeamsWrapper.getTeamId(p2).orElse(null));
-		if (p1TeamId != null) return p1TeamId.equals(p2TeamId);
-		if (p2TeamId != null) return false;
+		return inSameContext(resolveContext(p1), resolveContext(p2));
+	}
 
-		return p1.getTeam() == p2.getTeam();
+	static boolean inSameContext(ResolvedContext p1, ResolvedContext p2) {
+		if (p1.context() != p2.context()) return false;
+
+		return p1.id() == p2.id() || (p1.id() != null && p1.id().equals(p2.id()));
+	}
+
+	static ResolvedContext resolveContext(Player player) {
+		if (player == null) return new ResolvedContext(TeamContext.NONE, null);
+
+		return selectContext(
+			VoiceChatWrapper.getGroupId(player),
+			FTBTeamsWrapper.getTeamId(player),
+			FactionsWrapper.getFactionId(player),
+			player.getTeam()
+		);
+	}
+
+	static ResolvedContext selectContext(Optional<?> voiceChatId, Optional<?> ftbTeamId, Optional<?> factionId, Object vanillaTeam) {
+		if (voiceChatId.isPresent()) return new ResolvedContext(TeamContext.VOICE_CHAT, voiceChatId.get());
+
+		if (ftbTeamId.isPresent()) return new ResolvedContext(TeamContext.FTB_TEAMS, ftbTeamId.get());
+
+		if (factionId.isPresent()) return new ResolvedContext(TeamContext.FACTIONS, factionId.get());
+
+		if (vanillaTeam != null) return new ResolvedContext(TeamContext.VANILLA_TEAM, vanillaTeam);
+
+		return new ResolvedContext(TeamContext.NONE, null);
 	}
 }

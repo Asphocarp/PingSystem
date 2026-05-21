@@ -143,9 +143,10 @@ Default team context is resolved as:
 
 1. Simple Voice Chat group if both players have a group;
 2. FTB Teams non-personal team if both players have a team;
-3. vanilla Minecraft team.
+3. Factions faction if both players are in the same faction;
+4. vanilla Minecraft team.
 
-Voice Chat has priority over FTB Teams when both integrations are present.
+Voice Chat has priority over FTB Teams, FTB Teams has priority over Factions, and Factions has priority over vanilla teams when multiple integrations are present. Factions support is server-authoritative and Fabric-only because upstream Factions is a Fabric server-side mod.
 
 ## Rate Limiting
 

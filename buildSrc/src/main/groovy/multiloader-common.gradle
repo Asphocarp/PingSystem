@@ -71,6 +71,7 @@ dependencies {
     compileOnly "maven.modrinth:DistantHorizonsApi:${distanthorizons_api_version}"
     compileOnly "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
     compileOnly "curse.maven:ftbteams-404468:${ftbteams_version}"
+    compileOnly "maven.modrinth:factions:${factions_version}"
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }

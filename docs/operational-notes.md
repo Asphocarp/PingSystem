@@ -58,14 +58,39 @@ Rules:
 
 ## Optional Team Integrations
 
-Simple Voice Chat and FTB Teams are compile-only integrations. Runtime code must check `ModContext.HasVoiceChat` or `ModContext.HasFTBTeams` before touching integration APIs.
+Simple Voice Chat, FTB Teams, and Factions are compile-only integrations. Runtime code must check `ModContext.HasVoiceChat`, `ModContext.HasFTBTeams`, or `ModContext.HasFactions` before touching integration APIs.
 
 Rules:
 
 - keep Simple Voice Chat API access in `VoiceChatIntegration` and `VoiceChatWrapper`;
 - keep FTB Teams API access in `FTBTeamsWrapper`;
-- preserve context priority: voice group, FTB team, vanilla team;
-- test startup without either optional mod installed.
+- keep Factions API access in `FactionsWrapper`;
+- preserve context priority: voice group, FTB team, Factions faction, vanilla team;
+- test startup without optional team mods installed.
+
+Factions is a Fabric, server-side mod. The server relay uses Factions as authoritative teammate context when it is loaded, but clients connected to dedicated servers may not show Factions in the settings placeholder because the mod does not need to be installed client-side.
+
+### Factions Version Matrix
+
+All matrix branches compile the guarded Factions integration, but runtime teammate recognition requires a compatible Factions server mod.
+
+| Minecraft | Factions artifact | Runtime support note |
+| --- | --- | --- |
+| 1.19.2 | v2.3.1 | Upstream-listed |
+| 1.19.3 | v2.3.2 | Upstream-listed |
+| 1.19.4 | 2.4.0 | Upstream-listed |
+| 1.20.1 | 2.5.1 | Upstream-listed |
+| 1.20.2 | 2.5.2 | Upstream-listed |
+| 1.20.4 | 2.6.0 | Upstream-listed |
+| 1.20.6 | 2.6.1 | Conditional: upstream lists 1.20.5, artifact metadata allows >=1.20.2 |
+| 1.21.1 | 2.8.0-1.21 | Upstream-listed |
+| 1.21.3 | 2.6.4 | Conditional: upstream lists 1.21.2, artifact filename targets 1.21.3 and metadata allows >=1.21.2 |
+| 1.21.4 | 2.7.2 | Upstream-listed |
+| 1.21.5 | 2.9.0 | Upstream-listed |
+| 1.21.8 | 2.9.1 | Upstream-listed |
+| 1.21.10 | 2.9.2 | Upstream-listed |
+| 1.21.11 | 2.9.3 | Upstream-listed |
+| 26.1.2 | 2.9.4 | Conditional: upstream lists 26.1 and 26.1.1, artifact metadata allows ~26.1 |
 
 ## Sable
 

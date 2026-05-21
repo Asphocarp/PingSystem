@@ -1,3 +1,10 @@
+# 1.3.0
+
+- Add optional Factions teammate recognition for default-channel ping routing.
+- Pin Factions integration artifacts across the generated version matrix.
+- Add Fabric metadata and contract tests so generated branches keep Factions support wired.
+- Document conditional Factions runtime support for 1.20.6, 1.21.3, and 26.1.2.
+
 # 1.2.5
 
 - Add a CurseForge Upload API preflight check before release builds or uploads.
