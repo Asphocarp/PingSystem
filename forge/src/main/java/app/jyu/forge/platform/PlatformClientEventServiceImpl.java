@@ -4,7 +4,7 @@ import app.jyu.common.platform.IPlatformClientEventService;
 import app.jyu.common.render.WorldRenderContext;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -58,7 +58,7 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 		@SubscribeEvent
 		public void onRenderWorld(RenderLevelStageEvent event) {
 			if (event.getStage().equals(RenderLevelStageEvent.Stage.AFTER_WEATHER)) {
-				callback.accept(WorldRenderContext.of(event.getPoseStack().last().pose(), event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
+				callback.accept(WorldRenderContext.of(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick(), event.getCamera()));
 			}
 		}
 	}
@@ -69,7 +69,7 @@ public class PlatformClientEventServiceImpl implements IPlatformClientEventServi
 	}
 	private record RenderGUIEventEventHandler(BiConsumer<GuiGraphics, Float> callback) {
 		@SubscribeEvent
-		public void onPreGuiRender(RenderGuiEvent.Pre event) {
+		public void onChatOverlayRender(CustomizeGuiOverlayEvent.Chat event) {
 			callback.accept(event.getGuiGraphics(), event.getPartialTick());
 		}
 	}

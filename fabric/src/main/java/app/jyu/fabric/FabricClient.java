@@ -1,5 +1,10 @@
 package app.jyu.fabric;
 
+import app.jyu.common.CommonClient;
+import app.jyu.common.command.ClientCommandBuilder;
+import app.jyu.common.resource.LanguageUtils;
+import app.jyu.common.resource.ResourceReloadListener;
+import app.jyu.fabric.payload.FabricPayloads;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -11,11 +16,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
-import app.jyu.common.CommonClient;
-import app.jyu.common.command.ClientCommandBuilder;
-import app.jyu.common.network.PingLocationS2CPacket;
-import app.jyu.common.resource.LanguageUtils;
-import app.jyu.common.resource.ResourceReloadListener;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -24,21 +24,17 @@ import static app.jyu.common.Global.MOD_ID;
 
 @Environment(EnvType.CLIENT)
 public class FabricClient implements ClientModInitializer {
-
 	public static final ResourceLocation RELOAD_LISTENER_ID = new ResourceLocation(MOD_ID, "reload-listener");
 
 	@Override
 	public void onInitializeClient() {
 		CommonClient.INSTANCE.onInit();
 
-		// packets
 		ClientPlayNetworking.registerGlobalReceiver(
-			PingLocationS2CPacket.PACKET_ID,
-			(a, b, packet, c)
-				-> CommonClient.INSTANCE.onPingLocationPacket(PingLocationS2CPacket.readSafe(packet))
+			FabricPayloads.PingLocationS2C.TYPE,
+			(payload, context) -> CommonClient.INSTANCE.onPingLocationPacket(payload.packet())
 		);
 
-		// resource reload
 		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)
 			.registerReloadListener(new IdentifiableResourceReloadListener() {
 				@Override
@@ -52,7 +48,6 @@ public class FabricClient implements ClientModInitializer {
 				}
 			});
 
-		// commands
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(ClientCommandBuilder.build((context, success, response) -> {
 			if (success) {
 				context.getSource().sendFeedback(LanguageUtils.withModPrefix(response));
